@@ -126,7 +126,9 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
       </div>
 
       {state.phase === "AWAITING_ROLL" && (
-        <p className="muted">Use a power-up on your phone, then roll when ready. No time limit.</p>
+        <p className="muted">
+          Use a power-up, then roll when ready. Each space earns 1 coin. No time limit.
+        </p>
       )}
 
       <div className="button-row">

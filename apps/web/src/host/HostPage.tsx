@@ -1,6 +1,6 @@
 import { defaultBoard, getMovementPath } from "@party-board/board"
 import type { GameState } from "@party-board/protocol"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 import { buildControllerUrl, createRuntimeConfig } from "../app/runtimeConfig"
 import { BoardScene } from "./BoardScene"
@@ -17,7 +17,7 @@ import { PlayerBalances } from "../app/PlayerBalances"
 import { PowerupNotice } from "../app/PowerupNotice"
 
 const DICE_DURATION_MS = 900
-const MOVEMENT_DURATION_MS = 300
+const MOVEMENT_DURATION_MS = 420
 const TURN_END_DURATION_MS = 500
 const PENDING_LIVE_STATE: GameState = {
   roomCode: "WAIT",
@@ -39,6 +39,7 @@ function getPreviewDiceValue(): number {
 }
 
 export default function HostPage() {
+  const wrapFade = useRef<HTMLDivElement>(null)
   const runtimeConfig = useMemo(
     () =>
       createRuntimeConfig({
@@ -71,7 +72,7 @@ export default function HostPage() {
     [live.state, liveMode, runtimeConfig.controllerBaseUrl, state.roomCode],
   )
 
-  const { animatePath, cancel } = usePieceAnimation()
+  const { animatePath, cancel, motion: fixtureMotion } = usePieceAnimation()
 
   const startPreview = useCallback(() => {
     setFixtureState((current) => ({
@@ -105,14 +106,25 @@ export default function HostPage() {
     const path = getMovementPath(defaultBoard, activePlayer.tileId, diceValue)
     setFixtureMovingPlayerId(activePlayerId)
     setFixtureState((current) => ({ ...current, phase: "MOVING" }))
-    const completed = await animatePath(path, MOVEMENT_DURATION_MS, (tileId) => {
-      setFixtureState((current) => ({
-        ...current,
-        players: current.players.map((player) =>
-          player.id === activePlayerId ? { ...player, tileId } : player,
-        ),
-      }))
-    })
+    const completed = await animatePath(
+      path,
+      MOVEMENT_DURATION_MS,
+      (tileId) => {
+        setFixtureState((current) => ({
+          ...current,
+          players: current.players.map((player) =>
+            player.id === activePlayerId
+              ? { ...player, tileId, coins: Math.min(999, (player.coins ?? 6) + 1) }
+              : player,
+          ),
+        }))
+      },
+      {
+        playerId: activePlayerId,
+        turnNumber: fixtureState.turnNumber,
+        fromTileId: activePlayer.tileId,
+      },
+    )
     if (!completed) return
 
     setFixtureMovingPlayerId(null)
@@ -147,10 +159,24 @@ export default function HostPage() {
         ? "Scan to join from a phone. Start once at least one connected player is ready."
         : "Connecting to the authoritative game server and creating a room…"))
     : "Scan to join from a phone. Four fixture players are shown for Ryan's host preview."
+  const sceneKey =
+    state.minigame?.id ??
+    (state.duel && state.duel.stage !== "intro"
+      ? state.duel.id
+      : state.potato && state.potato.stage !== "intro"
+        ? state.potato.id
+        : "trail")
 
   return (
     <main className="host-shell">
-      <BoardScene movingPlayerId={movingPlayerId} state={state} />
+      <BoardScene
+        movingPlayerId={movingPlayerId}
+        state={state}
+        motion={liveMode ? live.motion : fixtureMotion}
+        wrapFade={wrapFade}
+      />
+      <div key={sceneKey} className="world-reveal" aria-hidden="true" />
+      <div ref={wrapFade} className="world-wrap" aria-hidden="true" />
 
       <header className="topbar">
         <div className="brand">Party Board</div>

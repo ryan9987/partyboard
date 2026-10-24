@@ -16,6 +16,7 @@ import { AcornModel, BowModel, DrumStick, FishingRod } from "./GameEquipment"
 import { MeadowGround, MeadowPlanting, WoodlandTree } from "./WoodlandDetails"
 import { createSurfaceTexture } from "./sceneryMaterials"
 import { useGameClock } from "../networking/gameClock"
+import { smoothStep } from "./trailMotion"
 
 const COLORS = { coral: "#ed7180", cyan: "#40c1c8", gold: "#e0b745", violet: "#9476d4" }
 
@@ -124,13 +125,16 @@ function FishingLine({
   const fish = useRef<THREE.Group>(null)
   const ripple = useRef<THREE.Mesh>(null)
   const lineRef = useRef<THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>>(null)
+  const scratchRef = useRef({ tip: new THREE.Vector3(), float: new THREE.Vector3() })
   const line = useMemo(() => {
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(9), 3))
-    return new THREE.Line(
+    const object = new THREE.Line(
       geometry,
       new THREE.LineBasicMaterial({ color: "#eee4cd", transparent: true, opacity: 0.8 }),
     )
+    object.frustumCulled = false
+    return object
   }, [])
   useEffect(
     () => () => {
@@ -140,20 +144,21 @@ function FishingLine({
     [line],
   )
   useFrame(({ clock: renderClock }) => {
+    const scratch = scratchRef.current
     if (!grip.current || !bobber.current || !fish.current || !ripple.current || !lineRef.current)
       return
     grip.current.updateWorldMatrix(true, false)
-    const tip = new THREE.Vector3(0, 0, 1.675).applyMatrix4(grip.current.matrixWorld)
-    const float = new THREE.Vector3()
+    const tip = scratch.tip.set(0, 0, 1.675).applyMatrix4(grip.current.matrixWorld)
+    const float = scratch.float
     const age = Math.max(0, (clock() - player.actionAt) / 1000)
     const casting = player.status === "casting"
     const landed = player.status === "caught"
-    const fishing = ["casting", "waiting", "bite"].includes(player.status)
+    const fishing = casting || player.status === "waiting" || player.status === "bite"
     const t = casting ? Math.min(1, age / 0.75) : 1
     float.set(x + 0.25, 0.08, -2.8)
     if (casting) {
-      float.lerpVectors(tip, float, t)
-      float.y += Math.sin(t * Math.PI) * 1.4
+      float.lerpVectors(tip, float, smoothStep(t))
+      float.y += Math.sin(t * Math.PI) ** 2 * 1.4
     } else
       float.y +=
         Math.sin(renderClock.elapsedTime * (player.status === "bite" ? 16 : 3)) *
@@ -165,8 +170,9 @@ function FishingLine({
     ripple.current.scale.setScalar(0.8 + Math.sin(renderClock.elapsedTime * 4) * 0.15)
     fish.current.visible = landed && age < 1.5
     if (landed) {
-      fish.current.position.lerpVectors(float, tip, Math.min(1, age / 1.1))
-      fish.current.position.y += Math.sin(Math.min(1, age / 1.1) * Math.PI) * 0.8
+      const reel = Math.min(1, age / 1.1)
+      fish.current.position.lerpVectors(float, tip, smoothStep(reel))
+      fish.current.position.y += Math.sin(reel * Math.PI) ** 2 * 0.8
       fish.current.rotation.z = Math.sin(age * 20) * 0.25
     }
     lineRef.current.material.opacity = fishing || (landed && age < 1.5) ? 0.8 : 0
@@ -176,7 +182,6 @@ function FishingLine({
     positions.setXYZ(1, (tip.x + end.x) / 2, (tip.y + end.y) / 2 - 0.12, (tip.z + end.z) / 2)
     positions.setXYZ(2, end.x, end.y, end.z)
     positions.needsUpdate = true
-    lineRef.current.geometry.computeBoundingSphere()
   })
   return (
     <>
@@ -250,7 +255,9 @@ function ArcheryShot({
   const arrow = useRef<THREE.Group>(null)
   const origin = useRef(new THREE.Vector3())
   const previous = useRef(0)
+  const scratchRef = useRef({ target: new THREE.Vector3(), look: new THREE.Vector3() })
   useFrame(() => {
+    const scratch = scratchRef.current
     if (!arrow.current || !grip.current) return
     const firedAt = shot?.at ?? player.actionAt
     const age = (clock() - firedAt) / 1000
@@ -261,13 +268,14 @@ function ArcheryShot({
     arrow.current.visible = player.attempts > 0
     const offset = shot?.offset ?? player.position
     const hitsTarget = Math.abs(offset * 1.7) < 0.7
-    const target = new THREE.Vector3(
+    const target = scratch.target.set(
       x + offset * 1.7,
       hitsTarget ? 1.5 : -0.06,
       hitsTarget ? -5.54 : -7.2,
     )
     arrow.current.position.lerpVectors(origin.current, target, Math.min(1, Math.max(0, age / 0.48)))
-    arrow.current.lookAt(target.clone().add(new THREE.Vector3(0, 0, -1)))
+    scratch.look.copy(target).z -= 1
+    arrow.current.lookAt(scratch.look)
     arrow.current.rotateY(Math.PI)
   })
   return (
@@ -380,7 +388,13 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
         delta,
       )
     }
-    if (log.current) log.current.rotation.z = balanceLean(elapsed, index) * -0.16
+    if (log.current)
+      log.current.rotation.z = THREE.MathUtils.damp(
+        log.current.rotation.z,
+        balanceLean(elapsed, index) * -0.16,
+        12,
+        delta,
+      )
     if (cue.current) {
       const beat = (elapsed % RHYTHM_BEAT_MS) / RHYTHM_BEAT_MS
       cue.current.scale.setScalar(1 + (1 - beat) * 0.18)
@@ -388,7 +402,12 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
         beat < 0.16 || beat > 0.84 ? 0.55 : 0
     }
     if (crosshair.current)
-      crosshair.current.position.x = x + (entry.axis + archeryDrift(elapsed)) * 1.7
+      crosshair.current.position.x = THREE.MathUtils.damp(
+        crosshair.current.position.x,
+        x + (entry.axis + archeryDrift(elapsed)) * 1.7,
+        24,
+        delta,
+      )
   })
   const fishing = game.kind === "fishing"
   const archery = game.kind === "archery"

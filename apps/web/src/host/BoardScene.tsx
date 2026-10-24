@@ -1,7 +1,7 @@
 import { defaultBoard } from "@party-board/board"
 import type { GameState } from "@party-board/protocol"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Suspense, useEffect, useMemo, useRef } from "react"
+import { Suspense, useEffect, useMemo, useRef, type RefObject } from "react"
 import * as THREE from "three"
 
 import { BoardTiles } from "./BoardTile"
@@ -14,48 +14,66 @@ import { WorldEnvironment } from "./WorldEnvironment"
 import { TrailMarkets } from "./MarketStall"
 import { PotatoArena } from "./PotatoArena"
 import { MinigameArena } from "./MinigameArena"
+import { createMotionSample, sampleTrailMotion, type TrailMotion } from "./trailMotion"
+
+const tileMap = new Map(defaultBoard.tiles.map((tile) => [tile.id, tile]))
 
 type BoardSceneProps = {
   state: GameState
   movingPlayerId: string | null
+  motion?: TrailMotion | null
+  wrapFade?: RefObject<HTMLDivElement | null>
 }
 
-function CameraRig({
-  focus,
-  market,
-}: {
-  focus: readonly [number, number, number]
-  market: boolean
-}) {
+function CameraRig({ focus, market }: { focus: RefObject<THREE.Vector3>; market: boolean }) {
   const { camera } = useThree()
-  const lookTarget = useRef(new THREE.Vector3(focus[0] - 1.15, 1.05, focus[2] - 0.8))
+  const lookTarget = useRef(new THREE.Vector3(0, 1.05, 0))
+  const scratchRef = useRef({
+    position: new THREE.Vector3(),
+    look: new THREE.Vector3(),
+    previous: new THREE.Vector3(),
+    initialized: false,
+  })
 
   useFrame((_, delta) => {
+    const scratch = scratchRef.current
     const smoothing = 1 - Math.exp(-delta * 4)
-    const desiredPosition = market
-      ? new THREE.Vector3(focus[0] + 5.2, 4.4, focus[2] + 7.4)
-      : new THREE.Vector3(focus[0] + 2.75, 6.1, focus[2] + 8.9)
-    const desiredLook = new THREE.Vector3(focus[0] + (market ? 1.4 : -1.15), 1.05, focus[2] - 0.8)
-    camera.position.lerp(desiredPosition, smoothing)
-    lookTarget.current.lerp(desiredLook, smoothing)
+    const point = focus.current
+    const desiredPosition = scratch.position.set(
+      point.x + (market ? 5.2 : 2.75),
+      market ? 4.4 : 6.1,
+      point.z + (market ? 7.4 : 8.9),
+    )
+    const desiredLook = scratch.look.set(point.x + (market ? 1.4 : -1.15), 1.05, point.z - 0.8)
+    if (!scratch.initialized || scratch.previous.distanceToSquared(point) > 225) {
+      // Logical lap wrap: reframe rather than sweeping the camera through the whole world.
+      camera.position.copy(desiredPosition)
+      lookTarget.current.copy(desiredLook)
+    } else {
+      camera.position.lerp(desiredPosition, smoothing)
+      lookTarget.current.lerp(desiredLook, smoothing)
+    }
+    scratch.previous.copy(point)
+    scratch.initialized = true
     camera.lookAt(lookTarget.current)
   })
 
   return null
 }
 
-function TrailSunlight({ focus }: { focus: readonly [number, number, number] }) {
+function TrailSunlight({ focus }: { focus: RefObject<THREE.Vector3> }) {
   const rigRef = useRef<THREE.Group>(null)
   const target = useMemo(() => new THREE.Object3D(), [])
   useFrame((_, delta) => {
     const rig = rigRef.current
     if (!rig) return
     const smoothing = 1 - Math.exp(-delta * 4)
-    rig.position.x = THREE.MathUtils.lerp(rig.position.x, focus[0], smoothing)
-    rig.position.z = THREE.MathUtils.lerp(rig.position.z, focus[2], smoothing)
+    if (rig.position.distanceToSquared(focus.current) > 225) rig.position.copy(focus.current)
+    rig.position.x = THREE.MathUtils.lerp(rig.position.x, focus.current.x, smoothing)
+    rig.position.z = THREE.MathUtils.lerp(rig.position.z, focus.current.z, smoothing)
   })
   return (
-    <group ref={rigRef} position={[focus[0], 0, focus[2]]}>
+    <group ref={rigRef}>
       <primitive object={target} />
       <directionalLight
         castShadow
@@ -77,18 +95,31 @@ function TrailSunlight({ focus }: { focus: readonly [number, number, number] }) 
   )
 }
 
-function Scene({ state, movingPlayerId }: BoardSceneProps) {
+function Scene({ state, movingPlayerId, motion, wrapFade }: BoardSceneProps) {
   const pathTexture = useMemo(() => {
     const texture = createSurfaceTexture("stone")
     texture.repeat.set(80, 1)
     return texture
   }, [])
   useEffect(() => () => pathTexture.dispose(), [pathTexture])
-  const tileMap = new Map(defaultBoard.tiles.map((tile) => [tile.id, tile]))
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
   const activePlayerIndex = state.players.findIndex((player) => player.id === state.currentPlayerId)
   const focusTile =
     tileMap.get(activePlayer?.tileId ?? defaultBoard.startingTileId) ?? defaultBoard.tiles[0]!
+  const focus = useRef(new THREE.Vector3())
+  const sampleRef = useRef(createMotionSample())
+  useFrame(() => {
+    const sample = sampleRef.current
+    if (motion) {
+      sampleTrailMotion(motion, performance.now(), sample)
+      focus.current.set(...sample.position)
+    } else focus.current.set(...focusTile.position)
+    if (wrapFade?.current) {
+      const opacity = motion && sample.warping ? String(1 - sample.opacity) : "0"
+      if (wrapFade.current.style.opacity !== opacity)
+        wrapFade.current.style.setProperty("opacity", opacity)
+    }
+  }, -2)
   const characterOffset = getCharacterOffset(activePlayerIndex)
   const activeCharacterPosition = [
     focusTile.position[0] + characterOffset[0],
@@ -114,11 +145,11 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
 
   return (
     <>
-      <CameraRig focus={focusTile.position} market={state.phase === "SHOP"} />
+      <CameraRig focus={focus} market={state.phase === "SHOP"} />
       <fog attach="fog" args={["#aed7e4", 17, 37]} />
       <hemisphereLight color="#e7f4ff" groundColor="#57643b" intensity={1.35} />
       <ambientLight intensity={0.25} />
-      <TrailSunlight focus={focusTile.position} />
+      <TrailSunlight focus={focus} />
       <WorldEnvironment />
       <TrailMarkets focusZ={focusTile.position[2]} />
 
@@ -145,6 +176,7 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
             moving={player.id === movingPlayerId}
             playerIndex={index}
             position={tile.position}
+            motion={motion?.playerId === player.id ? motion : null}
           />
         )
       })}
@@ -153,6 +185,9 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
         position={dicePosition}
         value={state.lastRoll}
         rolling={state.phase === "ROLLING"}
+        follow={focus}
+        followOffset={[characterOffset[0], 3.05, characterOffset[2]]}
+        tracking={!!motion}
       />
     </>
   )

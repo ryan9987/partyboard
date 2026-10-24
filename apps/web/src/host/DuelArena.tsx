@@ -13,10 +13,6 @@ function ArenaCamera() {
     camera.position.set(5.8, 5.2, 9)
     camera.lookAt(0, 0.8, 0)
   }, [camera])
-  useFrame((_, delta) => {
-    camera.position.lerp(new THREE.Vector3(5.8, 5.2, 9), 1 - Math.exp(-delta * 4))
-    camera.lookAt(0, 0.8, 0)
-  })
   return null
 }
 

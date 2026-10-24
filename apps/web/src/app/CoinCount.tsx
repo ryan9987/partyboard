@@ -12,7 +12,9 @@ export function CoinCount({ coins }: { coins: number }) {
           strokeLinecap="round"
         />
       </svg>
-      <strong aria-hidden="true">{coins}</strong>
+      <strong key={coins} className="coin-count__value" aria-hidden="true">
+        {coins}
+      </strong>
     </span>
   )
 }

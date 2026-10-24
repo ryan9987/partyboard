@@ -24,6 +24,7 @@ import {
   applyTurnStarted,
 } from "./hostState"
 import { usePieceAnimation } from "./usePieceAnimation"
+import type { TrailMotion } from "./trailMotion"
 
 export type HostConnectionState = "idle" | "connecting" | "connected" | "disconnected"
 
@@ -32,6 +33,7 @@ type LiveHostGame = {
   connectionState: HostConnectionState
   error: string | null
   movingPlayerId: string | null
+  motion: TrailMotion | null
   restart: () => void
   start: () => void
   continueGame: () => void
@@ -79,7 +81,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
   const movingPlayerIdRef = useRef<string | null>(null)
   const roomRequestPendingRef = useRef(false)
   const continuePendingRef = useRef<string | null>(null)
-  const { animatePath, cancel } = usePieceAnimation()
+  const { animatePath, cancel, motion } = usePieceAnimation()
 
   useEffect(() => {
     if (!socket) return
@@ -194,11 +196,16 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
       movingPlayerIdRef.current = event.playerId
       setMovingPlayerId(event.playerId)
       setState((current) => (current ? applyMovementStarted(current, event) : current))
-      void animatePath(event.path, event.millisecondsPerTile, (tileId) => {
-        setState((current) =>
-          current ? applyMovementStep(current, event.playerId, tileId) : current,
-        )
-      }).then((completed) => {
+      void animatePath(
+        event.path,
+        event.millisecondsPerTile,
+        (tileId) => {
+          setState((current) =>
+            current ? applyMovementStep(current, event.playerId, tileId) : current,
+          )
+        },
+        event,
+      ).then((completed) => {
         if (completed) {
           movingPlayerIdRef.current = null
           setMovingPlayerId(null)
@@ -304,6 +311,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
     connectionState,
     error,
     movingPlayerId,
+    motion,
     restart,
     continueGame,
     start,

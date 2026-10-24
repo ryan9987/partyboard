@@ -43,5 +43,8 @@ export const fixtureGameState: GameState = {
 }
 
 export function createFixtureState(): GameState {
-  return structuredClone(fixtureGameState)
+  return structuredClone({
+    ...fixtureGameState,
+    players: fixtureGameState.players.map((player) => ({ ...player, coins: 6, inventory: [] })),
+  })
 }

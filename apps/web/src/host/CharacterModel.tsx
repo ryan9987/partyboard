@@ -2,12 +2,15 @@ import type { Vec3 } from "@party-board/board"
 import type { PlayerColor } from "@party-board/protocol"
 import { RoundedBox } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
-import { useEffect, useMemo, useRef, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import * as THREE from "three"
 
 import { getCharacterOffset } from "./characterLayout"
 import { SwordModel } from "./SwordModel"
 import { createFabricTexture } from "./sceneryMaterials"
+import { createMotionSample, dampAngle, sampleTrailMotion, type TrailMotion } from "./trailMotion"
+
+const NO_OFFSET = [0, 0, 0] as const
 
 export type HairStyle = "short" | "bun" | "spikes" | "cap"
 
@@ -76,6 +79,7 @@ type CharacterModelProps = {
   moving: boolean
   playerIndex: number
   position: Vec3
+  motion?: TrailMotion | null
 }
 
 type LimbProps = {
@@ -264,6 +268,7 @@ export function CharacterModel({
   moving,
   playerIndex,
   position,
+  motion,
 }: CharacterModelProps) {
   const rootRef = useRef<THREE.Group>(null)
   const bodyRef = useRef<THREE.Group>(null)
@@ -298,44 +303,80 @@ export function CharacterModel({
     const offset = centered ? [0, 0, 0] : getCharacterOffset(playerIndex)
     return new THREE.Vector3(position[0] + offset[0]!, position[1] + 0.99, position[2] + offset[2]!)
   }, [centered, playerIndex, position])
+  // R3F must not reapply a new position prop on every tile/snapshot: that bypasses smoothing.
+  const [initialPosition] = useState(() => target.clone())
+  const sampleRef = useRef(createMotionSample())
+  const animation = useRef({
+    walk: 0,
+    gait: 0,
+    gaitOffset: 0,
+    motion: null as TrailMotion | null,
+    heading: facing,
+  })
 
   useFrame((state, delta) => {
     const root = rootRef.current
     const body = bodyRef.current
     if (!root || !body) return
 
-    const smoothing = 1 - Math.exp(-delta * 9)
-    root.position.lerp(target, smoothing)
-    root.rotation.y = THREE.MathUtils.damp(root.rotation.y, facing, 8, delta)
+    const anim = animation.current
+    const sample = sampleRef.current
+    let speed = moving ? 4 : 0
+    if (motion) {
+      sampleTrailMotion(motion, performance.now(), sample)
+      const offset = centered ? NO_OFFSET : getCharacterOffset(playerIndex)
+      root.position.set(
+        sample.position[0] + offset[0]!,
+        sample.position[1] + 0.99,
+        sample.position[2] + offset[2]!,
+      )
+      speed = Math.hypot(sample.velocity[0], sample.velocity[2])
+      if (speed > 0.03) anim.heading = Math.atan2(sample.velocity[0], sample.velocity[2])
+      if (anim.motion !== motion) {
+        anim.motion = motion
+        anim.gaitOffset = anim.gait
+      }
+      anim.gait = anim.gaitOffset + sample.distance * 4.6
+      root.scale.setScalar(1.02 * Math.max(0.001, sample.opacity))
+    } else {
+      if (root.position.distanceToSquared(target) > 64) root.position.copy(target)
+      else root.position.lerp(target, 1 - Math.exp(-delta * 12))
+      anim.motion = null
+      if (moving) anim.gait += delta * 9
+      else anim.heading = facing
+      root.scale.setScalar(THREE.MathUtils.damp(root.scale.x, 1.02, 12, delta))
+    }
+    anim.walk = THREE.MathUtils.damp(anim.walk, moving ? Math.min(1, speed / 4) : 0, 12, delta)
+    root.rotation.y = dampAngle(root.rotation.y, anim.heading, 12, delta)
 
     const time = state.clock.elapsedTime
-    const stride = moving ? Math.sin(time * 11) * 0.62 : Math.sin(time * 2.1) * 0.035
-    const bounce = moving ? Math.abs(Math.sin(time * 11)) * 0.15 : Math.sin(time * 2.1) * 0.025
-    body.position.y = bounce
-
-    if (leftArmRef.current) {
-      leftArmRef.current.rotation.x = stride
-      leftArmRef.current.rotation.z = 0
-    }
+    const stride =
+      Math.sin(anim.gait) * 0.48 * anim.walk + Math.sin(time * 2.1) * 0.025 * (1 - anim.walk)
+    const bounce =
+      (1 - Math.cos(anim.gait * 2)) * 0.022 * anim.walk +
+      Math.sin(time * 2.1) * 0.012 * (1 - anim.walk)
+    body.position.y = THREE.MathUtils.damp(body.position.y, bounce, 14, delta)
+    let leftX = stride
+    let leftZ = 0
+    let rightX = active && !moving ? -0.45 + Math.sin(time * 3) * 0.12 : -stride
+    let rightZ = 0
     if (rightArmRef.current) {
-      rightArmRef.current.rotation.x =
-        active && !moving ? -0.45 + Math.sin(time * 3) * 0.12 : -stride
       if (combat) {
-        const age = (clock() - combat.actionAt) / 1000
+        const age = Math.max(0, (clock() - combat.actionAt) / 1000)
         const swinging = combat.action === "swing" && age < 0.85
         const guarding = combat.action === "guard" && age < 0.7
-        rightArmRef.current.rotation.x = guarding
+        rightX = guarding
           ? -1.3
           : swinging
             ? -1.8 + Math.sin(Math.min(1, age / 0.65) * Math.PI) * 2.7
             : -0.4
-        rightArmRef.current.rotation.z = guarding ? -0.8 : swinging ? Math.sin(age * 7) * 0.65 : 0
-      } else rightArmRef.current.rotation.z = 0
+        rightZ = guarding ? -0.8 : swinging ? Math.sin(age * 7) * 0.65 : 0
+      }
     }
     if (pose && rightArmRef.current && leftArmRef.current) {
       const age = (clock() - actionAt) / 1000
       const gesture = age >= 0 && age < 0.75 ? Math.sin((age / 0.75) * Math.PI) : 0
-      rightArmRef.current.rotation.x =
+      rightX =
         pose === "carry"
           ? -1.2
           : pose === "fishing"
@@ -345,17 +386,61 @@ export function CharacterModel({
               : pose === "rhythm"
                 ? -0.75 - gesture * 0.85
                 : -0.3
-      leftArmRef.current.rotation.x =
+      leftX =
         pose === "archery" ? -1.4 : pose === "carry" ? -1.1 : pose === "rhythm" ? -0.75 : -0.25
-      rightArmRef.current.rotation.z = pose === "balance" ? 1.2 : pose === "carry" ? -0.25 : 0
-      leftArmRef.current.rotation.z = pose === "balance" ? -1.2 : pose === "carry" ? 0.25 : 0
+      rightZ = pose === "balance" ? 1.2 : pose === "carry" ? -0.25 : 0
+      leftZ = pose === "balance" ? -1.2 : pose === "carry" ? 0.25 : 0
     }
-    if (pose === "balance") body.rotation.z = lean * -0.3
-    else if (combat?.action === "hit" && clock() - combat.actionAt < 400)
-      body.rotation.z = Math.sin(time * 35) * 0.12
-    else body.rotation.z = 0
-    if (leftLegRef.current) leftLegRef.current.rotation.x = -stride * 0.8
-    if (rightLegRef.current) rightLegRef.current.rotation.x = stride * 0.8
+    const poseRate = combat ? 24 : 14
+    if (leftArmRef.current) {
+      leftArmRef.current.rotation.x = THREE.MathUtils.damp(
+        leftArmRef.current.rotation.x,
+        leftX,
+        poseRate,
+        delta,
+      )
+      leftArmRef.current.rotation.z = THREE.MathUtils.damp(
+        leftArmRef.current.rotation.z,
+        leftZ,
+        poseRate,
+        delta,
+      )
+    }
+    if (rightArmRef.current) {
+      rightArmRef.current.rotation.x = THREE.MathUtils.damp(
+        rightArmRef.current.rotation.x,
+        rightX,
+        poseRate,
+        delta,
+      )
+      rightArmRef.current.rotation.z = THREE.MathUtils.damp(
+        rightArmRef.current.rotation.z,
+        rightZ,
+        poseRate,
+        delta,
+      )
+    }
+    const bodyLean =
+      pose === "balance"
+        ? lean * -0.3
+        : combat?.action === "hit" && clock() - combat.actionAt < 400
+          ? Math.sin(time * 35) * 0.12
+          : 0
+    body.rotation.z = THREE.MathUtils.damp(body.rotation.z, bodyLean, 16, delta)
+    if (leftLegRef.current)
+      leftLegRef.current.rotation.x = THREE.MathUtils.damp(
+        leftLegRef.current.rotation.x,
+        -stride * 0.8,
+        20,
+        delta,
+      )
+    if (rightLegRef.current)
+      rightLegRef.current.rotation.x = THREE.MathUtils.damp(
+        rightLegRef.current.rotation.x,
+        stride * 0.8,
+        20,
+        delta,
+      )
 
     if (activeRingRef.current) {
       const pulse = 1 + Math.sin(time * 3.4) * 0.1
@@ -364,7 +449,7 @@ export function CharacterModel({
   })
 
   return (
-    <group ref={rootRef} position={target} scale={1.02}>
+    <group ref={rootRef} position={initialPosition} scale={1.02}>
       {active && (
         <group position={[0, -0.61, 0]}>
           <mesh ref={activeRingRef} rotation={[-Math.PI / 2, 0, 0]}>

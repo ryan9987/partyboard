@@ -46,6 +46,11 @@ Required validation:
 
 The host converts tile positions into rendered meshes. Board data should not prescribe materials, geometry, or animation. The host renders the route as an open curve, follows the active piece with the camera, and may interpolate between the positions returned by the movement path.
 
+`trailMotion.ts` samples a continuous Hermite path from each movement event using a monotonic
+clock, exact per-space arrival times, shared camera/die focus, and reused frame storage. The
+logical lap wrap uses a brief fade instead of drawing a flight across the open world.
+See `ANIMATION.md` for recovery, performance, and verification details.
+
 ## Future compatibility
 
 Branching paths may later replace `nextTileId` with multiple connections. Do not implement that abstraction now. A focused migration later will be cheaper than supporting unneeded route-selection states during the core milestone.

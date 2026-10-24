@@ -1,5 +1,14 @@
 # Current task board
 
+## Continuous animation and per-space travel rewards
+
+- [x] Replace tile-target jumps with a continuous, timed path and shared camera/die focus.
+- [x] Blend walk/idle/action poses and shortest-angle turns; preserve instanced scenery.
+- [x] Reuse frame scratch buffers, ease passes/casts, and soften scene/wrap transitions.
+- [x] Award exactly one server-owned coin per forward space, including markets and Boots.
+- [x] Test movement continuity/frame independence, caps, duplicates, restart and no penalty rewards.
+- [ ] Verify presentation-laptop FPS and physical-phone motion on the venue network.
+
 ## Relaxed pacing and economy visibility
 
 - [x] Remove default shop and connected-player roll deadlines; keep disconnect recovery.

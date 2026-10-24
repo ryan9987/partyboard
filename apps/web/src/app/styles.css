@@ -83,6 +83,39 @@ a {
   position: absolute !important;
   inset: 0;
 }
+.world-reveal,
+.world-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: #294638;
+  opacity: 0;
+}
+.world-reveal {
+  animation: world-reveal 350ms ease-out both;
+}
+@keyframes world-reveal {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.coin-count__value {
+  animation: coin-arrive 160ms ease-out;
+}
+@keyframes coin-arrive {
+  from {
+    opacity: 0.4;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .topbar {
   position: absolute;

@@ -5,6 +5,7 @@ import * as THREE from "three"
 import { CharacterModel } from "./CharacterModel"
 import { AcornModel } from "./GameEquipment"
 import { ArenaEnvironment } from "./MinigameArena"
+import { smoothStep } from "./trailMotion"
 
 function PassingAcorn({
   holderId,
@@ -32,8 +33,8 @@ function PassingAcorn({
       previous.current = holderId
     }
     progress.current = Math.min(1, progress.current + delta / 0.28)
-    group.position.lerpVectors(origin.current, target.current, progress.current)
-    group.position.y += Math.sin(progress.current * Math.PI) * 0.5
+    group.position.lerpVectors(origin.current, target.current, smoothStep(progress.current))
+    group.position.y += Math.sin(progress.current * Math.PI) ** 2 * 0.5
     group.rotation.y += delta * (progress.current < 1 ? 6 : 0.3)
   })
   return (

@@ -4,6 +4,19 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Smooth-travel/per-space-reward integration requested by Ryan, including main push. Continuous
+  render-loop path sampling, rounded bends, exact timed arrivals, distance-based gait, blended
+  limb poses/turns, shared camera/die focus and soft arena/wrap reveals. Instanced assets retained;
+  scratch vectors/buffers reused. Travel pace is 420 ms per space; no new dependencies/physics.
+- Server awards one coin per actual forward crossing, including shops, Boots and Start. No extra
+  landing bonus or coins for freezes, penalties, duplicates or stale movement after restart.
+  Browser rehearsal: first three spaces 6→9 coins; Boots purchase 9→5; five-plus-two-space roll
+  to space 10 yields 12 coins. Inspected successive travel frames; fresh console errors empty.
+- Automated coverage includes exact arrivals, continuity, 30/60/120 Hz equivalence, bounded lap
+  wrap, crossing ticks, shop continuation, Boots, duplicates, restart, penalties/cap and real sockets.
+  Final `pnpm check` passes: 114 Vitest + 10 motion tests, types, lint, format and production build.
+  Presentation-laptop FPS, physical phones and the eventual Render rollout still need verification.
+
 - Integrating Jack's `feat/visual-overhaul` and latest server-lane verification notes at Ryan's
   request, preserving relaxed pacing and visible economy. One documentation-only conflict was
   resolved by retaining both of Jack's status sections. Full check passes: 100 Vitest + 10 motion
