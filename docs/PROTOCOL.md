@@ -51,6 +51,12 @@ type JoinRoomRequest = {
 }
 ```
 
+### `room.host.resume`
+
+Sent by a returning host with its private `roomCode` and `hostToken`. A valid request attaches the
+new transport to the existing room and returns the current `room.snapshot`; it never creates or
+restarts a room.
+
 ### `player.ready`
 
 Marks a joined controller as ready after it reaches the lobby.
@@ -152,5 +158,6 @@ type GameErrorEvent = {
 - Normalize room codes to uppercase.
 - Validate colors against an allowed list.
 - Treat session and host tokens as private values.
+- Require the host token for host resume, start, and restart commands.
 - Reject unknown event payload fields where practical.
 - Never trust a client-provided player ID, dice value, tile ID, or turn number as authority.

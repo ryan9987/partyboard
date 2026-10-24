@@ -53,7 +53,7 @@ The controller owns:
 10. The host animates the path while the server schedules the next phase.
 11. The server advances the turn and broadcasts a fresh snapshot.
 
-The host does not send `animation.finished` to control the game. Known server durations prevent a lost host message from freezing the room. A reconnecting host renders the latest authoritative snapshot and may snap to the current position.
+The host does not send `animation.finished` to control the game. Known server durations prevent a lost host message from freezing the room. The browser keeps the room code and private host token in session storage. A reconnecting host sends `room.host.resume`, receives the latest authoritative snapshot, and does not create or reset a room.
 
 ## Timing defaults
 

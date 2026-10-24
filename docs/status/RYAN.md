@@ -4,9 +4,8 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
-- Ryan's host/board foundation, visual-polish pass, Phase 2 live host adapter, and Phase 3 preflight
-  foundation are implemented on `feat/host-board`.
-- Waiting for Jack's server branch to run the first real host/controller integration checkpoint.
+- Jack's server/controller/motion branch is integrated with Ryan's live 3D host.
+- The first real host/controller integration checkpoint and host-refresh recovery test pass.
 
 ## Completed
 
@@ -38,21 +37,23 @@ Ryan or Ryan's agent owns this file.
   joined/ready controller counts. It can open automatically with `/host?preflight=1`.
 - Added a platform-neutral deployment and release-proof playbook.
 - CI, lint, formatting, tests, type checking, and production build configured.
+- Added authenticated host resume without room creation or state reset.
+- Configured Vite to read root environment files and expanded formatting coverage to every merged
+  application/package lane.
 
 ## Blockers and handoffs
 
-- Live room creation, host authentication, and authoritative game events depend on Jack's server lane.
-- The controller route deliberately remains a placeholder until Jack's controller is integrated.
-- Host refresh/reconnection needs a server-side resume contract; the request is documented in
-  `docs/INTEGRATION_NOTES.md`.
+- Physical iPhone/Android motion and intended demo-network testing remain outstanding.
 
 ## Verification
 
 - `pnpm check` passes.
-- 16 unit tests pass across board, protocol, host event-projection, and runtime-config suites.
+- 37 Vitest checks and 10 motion tests pass across the integrated workspace.
 - Production Vite build succeeds with the host isolated into a lazy-loaded chunk.
 - Browser-tested the detailed lobby world, character placement, a six-space dice/movement turn,
   turn advancement, and updated player positions at a 944-by-804 viewport.
 - No browser console errors were observed.
 - Browser-tested the live-mode disconnected state with a configured unavailable server: the host
   displays a clear error, keeps the board rendered, and disables Start.
+- Browser-tested a real controller join, server-generated roll, four-tile movement, automatic turn
+  advancement, and host-page refresh with the same authoritative room and position.

@@ -16,6 +16,7 @@ import type { GameState, PublicPlayer } from "./state"
 
 export const CLIENT_EVENTS = {
   ROOM_CREATE: "room.create",
+  HOST_RESUME: "room.host.resume",
   ROOM_JOIN: "room.join",
   PLAYER_READY: "player.ready",
   GAME_START: "game.start",
@@ -39,6 +40,7 @@ export const SERVER_EVENTS = {
 
 export interface ClientToServerEvents {
   "room.create": (payload: RoomCreateRequest) => void
+  "room.host.resume": (payload: HostCommand) => void
   "room.join": (payload: JoinRoomRequest) => void
   "player.ready": (payload: PlayerReadyRequest) => void
   "game.start": (payload: HostCommand) => void

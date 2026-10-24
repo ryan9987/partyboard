@@ -2,12 +2,14 @@ import {
   diceRolledEventSchema,
   gameErrorEventSchema,
   gameStateSchema,
+  hostCommandSchema,
   playerMovingEventSchema,
   publicPlayerSchema,
   roomCreatedEventSchema,
   turnEndedEventSchema,
   turnStartedEventSchema,
   type GameState,
+  type HostCommand,
 } from "@party-board/protocol"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -34,6 +36,27 @@ type LiveHostGame = {
   state: GameState | null
 }
 
+const HOST_SESSION_KEY = "party-board.host-session"
+
+function loadHostCredentials(): HostCommand | null {
+  try {
+    const stored = window.sessionStorage.getItem(HOST_SESSION_KEY)
+    if (!stored) return null
+    const parsed = hostCommandSchema.safeParse(JSON.parse(stored))
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
+}
+
+function storeHostCredentials(credentials: HostCommand | null): void {
+  if (credentials) {
+    window.sessionStorage.setItem(HOST_SESSION_KEY, JSON.stringify(credentials))
+  } else {
+    window.sessionStorage.removeItem(HOST_SESSION_KEY)
+  }
+}
+
 function describeInvalidEvent(eventName: string): string {
   return `The server sent an invalid ${eventName} event.`
 }
@@ -44,23 +67,29 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
     [enabled, serverUrl],
   )
   const [state, setState] = useState<GameState | null>(null)
-  const [hostToken, setHostToken] = useState<string | null>(null)
+  const [hostCredentials, setHostCredentials] = useState<HostCommand | null>(loadHostCredentials)
   const [movingPlayerId, setMovingPlayerId] = useState<string | null>(null)
   const [connectionState, setConnectionState] = useState<HostConnectionState>(
     socket ? "connecting" : "idle",
   )
   const [error, setError] = useState<string | null>(null)
-  const hasCreatedRoomRef = useRef(false)
+  const hostCredentialsRef = useRef(hostCredentials)
+  const movingPlayerIdRef = useRef<string | null>(null)
+  const roomRequestPendingRef = useRef(false)
   const { animatePath, cancel } = usePieceAnimation()
 
   useEffect(() => {
     if (!socket) return
-    hasCreatedRoomRef.current = false
+    roomRequestPendingRef.current = false
 
     const handleConnect = () => {
       setConnectionState("connected")
       setError(null)
-      if (!hasCreatedRoomRef.current) {
+      const credentials = hostCredentialsRef.current
+      if (credentials) {
+        socket.emit("room.host.resume", credentials)
+      } else if (!roomRequestPendingRef.current) {
+        roomRequestPendingRef.current = true
         socket.emit("room.create", {})
       }
     }
@@ -76,8 +105,14 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
         return
       }
 
-      hasCreatedRoomRef.current = true
-      setHostToken(result.data.hostToken)
+      roomRequestPendingRef.current = false
+      const credentials = {
+        hostToken: result.data.hostToken,
+        roomCode: result.data.roomCode,
+      }
+      hostCredentialsRef.current = credentials
+      setHostCredentials(credentials)
+      storeHostCredentials(credentials)
       setState(result.data.state)
     }
     const handleSnapshot = (payload: unknown) => {
@@ -87,11 +122,23 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
         return
       }
 
+      const movingId = movingPlayerIdRef.current
       if (["LOBBY", "AWAITING_ROLL", "TURN_END", "FINISHED"].includes(result.data.phase)) {
         cancel()
+        movingPlayerIdRef.current = null
         setMovingPlayerId(null)
       }
-      setState(result.data)
+      setState((current) => {
+        if (!current || result.data.phase !== "MOVING" || !movingId) return result.data
+        const displayedPlayer = current.players.find((player) => player.id === movingId)
+        if (!displayedPlayer) return result.data
+        return {
+          ...result.data,
+          players: result.data.players.map((player) =>
+            player.id === movingId ? { ...player, tileId: displayedPlayer.tileId } : player,
+          ),
+        }
+      })
     }
     const handleGameStarted = (payload: unknown) => {
       const result = gameStateSchema.safeParse(payload)
@@ -125,6 +172,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
       }
 
       const event = result.data
+      movingPlayerIdRef.current = event.playerId
       setMovingPlayerId(event.playerId)
       setState((current) => (current ? applyMovementStarted(current, event) : current))
       void animatePath(event.path, event.millisecondsPerTile, (tileId) => {
@@ -132,7 +180,10 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
           current ? applyMovementStep(current, event.playerId, tileId) : current,
         )
       }).then((completed) => {
-        if (completed) setMovingPlayerId(null)
+        if (completed) {
+          movingPlayerIdRef.current = null
+          setMovingPlayerId(null)
+        }
       })
     }
     const handleTurnEnded = (payload: unknown) => {
@@ -143,6 +194,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
       }
 
       cancel()
+      movingPlayerIdRef.current = null
       setMovingPlayerId(null)
       setState((current) => (current ? applyTurnEnded(current, result.data) : current))
     }
@@ -154,12 +206,24 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
       }
 
       cancel()
+      movingPlayerIdRef.current = null
       setMovingPlayerId(null)
       setState((current) => (current ? applyTurnStarted(current, result.data) : current))
     }
     const handleGameError = (payload: unknown) => {
       const result = gameErrorEventSchema.safeParse(payload)
       setError(result.success ? result.data.message : describeInvalidEvent("game.error"))
+      if (
+        result.success &&
+        hostCredentialsRef.current &&
+        ["ROOM_NOT_FOUND", "UNAUTHORIZED"].includes(result.data.code)
+      ) {
+        hostCredentialsRef.current = null
+        setHostCredentials(null)
+        storeHostCredentials(null)
+        roomRequestPendingRef.current = true
+        socket.emit("room.create", {})
+      }
     }
 
     socket.on("connect", handleConnect)
@@ -185,16 +249,17 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
   }, [animatePath, cancel, socket])
 
   const start = useCallback(() => {
-    if (!socket || !state || !hostToken) return
-    socket.emit("game.start", { hostToken, roomCode: state.roomCode })
-  }, [hostToken, socket, state])
+    if (!socket || !state || !hostCredentials) return
+    socket.emit("game.start", hostCredentials)
+  }, [hostCredentials, socket, state])
 
   const restart = useCallback(() => {
-    if (!socket || !state || !hostToken) return
+    if (!socket || !state || !hostCredentials) return
     cancel()
+    movingPlayerIdRef.current = null
     setMovingPlayerId(null)
-    socket.emit("game.restart", { hostToken, roomCode: state.roomCode })
-  }, [cancel, hostToken, socket, state])
+    socket.emit("game.restart", hostCredentials)
+  }, [cancel, hostCredentials, socket, state])
 
   return {
     busy: state ? ["ROLLING", "MOVING", "TURN_END"].includes(state.phase) : true,

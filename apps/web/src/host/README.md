@@ -28,3 +28,9 @@ The host selects its mode from `VITE_SOCKET_URL`. With no URL it runs the determ
 preview. With a URL it creates a live room, validates every received payload, renders snapshots and
 incremental player updates, animates server-supplied dice and movement events, and sends only
 authenticated Start/Restart commands. It never chooses a live dice value or movement path.
+
+The live host keeps its room code and private host token in tab-scoped session storage. On a socket
+reconnect or page refresh it authenticates with `room.host.resume` and renders the server snapshot;
+if the in-memory room no longer exists, it clears the stale credentials and creates a new room.
+During `MOVING`, the display preserves the animated piece position even though recovery snapshots
+already contain the destination, then accepts the final authoritative position at turn end.

@@ -5,14 +5,14 @@
   "type": "module",
   "packageManager": "pnpm@10.30.3",
   "scripts": {
-    "dev": "pnpm --filter @party-board/web dev",
+    "dev": "pnpm -r --parallel --filter @party-board/web --filter @party-board/server dev",
     "build": "pnpm -r --if-present build",
-    "test": "vitest run",
+    "test": "vitest run && node --test packages/motion/test/motion.test.mjs",
     "test:watch": "vitest",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
-    "format": "prettier --write package.json tsconfig.base.json vitest.config.ts eslint.config.js \"apps/web/*.{json,ts,html}\" apps/web/src/main.tsx apps/web/src/app apps/web/src/host apps/web/src/networking packages/board packages/protocol tests",
-    "format:check": "prettier --check package.json tsconfig.base.json vitest.config.ts eslint.config.js \"apps/web/*.{json,ts,html}\" apps/web/src/main.tsx apps/web/src/app apps/web/src/host apps/web/src/networking packages/board packages/protocol tests",
+    "format": "prettier --write package.json tsconfig.base.json vitest.config.ts eslint.config.js apps/server \"apps/web/*.{json,ts,html}\" apps/web/src/main.tsx apps/web/src/app apps/web/src/controller apps/web/src/host apps/web/src/networking packages/board packages/motion packages/protocol tests",
+    "format:check": "prettier --check package.json tsconfig.base.json vitest.config.ts eslint.config.js apps/server \"apps/web/*.{json,ts,html}\" apps/web/src/main.tsx apps/web/src/app apps/web/src/controller apps/web/src/host apps/web/src/networking packages/board packages/motion packages/protocol tests",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build"
   },
   "devDependencies": {
