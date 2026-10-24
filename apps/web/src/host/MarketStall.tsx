@@ -174,8 +174,12 @@ function Stall({ position }: { position: readonly [number, number, number] }) {
         radius={0.03}
         smoothness={3}
       >
-        <meshStandardMaterial map={sign} roughness={0.9} />
+        <meshStandardMaterial color="#eee2c1" roughness={0.9} />
       </RoundedBox>
+      <mesh position={[0, 0.37, 0.606]}>
+        <planeGeometry args={[0.64, 0.2]} />
+        <meshBasicMaterial map={sign} />
+      </mesh>
       {[-0.85, 0.85].map((x) => (
         <mesh key={`rail-${x}`} castShadow position={[x, 0.34, 0.58]}>
           <boxGeometry args={[0.025, 0.58, 0.025]} />
@@ -257,11 +261,15 @@ function Stall({ position }: { position: readonly [number, number, number] }) {
           <meshStandardMaterial color="#cead55" metalness={0.65} roughness={0.4} />
         </mesh>
       ))}
-      <mesh position={[0, 1.62, -0.43]}>
+      <mesh position={[0, 2.25, -0.15]}>
         <boxGeometry args={[1.25, 0.4, 0.04]} />
-        <meshStandardMaterial map={sign} roughness={0.9} />
+        <meshStandardMaterial color="#81633f" roughness={0.9} />
       </mesh>
-      <mesh position={[0.86, 1.62, -0.39]} rotation={[0, 0, Math.PI / 4]}>
+      <mesh position={[0, 2.25, -0.124]}>
+        <planeGeometry args={[1.2, 0.375]} />
+        <meshBasicMaterial map={sign} />
+      </mesh>
+      <mesh position={[0.86, 2.25, -0.12]} rotation={[0, 0, Math.PI / 4]}>
         <boxGeometry args={[0.14, 0.14, 0.03]} />
         <meshStandardMaterial color="#b18c43" metalness={0.4} />
       </mesh>
