@@ -86,3 +86,8 @@ Jack or Jack's agent owns this file.
 - Verification: server type checking, lint, formatting, and a full real demo-runner build/start/public reachability check. The preceding integrated-main checks passed all 69 tests.
 - A public WSS rehearsal with two controller clients completed exactly two rolls, one market stop/purchase, Hot Potato, one successful pass, result/payouts (15 and 5 coins), and return to board turn 3. This random rehearsal did not trigger a duel; automated duel coverage remains passing.
 - Physical iPhone/Android sensitivity, four-phone venue testing, and release-proof recording/tag remain outstanding. A tutorial or practice screen was discussed as a possible next feature, not implemented without a request.
+
+## Main refresh — 2026-10-24
+
+- Fast-forwarded to `origin/main` at `9e51c85`: additional round minigames, shared clock timing, phone controls, and market presentation updates. No conflicts or implementation changes were needed.
+- Frozen install, type checking, lint, formatting, 78 Vitest tests plus 10 motion tests, and the isolated production build pass. The live demo was not redeployed or reset by this pull.
