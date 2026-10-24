@@ -35,7 +35,7 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
   const focusTile =
     tileMap.get(activePlayer?.tileId ?? defaultBoard.startingTileId) ?? defaultBoard.tiles[0]!
-  const dicePosition = [focusTile.position[0] + 3.15, 2.15, focusTile.position[2] - 0.1] as const
+  const dicePosition = [focusTile.position[0] + 4.2, 4.8, focusTile.position[2] - 1.4] as const
   const pathCurve = useMemo(
     () =>
       new THREE.CatmullRomCurve3(

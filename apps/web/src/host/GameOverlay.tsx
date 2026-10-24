@@ -19,24 +19,30 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
 
   return (
-    <aside className="host-panel" aria-label="Game status">
-      <p className="eyebrow">Turn {state.turnNumber}</p>
-      <h2>The Winding Trail</h2>
-      <span className="phase-badge">{state.phase.replaceAll("_", " ")}</span>
-
-      <div className="turn-callout">
-        <span className="muted">Current player</span>
-        <span
-          className="turn-callout__name"
-          style={{ color: activePlayer ? COLOR_VALUES[activePlayer.color] : undefined }}
-        >
-          {activePlayer?.name ?? "Waiting"}
-        </span>
-        <span className="muted">{activePlayer?.tileId ?? "No active tile"}</span>
+    <aside className="host-panel host-panel--game" aria-label="Game status">
+      <div className="game-heading">
+        <div>
+          <p className="eyebrow">Turn {state.turnNumber}</p>
+          <h2>The Winding Trail</h2>
+        </div>
+        <span className="phase-badge">{state.phase.replaceAll("_", " ")}</span>
       </div>
 
-      <div className="dice-result" aria-label="Last dice result">
-        {state.lastRoll ?? "–"}
+      <div className="turn-summary">
+        <div>
+          <span className="summary-label">Current player</span>
+          <strong
+            className="turn-summary__player"
+            style={{ color: activePlayer ? COLOR_VALUES[activePlayer.color] : undefined }}
+          >
+            {activePlayer?.name ?? "Waiting"}
+          </strong>
+          <span className="summary-detail">{activePlayer?.tileId ?? "No active tile"}</span>
+        </div>
+        <div className="roll-summary" aria-label="Last dice result">
+          <span className="summary-label">Last roll</span>
+          <strong>{state.lastRoll ?? "–"}</strong>
+        </div>
       </div>
 
       <div className="player-list">
@@ -59,12 +65,6 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
           </div>
         ))}
       </div>
-
-      <p className="technical-note">
-        {live
-          ? "The active phone requests each roll. The server supplies the authoritative value, movement path, and next turn."
-          : "Preview Roll is a fixture-only test control. In the integrated game, the phone requests a roll and Jack's server supplies the authoritative value and path."}
-      </p>
 
       <div className="button-row">
         <button

@@ -118,7 +118,7 @@ export function DiceView({ position = [0, 1.85, 0], value, rolling }: DiceViewPr
   })
 
   return (
-    <group ref={floatRef} position={position}>
+    <group ref={floatRef} position={position} scale={0.52}>
       <group ref={dieRef}>
         <RoundedBox args={[1.34, 1.34, 1.34]} castShadow radius={0.19} smoothness={8}>
           <meshPhysicalMaterial

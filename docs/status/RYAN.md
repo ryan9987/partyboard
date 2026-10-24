@@ -68,3 +68,8 @@ Ryan or Ryan's agent owns this file.
   mushrooms. Browser-tested a live six-space roll and camera move from space 12 to space 18.
 - Recorded automated and desktop-browser evidence directly in the demo checklist. Physical phone,
   venue-network, HTTPS deployment, recording, and release-tag proof remain intentionally open.
+- Replaced the oversized host dashboard with a compact flat broadcast UI: no gradients, smaller
+  typography, solid controls, a concise turn summary, and no technical explainer card.
+- Reduced the 3D die to roughly half scale and moved it high beside the camera framing so it remains
+  readable without covering the character or route. Browser-checked both lobby and active-game
+  layouts with no console errors.

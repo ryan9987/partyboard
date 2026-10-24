@@ -152,7 +152,8 @@ export default function HostPage() {
         </div>
         <div className="topbar__actions">
           <span className="fixture-badge">
-            {liveMode ? `Live host · ${live.connectionState}` : "Ryan lane · fixture preview"}
+            <span className="connection-dot" />
+            {liveMode ? live.connectionState : "Preview"}
           </span>
           <DemoPreflight
             config={runtimeConfig}
