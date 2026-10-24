@@ -74,6 +74,9 @@ Host-only. Returns every player to the starting tile while preserving the room a
 
 ### `game.continue`
 
+Optional operator mode only (`manualStageAdvance: true`). Production round stages auto-advance
+after the server's countdown/result deadlines; no controller/host command is needed.
+
 Host-only, connected/attached host required. Payload is `{ roomCode, hostToken, continueId }`.
 The UUID must equal the current `waitingForHost.id`; it consumes exactly one paused intro/result.
 Stale, duplicate and controller commands cannot advance another screen. See `PARTY_ECONOMY.md`
@@ -160,6 +163,13 @@ type GameErrorEvent = {
   requestId?: string
 }
 ```
+
+`UNAUTHORIZED` on an action does not invalidate a saved player session. Reattach at most once
+per two seconds. `SESSION_REPLACED` means the session was opened on another connection: stop
+the old tab's input without clearing its token or automatically stealing back the connection.
+`ROOM_NOT_FOUND`/`SESSION_NOT_FOUND` invalidate obsolete room/session credentials. Rooms do not
+survive a server-process restart. Transient activity disconnects have an eight-second grace;
+authenticated reattachment resets mini-game sequence counters, not game scores or cooldowns.
 
 ## Validation rules
 

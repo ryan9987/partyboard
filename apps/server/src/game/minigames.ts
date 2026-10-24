@@ -188,7 +188,17 @@ export class MinigameRound {
     })
     game.revision++
     const survival = game.kind === "balance" || game.kind === "dodge"
-    return now >= game.endsAt || (survival && game.players.every((player) => !player.alive))
+    // Let the final arrow land, then announce the winner instead of waiting out an idle clock.
+    const arrowsFinished =
+      game.kind === "archery" &&
+      game.players.every(
+        (player) => !player.alive || (player.attempts >= 3 && now - player.actionAt >= 650),
+      )
+    return (
+      now >= game.endsAt ||
+      (survival && game.players.every((player) => !player.alive)) ||
+      arrowsFinished
+    )
   }
   disconnect(id: string): void {
     this.forfeited.add(id)
@@ -197,6 +207,13 @@ export class MinigameRound {
       player.alive = false
       player.status = "out"
     }
+  }
+  /** A refreshed controller restarts its input sequence, not its score, arrows or eligibility. */
+  reconnect(id: string): void {
+    const runtime = this.runtime.get(id)
+    if (runtime) runtime.sequence = -1
+    const player = this.state.players.find((entry) => entry.playerId === id)
+    if (player) player.axis = 0
   }
   finish(now: number, resultMs: number): void {
     const game = this.state

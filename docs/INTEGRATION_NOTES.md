@@ -1,5 +1,14 @@
 # Integration notes
 
+## 2026-10-24 — Ryan-approved seamless rounds and controller recovery
+
+Ryan explicitly requested server/controller recovery fixes, automatic three-second mini-game
+countdowns/results, clearer Archery framing, consistent power-up symbols/colors, a minimal phone
+controller and a verified push to main. This authorizes corresponding cross-lane integration and
+tests. Shops/connected board turns remain untimed. Safari cannot reliably suppress iOS Shake to
+Undo; dismiss text input focus after joining and retain motion/touch alternatives. No database,
+dependency or unrelated Jack-owned work is included.
+
 ## 2026-10-24 — Ryan-approved smooth animation and per-space coins
 
 Ryan requested smoother travel/animation while preserving performance, one coin for every space

@@ -72,6 +72,14 @@ it("judges three archery arrows, enforces cooldown and rejects duplicate/stale i
   expect(input(game, "a", 5000)).toBe(false)
 })
 
+it("finishes Archery once everyone's arrows land, without an unnecessary idle wait", () => {
+  const game = round("archery")
+  for (const time of [1000, 2000, 3000])
+    for (const id of ["a", "b", "c", "d"]) input(game, id, time)
+  expect(game.tick(start + 100 + 3649)).toBe(false)
+  expect(game.tick(start + 100 + 3650)).toBe(true)
+})
+
 it("requires a cast, waits for a bite, lands a fish once and animates a new cast separately", () => {
   const game = round("fishing")
   input(game, "a", 1000)

@@ -46,6 +46,7 @@ export class ControllerClient {
   private minigameSequence = 0
   private lastPartyInputAt = 0
   private lastDuelActionAt = 0
+  private lastReattachAt = -Infinity
   private view: ControllerView = {
     connection: "connecting",
     state: null,
@@ -190,7 +191,21 @@ export class ControllerClient {
         this.invalidMessage()
         return
       }
-      if (["ROOM_NOT_FOUND", "SESSION_NOT_FOUND", "UNAUTHORIZED"].includes(parsed.data.code)) {
+      if (parsed.data.code === "SESSION_REPLACED") {
+        // Do not fight another tab for the same session or erase its saved credentials.
+        this.socket.disconnect()
+        this.update({ joining: false, error: parsed.data.message })
+        return
+      }
+      if (parsed.data.code === "UNAUTHORIZED" && this.session?.existingSessionId) {
+        // A stale action is not evidence that our persistent player identity disappeared.
+        if (!this.view.joining && Date.now() - this.lastReattachAt > 2000) {
+          this.lastReattachAt = Date.now()
+          this.join(this.session)
+          return
+        }
+      }
+      if (["ROOM_NOT_FOUND", "SESSION_NOT_FOUND"].includes(parsed.data.code)) {
         if (this.session) {
           try {
             this.storage.setItem(`party-board:controller:${this.session.roomCode}`, "")
@@ -210,7 +225,13 @@ export class ControllerClient {
       if (parsed.data.requestId === this.pendingShop?.requestId) this.pendingShop = null
       if (parsed.data.requestId === this.view.pendingItem?.requestId)
         this.update({ pendingItem: null })
-      this.update({ joining: false, error: parsed.data.message })
+      this.update({
+        joining: false,
+        error:
+          parsed.data.code === "ROOM_NOT_FOUND"
+            ? "This room is no longer on the server. It may have restarted. Ask the host to create a new room."
+            : parsed.data.message,
+      })
       // No retryable error contract exists yet. Keep submitted turns locked.
     }
     this.socket.on("connect", connect)
@@ -320,6 +341,7 @@ export class ControllerClient {
     const { state, playerId, connection } = this.view
     if (
       connection !== "connected" ||
+      this.view.joining ||
       state?.phase !== "SHOP" ||
       state.shop?.playerId !== playerId ||
       !this.session?.existingSessionId ||
@@ -384,6 +406,7 @@ export class ControllerClient {
     const { state, playerId, connection } = this.view
     return (
       connection === "connected" &&
+      !this.view.joining &&
       state?.phase === "POTATO" &&
       state.potato?.stage === "active" &&
       state.potato.holderId === playerId
@@ -395,6 +418,7 @@ export class ControllerClient {
     const { state, playerId, connection } = this.view
     if (
       connection !== "connected" ||
+      this.view.joining ||
       state?.phase !== "MINIGAME" ||
       state.minigame?.stage !== "active" ||
       !state.minigame.players.some((entry) => entry.playerId === playerId && entry.alive) ||

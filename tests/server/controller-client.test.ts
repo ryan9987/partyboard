@@ -309,6 +309,35 @@ it("returns to the join screen when the server loses its in-memory room", () => 
   expect(storage.get(`party-board:controller:${room.roomCode}`)).toBe("")
 })
 
+it("reattaches after an unauthorized action without erasing the saved player session", () => {
+  const room = host()
+  const { client, socket } = controller(room.roomCode)
+  client.join({ roomCode: room.roomCode, name: "Ryan", color: "coral" })
+  start(room)
+  const saved = storage.get(`party-board:controller:${room.roomCode}`)
+  const id = client.getSnapshot().playerId
+  socket.receive("game.error", { code: "UNAUTHORIZED", message: "Rejoin first" })
+  expect(client.getSnapshot()).toMatchObject({ playerId: id, joining: false, error: null })
+  expect(storage.get(`party-board:controller:${room.roomCode}`)).toBe(saved)
+  expect(client.requestRoll()).toBe(true)
+})
+
+it("hands a session to a replacement tab without kicking it or creating a rejoin loop", () => {
+  const room = host()
+  const original = controller(room.roomCode)
+  original.client.join({ roomCode: room.roomCode, name: "Ryan", color: "coral" })
+  start(room)
+  const saved = storage.get(`party-board:controller:${room.roomCode}`)
+  const id = original.client.getSnapshot().playerId
+  const replacement = controller(room.roomCode)
+  expect(replacement.client.getSnapshot().playerId).toBe(id)
+  expect(original.client.getSnapshot().connection).toBe("disconnected")
+  expect(original.client.getSnapshot().error).toContain("another tab")
+  expect(storage.get(`party-board:controller:${room.roomCode}`)).toBe(saved)
+  expect(original.client.requestRoll()).toBe(false)
+  expect(replacement.client.requestRoll()).toBe(true)
+})
+
 it("creates valid unique request IDs when randomUUID is unavailable on local HTTP", () => {
   const random = crypto.randomUUID
   Object.defineProperty(crypto, "randomUUID", { configurable: true, value: undefined })
@@ -352,7 +381,7 @@ it("enables duel input only for participants, shares a cooldown, and disables bo
   first.client.requestRoll()
   vi.advanceTimersByTime(1700)
   second.client.requestRoll()
-  vi.advanceTimersByTime(1200 + 2400)
+  vi.advanceTimersByTime(1200 + 3000)
   expect(first.client.canDuel()).toBe(true)
   expect(second.client.canDuel()).toBe(true)
   expect(first.client.canRoll()).toBe(false)

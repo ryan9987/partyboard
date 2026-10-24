@@ -49,7 +49,11 @@ const outputSchemas = {
 type EventName = keyof ServerToClientEvents
 export type Deliver = (connectionId: string, event: EventName, payload: unknown) => void
 
-type Session = { playerId: string; connectionId: string | null }
+type Session = {
+  playerId: string
+  connectionId: string | null
+  recoveryTimer?: ReturnType<typeof setTimeout>
+}
 type Room = {
   state: GameState
   hostToken: string
@@ -78,6 +82,7 @@ export type GameServerOptions = {
   turnEndMs?: number
   rollTimeoutMs?: number
   disconnectTimeoutMs?: number
+  disconnectGraceMs?: number
   duelIntroMs?: number
   duelDurationMs?: number
   duelResultMs?: number
@@ -88,7 +93,7 @@ export type GameServerOptions = {
   minigameIntroMs?: number
   minigameDurationMs?: number
   minigameResultMs?: number
-  /** Automated/rehearsal runners can opt out; live games wait on rules and results. */
+  /** Optional operator mode; normal games automatically count down and show results. */
   manualStageAdvance?: boolean
   roundGame?: MinigameKind | "potato" | ((round: number) => MinigameKind | "potato")
 }
@@ -106,6 +111,7 @@ class CommandError extends Error {
 export class GameServer {
   private readonly rooms = new Map<string, Room>()
   private readonly bindings = new Map<string, Binding>()
+  private readonly replacedConnections = new Set<string>()
   private readonly dice: () => number
   private readonly timing: {
     rollDurationMs: number
@@ -126,6 +132,11 @@ export class GameServer {
   }
 
   constructor(private readonly options: GameServerOptions) {
+    if (
+      options.disconnectGraceMs !== undefined &&
+      (!Number.isInteger(options.disconnectGraceMs) || options.disconnectGraceMs < 0)
+    )
+      throw new RangeError("Disconnect grace must be nonnegative integer milliseconds")
     this.dice = options.dice ?? (() => randomInt(1, 7))
     this.timing = {
       rollDurationMs: options.rollDurationMs ?? 900,
@@ -133,14 +144,14 @@ export class GameServer {
       turnEndMs: options.turnEndMs ?? 500,
       rollTimeoutMs: options.rollTimeoutMs ?? 0,
       disconnectTimeoutMs: options.disconnectTimeoutMs ?? 60_000,
-      duelIntroMs: options.duelIntroMs ?? 2400,
+      duelIntroMs: options.duelIntroMs ?? 3000,
       duelDurationMs: options.duelDurationMs ?? 25_000,
       duelResultMs: options.duelResultMs ?? 3200,
       shopDurationMs: options.shopDurationMs ?? 0,
-      potatoIntroMs: options.potatoIntroMs ?? 2200,
+      potatoIntroMs: options.potatoIntroMs ?? 3000,
       potatoFuseMs: options.potatoFuseMs ?? 5000,
       potatoResultMs: options.potatoResultMs ?? 3000,
-      minigameIntroMs: options.minigameIntroMs ?? 3500,
+      minigameIntroMs: options.minigameIntroMs ?? 3000,
       minigameDurationMs: options.minigameDurationMs ?? 20000,
       minigameResultMs: options.minigameResultMs ?? 3500,
     }
@@ -238,6 +249,12 @@ export class GameServer {
             if (existing.connectionId && existing.connectionId !== connectionId) {
               room.connections.delete(existing.connectionId)
               this.bindings.delete(existing.connectionId)
+              this.replacedConnections.add(existing.connectionId)
+              this.send(existing.connectionId, "game.error", {
+                code: "SESSION_REPLACED",
+                message:
+                  "Your controller is open in another tab. Use that tab, or reload this one to reconnect.",
+              })
             }
           } else {
             if (room.state.phase !== "LOBBY")
@@ -264,7 +281,12 @@ export class GameServer {
             session = { playerId: player.id, connectionId }
             room.sessions.set(sessionId, session)
           }
+          const reattaching = session.connectionId !== connectionId
+          if (session.recoveryTimer) clearTimeout(session.recoveryTimer)
+          delete session.recoveryTimer
           session.connectionId = connectionId
+          this.replacedConnections.delete(connectionId)
+          if (reattaching) room.minigameRuntime?.reconnect(session.playerId)
           const player = this.player(room, session.playerId)
           player.connected = true
           room.connections.add(connectionId)
@@ -332,6 +354,10 @@ export class GameServer {
           this.bindings.set(connectionId, { room, sessionId: null })
           this.clearTimer(room)
           room.continueTask = null
+          for (const session of room.sessions.values()) {
+            if (session.recoveryTimer) clearTimeout(session.recoveryTimer)
+            delete session.recoveryTimer
+          }
           room.state.waitingForHost = null
           room.state.itemEffect = null
           for (const player of room.state.players) {
@@ -570,6 +596,7 @@ export class GameServer {
   }
 
   disconnect(connectionId: string): void {
+    this.replacedConnections.delete(connectionId)
     const binding = this.bindings.get(connectionId)
     if (!binding) return
     this.bindings.delete(connectionId)
@@ -579,21 +606,36 @@ export class GameServer {
     const session = room.sessions.get(sessionId)!
     session.connectionId = null
     this.player(room, session.playerId).connected = false
-    if (room.state.phase === "SHOP" && room.state.shop?.playerId === session.playerId)
-      this.closeShop(room)
-    if (room.state.potato && room.state.potato.stage !== "result")
-      this.removePotatoPlayer(room, session.playerId)
-    room.minigameRuntime?.disconnect(session.playerId)
-    if (
-      room.state.duel &&
-      room.state.duel.stage !== "result" &&
-      room.state.duel.fighters.some((fighter) => fighter.playerId === session.playerId)
-    ) {
-      const opponent = room.state.duel.fighters.find(
-        (fighter) => fighter.playerId !== session.playerId,
-      )!
-      this.finishDuel(room, opponent.playerId, "forfeit")
+    const activityId =
+      room.state.shop?.id ?? room.state.minigame?.id ?? room.state.potato?.id ?? room.state.duel?.id
+    const forfeit = () => {
+      delete session.recoveryTimer
+      if (session.connectionId || !activityId) return
+      if (
+        room.state.phase === "SHOP" &&
+        room.state.shop?.id === activityId &&
+        room.state.shop.playerId === session.playerId
+      )
+        this.closeShop(room)
+      if (room.state.potato?.id === activityId && room.state.potato.stage !== "result")
+        this.removePotatoPlayer(room, session.playerId)
+      if (room.state.minigame?.id === activityId && room.state.minigame.stage !== "result")
+        room.minigameRuntime?.disconnect(session.playerId)
+      if (
+        room.state.duel?.id === activityId &&
+        room.state.duel.stage !== "result" &&
+        room.state.duel.fighters.some((fighter) => fighter.playerId === session.playerId)
+      ) {
+        const opponent = room.state.duel.fighters.find(
+          (fighter) => fighter.playerId !== session.playerId,
+        )!
+        this.finishDuel(room, opponent.playerId, "forfeit")
+      }
+      this.snapshot(room)
     }
+    if (this.options.disconnectGraceMs === 0) forfeit()
+    else if (activityId)
+      session.recoveryTimer = setTimeout(forfeit, this.options.disconnectGraceMs ?? 8000)
     if (room.state.phase === "AWAITING_ROLL" && room.state.currentPlayerId === session.playerId) {
       this.schedule(room, this.timing.disconnectTimeoutMs, () => this.advance(room))
     }
@@ -601,9 +643,14 @@ export class GameServer {
   }
 
   dispose(): void {
-    for (const room of this.rooms.values()) this.clearTimer(room)
+    for (const room of this.rooms.values()) {
+      this.clearTimer(room)
+      for (const session of room.sessions.values())
+        if (session.recoveryTimer) clearTimeout(session.recoveryTimer)
+    }
     this.rooms.clear()
     this.bindings.clear()
+    this.replacedConnections.clear()
   }
 
   private room(code: string): Room {
@@ -617,6 +664,11 @@ export class GameServer {
   }
 
   private authorizePlayer(room: Room, connectionId: string, sessionId: string): PublicPlayer {
+    if (this.replacedConnections.has(connectionId))
+      throw new CommandError(
+        "SESSION_REPLACED",
+        "Your controller is open in another tab. Reload to reconnect here.",
+      )
     const session = room.sessions.get(sessionId)
     const binding = this.bindings.get(connectionId)
     if (
@@ -1032,7 +1084,7 @@ export class GameServer {
   }
 
   private afterStage(room: Room, label: string, delay: number, task: () => void): void {
-    if (this.options.manualStageAdvance === false) {
+    if (this.options.manualStageAdvance !== true) {
       this.schedule(room, delay, task)
       return
     }

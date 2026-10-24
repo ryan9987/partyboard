@@ -26,8 +26,10 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function setup(count = 2, roundGame: MinigameKind | "potato" = "potato") {
+function setup(count = 2, roundGame: MinigameKind | "potato" = "potato", manual = true) {
   server = new GameServer({
+    ...(manual ? { manualStageAdvance: true } : {}),
+    disconnectGraceMs: 0,
     dice: () => dice,
     roundGame,
     rollDurationMs: 10,
@@ -98,6 +100,31 @@ function round() {
   roll(1, 2)
   settle()
 }
+
+it.each(["potato", "balance", "fishing", "dodge", "archery", "rhythm"] as const)(
+  "automatically counts down three seconds into %s, shows results and returns to the board",
+  (kind) => {
+    setup(2, kind, false)
+    roll(0, 1)
+    settle()
+    roll(1, 2)
+    vi.advanceTimersByTime(30)
+    expect(state.waitingForHost).toBeFalsy()
+    expect((state.minigame ?? state.potato)?.stage).toBe("intro")
+    vi.advanceTimersByTime(2999)
+    expect((state.minigame ?? state.potato)?.stage).toBe("intro")
+    vi.advanceTimersByTime(1)
+    expect((state.minigame ?? state.potato)?.stage).toBe("active")
+    vi.advanceTimersByTime(1000)
+    expect((state.minigame ?? state.potato)?.stage).toBe("result")
+    const coins = state.players.map((player) => player.coins)
+    vi.advanceTimersByTime(3500)
+    expect(state.phase).toBe("AWAITING_ROLL")
+    expect(state.roundNumber).toBe(2)
+    expect(state.players.map((player) => player.coins)).toEqual(coins)
+    expect(errors).toEqual([])
+  },
+)
 
 it("never skips a connected player or closes a shop just because time passes", () => {
   setup()

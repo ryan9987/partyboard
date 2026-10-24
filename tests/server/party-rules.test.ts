@@ -23,6 +23,7 @@ beforeEach(() => {
   nextDice = 6
   server = new GameServer({
     manualStageAdvance: false,
+    disconnectGraceMs: 0,
     roundGame: "potato",
     dice: () => nextDice,
     rollDurationMs: 10,

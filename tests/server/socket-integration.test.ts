@@ -255,11 +255,34 @@ it("carries validated mini-game inputs over real sockets and returns coin reward
     playerSessionId: phones[0]!.playerSessionId,
     requestId: crypto.randomUUID(),
     gameId: game.id,
-    sequence: 1,
+    sequence: 100,
     axis: 0,
     action: true,
   })
   expect((await scored).minigame!.players[0]!.score).toBeGreaterThan(0)
+  phones[0]!.socket.disconnect()
+  const refreshed = client(url)
+  await connected(refreshed)
+  const rejoined = next(refreshed, "room.joined")
+  refreshed.emit("room.join", {
+    roomCode: room.roomCode,
+    name: "coral",
+    color: "coral",
+    existingSessionId: phones[0]!.playerSessionId,
+  })
+  const recovered = roomJoinedEventSchema.parse(await rejoined)
+  expect(recovered.state.minigame!.players[0]).toMatchObject({ alive: true, attempts: 1 })
+  const steering = waitState((state) => state.minigame?.players[0]?.axis === 0.6)
+  refreshed.emit("minigame.input", {
+    roomCode: room.roomCode,
+    playerSessionId: phones[0]!.playerSessionId,
+    requestId: crypto.randomUUID(),
+    gameId: game.id,
+    sequence: 0,
+    axis: 0.6,
+    action: false,
+  })
+  expect((await steering).players).toHaveLength(2)
   const result = await waitState((state) => state.minigame?.stage === "result")
   expect(result.minigame!.winnerIds).toEqual([result.players[0]!.id])
   const resumed = await waitState(

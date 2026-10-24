@@ -19,6 +19,7 @@ beforeEach(() => {
   errors = []
   server = new GameServer({
     manualStageAdvance: false,
+    disconnectGraceMs: 0,
     dice: () => 2,
     rollDurationMs: 10,
     millisecondsPerTile: 5,
