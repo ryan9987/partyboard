@@ -3,6 +3,14 @@ import { useFrame } from "@react-three/fiber"
 import { useMemo, useRef } from "react"
 import * as THREE from "three"
 
+import {
+  MeadowGround,
+  MeadowPlanting,
+  TrailLandmarks,
+  WoodlandTree,
+  WoodlandUnderstory,
+} from "./WoodlandDetails"
+
 const CLOUD_PUFFS = [
   [-0.75, 0, 0, 0.58],
   [0, 0.18, 0, 0.82],
@@ -22,37 +30,7 @@ const START_LETTERS = [
 ] as const
 
 function Tree({ position, scale }: { position: readonly [number, number]; scale: number }) {
-  return (
-    <group position={[position[0], -0.12, position[1]]} scale={scale}>
-      {[0, 1, 2].map((index) => (
-        <mesh
-          castShadow
-          key={index}
-          position={[(index - 1) * 0.2, 0.09, index % 2 === 0 ? 0.05 : -0.08]}
-          rotation={[0, index * 1.8, Math.PI / 2.8]}
-        >
-          <cylinderGeometry args={[0.07, 0.12, 0.65, 7]} />
-          <meshStandardMaterial color="#704128" roughness={1} />
-        </mesh>
-      ))}
-      <mesh castShadow position={[0, 0.75, 0]}>
-        <cylinderGeometry args={[0.16, 0.27, 1.65, 10]} />
-        <meshStandardMaterial color="#865332" roughness={0.96} />
-      </mesh>
-      <mesh castShadow position={[-0.28, 1.63, 0.04]} scale={[1.05, 0.9, 1]}>
-        <dodecahedronGeometry args={[0.72, 1]} />
-        <meshStandardMaterial color="#257d50" roughness={0.88} />
-      </mesh>
-      <mesh castShadow position={[0.34, 1.72, -0.04]} scale={[0.92, 1.02, 0.92]}>
-        <dodecahedronGeometry args={[0.7, 1]} />
-        <meshStandardMaterial color="#2d9659" roughness={0.88} />
-      </mesh>
-      <mesh castShadow position={[0.02, 2.24, 0]} scale={[0.9, 1, 0.9]}>
-        <dodecahedronGeometry args={[0.72, 1]} />
-        <meshStandardMaterial color="#36a966" roughness={0.85} />
-      </mesh>
-    </group>
-  )
+  return <WoodlandTree position={position} scale={scale} />
 }
 
 function Shrub({ position, tint }: { position: readonly [number, number]; tint: string }) {
@@ -183,10 +161,19 @@ export function WorldEnvironment() {
         <boxGeometry args={[19, 1.2, 64]} />
         <meshStandardMaterial color="#69452d" roughness={1} />
       </mesh>
-      <mesh receiveShadow position={[0, -0.17, ROUTE_CENTER_Z]}>
-        <boxGeometry args={[19, 0.16, 64]} />
-        <meshStandardMaterial color="#55ad5b" roughness={0.98} />
-      </mesh>
+      <MeadowGround />
+      <MeadowPlanting />
+      <TrailLandmarks />
+      <WoodlandUnderstory />
+      {[-1, 1].flatMap((side) =>
+        [0, 1, 2].map((index) => (
+          <Tree
+            key={`horizon-${side}-${index}`}
+            position={[side * (4.5 + (index % 2) * 2.5), -53 - index * 7]}
+            scale={1.05 + index * 0.08}
+          />
+        )),
+      )}
 
       {decorations.map(({ flowerColor, side, tile }, index) => (
         <group key={tile.id}>
@@ -194,6 +181,12 @@ export function WorldEnvironment() {
             <Tree
               position={[tile.position[0] + side * (4.25 + (index % 3) * 0.45), tile.position[2]]}
               scale={0.78 + (index % 5) * 0.07}
+            />
+          )}
+          {index % 3 === 0 && (
+            <Tree
+              position={[tile.position[0] - side * 5.4, tile.position[2] - 1.2]}
+              scale={0.85 + (index % 4) * 0.12}
             />
           )}
           {index % 6 === 2 && (

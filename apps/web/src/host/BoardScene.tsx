@@ -1,13 +1,14 @@
 import { defaultBoard } from "@party-board/board"
 import type { GameState } from "@party-board/protocol"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import * as THREE from "three"
 
 import { BoardTile } from "./BoardTile"
 import { getCharacterOffset } from "./characterLayout"
 import { CharacterModel } from "./CharacterModel"
 import { DiceView } from "./DiceView"
+import { createSurfaceTexture } from "./sceneryMaterials"
 import { WorldEnvironment } from "./WorldEnvironment"
 
 type BoardSceneProps = {
@@ -31,7 +32,48 @@ function CameraRig({ focus }: { focus: readonly [number, number, number] }) {
   return null
 }
 
+function TrailSunlight({ focus }: { focus: readonly [number, number, number] }) {
+  const rigRef = useRef<THREE.Group>(null)
+  const target = useMemo(() => new THREE.Object3D(), [])
+  useFrame((_, delta) => {
+    const rig = rigRef.current
+    if (!rig) return
+    const smoothing = 1 - Math.exp(-delta * 4)
+    rig.position.x = THREE.MathUtils.lerp(rig.position.x, focus[0], smoothing)
+    rig.position.z = THREE.MathUtils.lerp(rig.position.z, focus[2], smoothing)
+  })
+  return (
+    <group ref={rigRef} position={[focus[0], 0, focus[2]]}>
+      <primitive object={target} />
+      <directionalLight
+        castShadow
+        target={target}
+        color="#fff4d1"
+        intensity={2.6}
+        position={[-7, 14, 9]}
+        shadow-mapSize-height={2048}
+        shadow-mapSize-width={2048}
+        shadow-camera-left={-14}
+        shadow-camera-right={14}
+        shadow-camera-top={14}
+        shadow-camera-bottom={-14}
+        shadow-camera-far={55}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.035}
+      />
+    </group>
+  )
+}
+
 function Scene({ state, movingPlayerId }: BoardSceneProps) {
+  const stoneTexture = useMemo(() => createSurfaceTexture("stone"), [])
+  useEffect(() => () => stoneTexture.dispose(), [stoneTexture])
+  const pathTexture = useMemo(() => {
+    const texture = stoneTexture.clone()
+    texture.repeat.set(80, 1)
+    return texture
+  }, [stoneTexture])
+  useEffect(() => () => pathTexture.dispose(), [pathTexture])
   const tileMap = new Map(defaultBoard.tiles.map((tile) => [tile.id, tile]))
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
   const activePlayerIndex = state.players.findIndex((player) => player.id === state.currentPlayerId)
@@ -63,22 +105,15 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
   return (
     <>
       <CameraRig focus={focusTile.position} />
-      <fog attach="fog" args={["#94d9f0", 13, 29]} />
-      <hemisphereLight color="#dff6ff" groundColor="#4d7d42" intensity={2.2} />
-      <ambientLight intensity={0.7} />
-      <directionalLight
-        castShadow
-        color="#fff4d1"
-        intensity={3.8}
-        position={[-7, 14, 9]}
-        shadow-mapSize-height={2048}
-        shadow-mapSize-width={2048}
-      />
+      <fog attach="fog" args={["#aed7e4", 17, 37]} />
+      <hemisphereLight color="#e7f4ff" groundColor="#57643b" intensity={1.35} />
+      <ambientLight intensity={0.25} />
+      <TrailSunlight focus={focusTile.position} />
       <WorldEnvironment />
 
       <mesh receiveShadow scale={[1, 0.16, 1]}>
         <tubeGeometry args={[pathCurve, 160, 0.62, 10, false]} />
-        <meshStandardMaterial color="#cbbd9f" roughness={0.88} />
+        <meshStandardMaterial map={pathTexture} roughness={0.95} />
       </mesh>
 
       {defaultBoard.tiles.map((tile) => (
@@ -87,6 +122,7 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
           tile={tile}
           active={tile.id === activePlayer?.tileId}
           start={tile.id === defaultBoard.startingTileId}
+          texture={stoneTexture}
         />
       ))}
 
@@ -121,9 +157,9 @@ export function BoardScene(props: BoardSceneProps) {
       className="board-canvas"
       camera={{ position: [3.7, 8.8, 20.8], fov: 42, near: 0.1, far: 72 }}
       dpr={[1, 1.75]}
-      shadows="basic"
+      shadows={{ type: THREE.PCFShadowMap }}
     >
-      <color attach="background" args={["#83d2ed"]} />
+      <color attach="background" args={["#aed7e4"]} />
       <Scene {...props} />
     </Canvas>
   )

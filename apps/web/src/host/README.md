@@ -14,6 +14,9 @@ Implemented components:
 - `characterLayout.ts`: shared per-player offsets used by characters, camera framing, and dice placement
 - `DiceView.tsx`: visual die driven by a server result
 - `WorldEnvironment.tsx`: grass island, trees, rocks, flowers, clouds, and daylight environment
+- `WoodlandDetails.tsx`: instanced foliage/ground planting, branching trees, benches, lanterns, and distant hills
+- `sceneryMaterials.ts`: deterministic local grass, bark, and stone textures
+- `ART_DIRECTION.md`: palette, asset provenance, rendering choices, and verification notes
 - `hostState.ts`: pure projection of authoritative server events into display state
 - `useLiveHostGame.ts`: validated Socket.IO room creation, snapshots, host commands, and animation events
 - `usePieceAnimation.ts`: path animation driven by `player.moving`
@@ -23,7 +26,10 @@ The host renders authoritative state but never generates dice values or advances
 Character appearances are data-driven through `CharacterAppearance`, so a future pre-game
 customizer can swap skin tone, hair, outfit, shoes, and accessories without replacing movement or
 networking code. The current four presets are intentionally distinct and require no external model
-files, keeping the hackathon demo deterministic and offline-friendly.
+files, keeping the hackathon demo deterministic and offline-friendly. The woodland art pass adds
+modeled facial features, layered hair, outfit trim, scarves, backpack straps/buckles, and rounded
+shoes with soles and laces. World details use local textures and instancing rather than runtime
+asset downloads.
 
 The board uses layered route stones, denser trees and shrubs, small flowers and mushrooms, and a
 clearly labeled start gate. Its decorative trail mesh is deliberately open, so the logical

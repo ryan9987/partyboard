@@ -6,6 +6,8 @@ Ryan or Ryan's agent owns this file.
 
 - Jack's server/controller/motion branch is integrated with Ryan's live 3D host.
 - The first real host/controller integration checkpoint and host-refresh recovery test pass.
+- Woodland visual pass implemented with local geometry/textures and instanced planting; no
+  external assets, new dependencies, or controller/server changes required.
 
 ## Completed
 
@@ -51,6 +53,9 @@ Ryan or Ryan's agent owns this file.
 ## Verification
 
 - `pnpm check` passes.
+- Woodland pass: live six-space roll from tile 23, controller submission lock, overhead dice, and
+  following-camera movement checked in the desktop browser. Presentation-laptop frame rate still
+  requires hardware testing.
 - 37 Vitest checks and 10 motion tests pass across the integrated workspace.
 - Production Vite build succeeds with the host isolated into a lazy-loaded chunk.
 - Browser-tested the detailed lobby world, character placement, a six-space dice/movement turn,

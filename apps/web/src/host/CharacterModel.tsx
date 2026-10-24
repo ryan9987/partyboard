@@ -1,5 +1,6 @@
 import type { Vec3 } from "@party-board/board"
 import type { PlayerColor } from "@party-board/protocol"
+import { RoundedBox } from "@react-three/drei"
 import { useFrame } from "@react-three/fiber"
 import { useMemo, useRef } from "react"
 import * as THREE from "three"
@@ -95,17 +96,41 @@ function Arm({ color, limbRef, position, side, skinTone }: LimbProps) {
   )
 }
 
-function Leg({ color, limbRef, position }: Omit<LimbProps, "side" | "skinTone">) {
+function Leg({
+  color,
+  limbRef,
+  position,
+  shoeColor,
+}: Omit<LimbProps, "side" | "skinTone"> & { shoeColor: string }) {
   return (
     <group ref={limbRef} position={position}>
       <mesh castShadow position={[0, -0.2, 0]}>
         <capsuleGeometry args={[0.08, 0.28, 5, 10]} />
         <meshStandardMaterial color={color} roughness={0.66} />
       </mesh>
-      <mesh castShadow position={[0, -0.42, 0.055]}>
-        <boxGeometry args={[0.17, 0.1, 0.27]} />
-        <meshStandardMaterial color="#f5f7ff" roughness={0.38} />
-      </mesh>
+      <RoundedBox
+        castShadow
+        position={[0, -0.405, 0.055]}
+        args={[0.175, 0.13, 0.285]}
+        radius={0.035}
+        smoothness={3}
+      >
+        <meshStandardMaterial color={shoeColor} roughness={0.58} />
+      </RoundedBox>
+      <RoundedBox
+        position={[0, -0.465, 0.055]}
+        args={[0.185, 0.035, 0.29]}
+        radius={0.012}
+        smoothness={2}
+      >
+        <meshStandardMaterial color="#ddd7c4" roughness={0.85} />
+      </RoundedBox>
+      {[0.03, 0.07, 0.11].map((z) => (
+        <mesh key={z} position={[0, -0.335, z]}>
+          <boxGeometry args={[0.09, 0.012, 0.012]} />
+          <meshStandardMaterial color="#faf4df" />
+        </mesh>
+      ))}
     </group>
   )
 }
@@ -230,8 +255,18 @@ export function CharacterModel({
       )}
 
       <group ref={bodyRef}>
-        <Leg color={appearance.pantsColor} limbRef={leftLegRef} position={[-0.105, 0, 0]} />
-        <Leg color={appearance.pantsColor} limbRef={rightLegRef} position={[0.105, 0, 0]} />
+        <Leg
+          color={appearance.pantsColor}
+          shoeColor={appearance.shoeColor}
+          limbRef={leftLegRef}
+          position={[-0.105, 0, 0]}
+        />
+        <Leg
+          color={appearance.pantsColor}
+          shoeColor={appearance.shoeColor}
+          limbRef={rightLegRef}
+          position={[0.105, 0, 0]}
+        />
 
         <mesh castShadow position={[0, 0.28, 0]}>
           <capsuleGeometry args={[0.2, 0.32, 7, 14]} />
@@ -243,9 +278,51 @@ export function CharacterModel({
           />
         </mesh>
 
-        <mesh castShadow position={[0, 0.32, -0.2]}>
-          <boxGeometry args={[0.29, 0.35, 0.12]} />
+        <RoundedBox
+          castShadow
+          position={[0, 0.3, -0.225]}
+          args={[0.32, 0.38, 0.17]}
+          radius={0.045}
+          smoothness={3}
+        >
           <meshStandardMaterial color={appearance.accessoryColor} roughness={0.65} />
+        </RoundedBox>
+        <RoundedBox
+          castShadow
+          position={[0, 0.25, -0.325]}
+          args={[0.22, 0.15, 0.06]}
+          radius={0.02}
+          smoothness={3}
+        >
+          <meshStandardMaterial color={appearance.shirtColor} roughness={0.85} />
+        </RoundedBox>
+        {[-1, 1].map((side) => (
+          <group key={side}>
+            <mesh position={[side * 0.145, 0.31, 0.155]} rotation={[0, 0, side * -0.11]}>
+              <boxGeometry args={[0.038, 0.37, 0.028]} />
+              <meshStandardMaterial color={appearance.accessoryColor} roughness={0.9} />
+            </mesh>
+            <mesh position={[side * 0.143, 0.23, 0.177]}>
+              <boxGeometry args={[0.05, 0.05, 0.012]} />
+              <meshStandardMaterial color="#d9d5bb" metalness={0.65} roughness={0.32} />
+            </mesh>
+          </group>
+        ))}
+        <mesh position={[0, 0.28, 0.2]}>
+          <boxGeometry args={[0.012, 0.33, 0.012]} />
+          <meshStandardMaterial color="#e9d7bd" roughness={0.8} />
+        </mesh>
+        <mesh position={[0.035, 0.34, 0.202]}>
+          <boxGeometry args={[0.018, 0.04, 0.012]} />
+          <meshStandardMaterial color="#f9ecd2" metalness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.56, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.125, 0.043, 8, 20]} />
+          <meshStandardMaterial color={appearance.accessoryColor} roughness={0.9} />
+        </mesh>
+        <mesh castShadow position={[-0.07, 0.47, 0.185]} rotation={[0, 0, -0.2]}>
+          <boxGeometry args={[0.085, 0.18, 0.03]} />
+          <meshStandardMaterial color={appearance.accessoryColor} roughness={0.9} />
         </mesh>
 
         <Arm
@@ -269,14 +346,53 @@ export function CharacterModel({
             <meshStandardMaterial color={appearance.skinTone} roughness={0.72} />
           </mesh>
           <Hair appearance={appearance} />
-          <mesh position={[-0.072, 0.02, 0.198]}>
-            <sphereGeometry args={[0.026, 10, 8]} />
-            <meshStandardMaterial color="#162033" roughness={0.38} />
+          {[-1, 1].map((side) => (
+            <group key={side}>
+              <mesh castShadow position={[side * 0.215, -0.015, 0]} scale={[0.6, 1, 0.8]}>
+                <sphereGeometry args={[0.065, 12, 10]} />
+                <meshStandardMaterial color={appearance.skinTone} roughness={0.8} />
+              </mesh>
+              <mesh position={[side * 0.072, 0.025, 0.198]} scale={[0.85, 1.08, 0.45]}>
+                <sphereGeometry args={[0.045, 16, 12]} />
+                <meshStandardMaterial color="#fff9e8" roughness={0.6} />
+              </mesh>
+              <mesh position={[side * 0.072, 0.023, 0.219]} scale={[0.82, 1, 0.5]}>
+                <sphereGeometry args={[0.028, 14, 10]} />
+                <meshStandardMaterial color="#342b27" roughness={0.3} />
+              </mesh>
+              <mesh position={[side * 0.072 - 0.009, 0.036, 0.232]}>
+                <sphereGeometry args={[0.009, 8, 6]} />
+                <meshBasicMaterial color="#ffffff" />
+              </mesh>
+              <mesh
+                position={[side * 0.077, 0.092, 0.191]}
+                rotation={[0, 0, Math.PI / 2 + side * -0.12]}
+              >
+                <capsuleGeometry args={[0.012, 0.049, 4, 8]} />
+                <meshStandardMaterial color={appearance.hairColor} />
+              </mesh>
+              <mesh position={[side * 0.125, -0.055, 0.177]} scale={[1, 0.5, 0.2]}>
+                <sphereGeometry args={[0.036, 10, 8]} />
+                <meshStandardMaterial color="#d88d7b" transparent opacity={0.42} />
+              </mesh>
+            </group>
+          ))}
+          <mesh castShadow position={[0, -0.02, 0.221]} scale={[0.7, 0.7, 1]}>
+            <sphereGeometry args={[0.038, 12, 10]} />
+            <meshStandardMaterial color={appearance.skinTone} roughness={0.8} />
           </mesh>
-          <mesh position={[0.072, 0.02, 0.198]}>
-            <sphereGeometry args={[0.026, 10, 8]} />
-            <meshStandardMaterial color="#162033" roughness={0.38} />
-          </mesh>
+          {[-0.12, -0.045, 0.03, 0.105].map((x) => (
+            <mesh
+              key={x}
+              castShadow
+              position={[x, 0.135 - Math.abs(x) * 0.25, 0.145]}
+              rotation={[0.35, 0, -0.4]}
+              scale={[1, 1.4, 0.65]}
+            >
+              <sphereGeometry args={[0.065, 10, 8]} />
+              <meshStandardMaterial color={appearance.hairColor} roughness={0.95} />
+            </mesh>
+          ))}
           <mesh position={[0, -0.055, 0.215]} scale={[1, 0.45, 0.35]}>
             <sphereGeometry args={[0.035, 10, 8]} />
             <meshStandardMaterial color="#9f4f54" roughness={0.65} />
