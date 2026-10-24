@@ -42,3 +42,23 @@ export function createSurfaceTexture(kind: "grass" | "bark" | "stone") {
   texture.anisotropy = 4
   return texture
 }
+
+export function createFabricTexture() {
+  const canvas = document.createElement("canvas")
+  canvas.width = canvas.height = 128
+  const context = canvas.getContext("2d")!
+  context.fillStyle = "#e9e6df"
+  context.fillRect(0, 0, 128, 128)
+  for (let i = 0; i < 128; i += 4) {
+    context.fillStyle = "#d1cfc7"
+    context.fillRect(i, 0, 1, 128)
+    context.fillStyle = "#f8f5ee"
+    context.fillRect(0, i, 128, 1)
+  }
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.repeat.set(3, 3)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = 4
+  return texture
+}

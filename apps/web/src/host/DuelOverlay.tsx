@@ -1,5 +1,5 @@
 import type { GameState } from "@party-board/protocol"
-import { useEffect, useState } from "react"
+import { useGameNow } from "../networking/gameClock"
 
 function SwordIcon({ className }: { className: string }) {
   return (
@@ -15,11 +15,7 @@ function SwordIcon({ className }: { className: string }) {
 
 export function DuelOverlay({ state }: { state: GameState }) {
   const duel = state.duel!
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 100)
-    return () => window.clearInterval(id)
-  }, [])
+  const now = useGameNow(state.serverTime)
   const players = duel.fighters.map((fighter) =>
     state.players.find((player) => player.id === fighter.playerId)!,
   )

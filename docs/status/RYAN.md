@@ -4,6 +4,25 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Demo hardening pass: full four-controller six-game rotation plus sword duels; targeted
+  Archery (three arrows, 157 points) and Balance tilt replays; actual narrow iframe layouts
+  at 320/390/430px. Shop purchases, Boots, Shield and targeted Frost exercised in browser.
+  Fresh live host/controller error logs empty. 78 Vitest + 10 motion tests pass before merge.
+- Refined humanoid proportions, textured clothing, hands/face/hair; detailed merchant stall
+  and product models. Fixed device-clock cues, flick/tension interference, mobile overflow,
+  repeated purchases, action cooldown feedback and floating missed arrows.
+- Physical iPhone/Android gesture/permission and venue-network checks remain required.
+
+- Added Balance, Fishing, Dodge, Archery and Rhythm to the round-end rotation on
+  `feat/woodland-minigames`. New wrist attachments hold props; Hot Potato now passes hand-to-hand.
+  Clean matching HUD/controller cards, locally authored arenas and visible cast/arrow actions.
+  Contract and rehearsal instructions: `docs/MINIGAMES.md`.
+- Verification: `pnpm check` passes (75 Vitest + 10 motion tests, typecheck, lint, format, build).
+  Real Socket.IO test exercises mini-game input, payout and board resumption. Browser inspected
+  all six art scenes and completed a two-controller Fishing cast/bite/catch, 100-point shared score,
+  Ryan's winner result, balances 15/9 and turn-3 board resumption; live host/controller error logs empty.
+  Physical-device gesture/layout tests remain pending; browser viewport override was ineffective.
+
 - Round-end Hot Potato, coin rewards, pass-by market stops, Frost Charm/Boots/Shield, and a 48-space
   route implemented at Ryan's request. Rules and verification are in `docs/PARTY_ECONOMY.md`.
 

@@ -133,6 +133,15 @@ export const potatoPassRequestSchema = rollRequestSchema
 export type ShopChoiceRequest = z.infer<typeof shopChoiceRequestSchema>
 export type ItemUseRequest = z.infer<typeof itemUseRequestSchema>
 export type PotatoPassRequest = z.infer<typeof potatoPassRequestSchema>
+export const minigameInputRequestSchema = rollRequestSchema
+  .extend({
+    gameId: z.string().uuid(),
+    sequence: z.number().int().min(0).max(1000000),
+    axis: z.number().min(-1).max(1),
+    action: z.boolean(),
+  })
+  .strict()
+export type MinigameInputRequest = z.infer<typeof minigameInputRequestSchema>
 export type TurnStartedEvent = z.infer<typeof turnStartedEventSchema>
 export type DiceRolledEvent = z.infer<typeof diceRolledEventSchema>
 export type PlayerMovingEvent = z.infer<typeof playerMovingEventSchema>

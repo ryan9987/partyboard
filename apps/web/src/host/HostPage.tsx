@@ -7,6 +7,7 @@ import { BoardScene } from "./BoardScene"
 import { DemoPreflight } from "./DemoPreflight"
 import { DuelOverlay } from "./DuelOverlay"
 import { PartyOverlay } from "./PartyOverlay"
+import { MinigameOverlay } from "./MinigameOverlay"
 import { createFixtureState } from "./fixture"
 import { GameOverlay } from "./GameOverlay"
 import { LobbyOverlay } from "./LobbyOverlay"
@@ -170,7 +171,9 @@ export default function HostPage() {
         </div>
       </header>
 
-      {state.phase === "SHOP" || state.phase === "POTATO" ? (
+      {state.phase === "MINIGAME" && state.minigame ? (
+        <MinigameOverlay state={state} />
+      ) : state.phase === "SHOP" || state.phase === "POTATO" ? (
         <PartyOverlay state={state} />
       ) : state.phase === "DUEL" && state.duel ? (
         <DuelOverlay state={state} />

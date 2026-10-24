@@ -4,6 +4,7 @@ import type {
   ShopChoiceRequest,
   ItemUseRequest,
   PotatoPassRequest,
+  MinigameInputRequest,
   GameErrorEvent,
   HostCommand,
   JoinRoomRequest,
@@ -30,6 +31,7 @@ export const CLIENT_EVENTS = {
   SHOP_CHOICE: "shop.choice",
   ITEM_USE: "item.use",
   POTATO_PASS: "potato.pass",
+  MINIGAME_INPUT: "minigame.input",
 } as const
 
 export const SERVER_EVENTS = {
@@ -58,6 +60,7 @@ export interface ClientToServerEvents {
   "shop.choice": (payload: ShopChoiceRequest) => void
   "item.use": (payload: ItemUseRequest) => void
   "potato.pass": (payload: PotatoPassRequest) => void
+  "minigame.input": (payload: MinigameInputRequest) => void
 }
 
 export interface ServerToClientEvents {

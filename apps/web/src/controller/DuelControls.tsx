@@ -2,6 +2,7 @@ import type { DuelState, GameState } from "@party-board/protocol"
 import { useEffect, useState } from "react"
 import type { ControllerClient } from "./controller-client"
 import { getDuelGesture } from "./duel-motion"
+import { useGameClock, useGameNow } from "../networking/gameClock"
 
 export function DuelControls({
   client,
@@ -17,11 +18,8 @@ export function DuelControls({
   const duel = state.duel!
   const fighter = duel.fighters.find((entry) => entry.playerId === playerId)
   const [readyAt, setReadyAt] = useState(0)
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 100)
-    return () => window.clearInterval(timer)
-  }, [])
+  const now = useGameNow(state.serverTime)
+  const clock = useGameClock(state.serverTime)
   useEffect(() => {
     if (!motionEnabled || !client.canDuel()) return
     let lastMotion = 0
@@ -29,7 +27,7 @@ export function DuelControls({
       if (Date.now() - lastMotion < 950) return
       if (client.requestDuelAction(action)) {
         lastMotion = Date.now()
-        setReadyAt(lastMotion + 900)
+        setReadyAt(clock() + 900)
       }
     }
     const swing = (event: DeviceMotionEvent) => {
@@ -45,13 +43,13 @@ export function DuelControls({
       window.removeEventListener("devicemotion", swing)
       window.removeEventListener("deviceorientation", guard)
     }
-  }, [client, motionEnabled, duel.stage, duel.id, fighter?.playerId])
+  }, [client, clock, motionEnabled, duel.stage, duel.id, fighter?.playerId])
   const names = duel.fighters.map(
     (entry) => state.players.find((player) => player.id === entry.playerId)?.name ?? "Player",
   )
   const disabled = !client.canDuel() || now < readyAt
   const action = (kind: "swing" | "guard") => {
-    if (client.requestDuelAction(kind)) setReadyAt(Date.now() + 900)
+    if (client.requestDuelAction(kind)) setReadyAt(clock() + 900)
   }
   return (
     <section className="duel-controller" aria-label="Sword duel controller">

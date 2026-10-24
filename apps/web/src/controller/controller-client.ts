@@ -9,6 +9,7 @@ import {
   shopChoiceRequestSchema,
   itemUseRequestSchema,
   potatoPassRequestSchema,
+  minigameInputRequestSchema,
   type Item,
   type GameState,
   type JoinRoomRequest,
@@ -38,6 +39,9 @@ export function createRollRequestId(): string {
 
 /** One shared request latch protects both touch and motion, including synchronous callbacks. */
 export class ControllerClient {
+  private pendingShop: { visitId: string; requestId: string } | null = null
+  private lastItemInputAt = 0
+  private minigameSequence = 0
   private lastPartyInputAt = 0
   private lastDuelActionAt = 0
   private view: ControllerView = {
@@ -177,6 +181,7 @@ export class ControllerClient {
         this.session = null
         this.update({ state: null, playerId: null, pending: null })
       }
+      if (parsed.data.requestId === this.pendingShop?.requestId) this.pendingShop = null
       this.update({ joining: false, error: parsed.data.message })
       // No retryable error contract exists yet. Keep submitted turns locked.
     }
@@ -269,15 +274,17 @@ export class ControllerClient {
       connection !== "connected" ||
       state?.phase !== "SHOP" ||
       state.shop?.playerId !== playerId ||
-      !this.session?.existingSessionId
+      !this.session?.existingSessionId ||
+      this.pendingShop?.visitId === state.shop.id
     )
       return false
+    this.pendingShop = { visitId: state.shop.id, requestId: this.newRequestId() }
     this.socket.emit(
       "shop.choice",
       shopChoiceRequestSchema.parse({
         roomCode: this.session.roomCode,
         playerSessionId: this.session.existingSessionId,
-        requestId: this.newRequestId(),
+        requestId: this.pendingShop.requestId,
         visitId: state.shop.id,
         item,
       }),
@@ -291,9 +298,11 @@ export class ControllerClient {
       connection !== "connected" ||
       state?.phase !== "AWAITING_ROLL" ||
       state.currentPlayerId !== playerId ||
-      !this.session?.existingSessionId
+      !this.session?.existingSessionId ||
+      Date.now() - this.lastItemInputAt < 350
     )
       return false
+    this.lastItemInputAt = Date.now()
     this.socket.emit(
       "item.use",
       itemUseRequestSchema.parse({
@@ -316,6 +325,32 @@ export class ControllerClient {
       state.potato?.stage === "active" &&
       state.potato.holderId === playerId
     )
+  }
+
+  minigameInput(axis: number, action = false): boolean {
+    if (!Number.isFinite(axis)) return false
+    const { state, playerId, connection } = this.view
+    if (
+      connection !== "connected" ||
+      state?.phase !== "MINIGAME" ||
+      state.minigame?.stage !== "active" ||
+      !state.minigame.players.some((entry) => entry.playerId === playerId && entry.alive) ||
+      !this.session?.existingSessionId
+    )
+      return false
+    this.socket.emit(
+      "minigame.input",
+      minigameInputRequestSchema.parse({
+        roomCode: this.session.roomCode,
+        playerSessionId: this.session.existingSessionId,
+        requestId: this.newRequestId(),
+        gameId: state.minigame.id,
+        sequence: this.minigameSequence++,
+        axis: Math.max(-1, Math.min(1, axis)),
+        action,
+      }),
+    )
+    return true
   }
 
   passPotato(): boolean {

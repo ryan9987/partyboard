@@ -1,5 +1,8 @@
 # Protocol contract
 
+The five-game extension is documented in [MINIGAMES.md](./MINIGAMES.md): `MINIGAME`,
+validated per-player snapshots, and authenticated `minigame.input` commands with monotonic sequences.
+
 The round-game/economy extension in [PARTY_ECONOMY.md](./PARTY_ECONOMY.md) adds `SHOP`, `POTATO`,
 optional public economy state, and validated `shop.choice`, `item.use`, and `potato.pass` commands.
 

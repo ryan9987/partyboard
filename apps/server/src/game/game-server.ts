@@ -1,4 +1,5 @@
 import { randomInt, randomUUID } from "node:crypto"
+import { MinigameRound } from "./minigames"
 
 import { defaultBoard, getMovementPath, SHOP_TILE_IDS } from "@party-board/board"
 import {
@@ -7,6 +8,9 @@ import {
   shopChoiceRequestSchema,
   itemUseRequestSchema,
   potatoPassRequestSchema,
+  minigameInputRequestSchema,
+  MINIGAMES,
+  type MinigameKind,
   SHOP_ITEMS,
   diceRolledEventSchema,
   gameErrorEventSchema,
@@ -59,6 +63,8 @@ type Room = {
   remainingPath: string[] | null
   roundCompleted: Set<string>
   nextPassAt: number
+  minigameRuntime: MinigameRound | null
+  gameBag: Array<MinigameKind | "potato">
 }
 type Binding = { room: Room; sessionId: string | null }
 
@@ -77,6 +83,10 @@ export type GameServerOptions = {
   potatoIntroMs?: number
   potatoFuseMs?: number
   potatoResultMs?: number
+  minigameIntroMs?: number
+  minigameDurationMs?: number
+  minigameResultMs?: number
+  roundGame?: MinigameKind | "potato" | ((round: number) => MinigameKind | "potato")
 }
 
 class CommandError extends Error {
@@ -106,6 +116,9 @@ export class GameServer {
     potatoIntroMs: number
     potatoFuseMs: number
     potatoResultMs: number
+    minigameIntroMs: number
+    minigameDurationMs: number
+    minigameResultMs: number
   }
 
   constructor(private readonly options: GameServerOptions) {
@@ -123,6 +136,9 @@ export class GameServer {
       potatoIntroMs: options.potatoIntroMs ?? 2200,
       potatoFuseMs: options.potatoFuseMs ?? 5000,
       potatoResultMs: options.potatoResultMs ?? 3000,
+      minigameIntroMs: options.minigameIntroMs ?? 3500,
+      minigameDurationMs: options.minigameDurationMs ?? 20000,
+      minigameResultMs: options.minigameResultMs ?? 3500,
     }
     if (Object.values(this.timing).some((value) => !Number.isInteger(value) || value <= 0)) {
       throw new RangeError("Server durations must be positive integer milliseconds")
@@ -165,6 +181,8 @@ export class GameServer {
             remainingPath: null,
             roundCompleted: new Set(),
             nextPassAt: 0,
+            minigameRuntime: null,
+            gameBag: [],
           }
           this.rooms.set(code, room)
           this.bindings.set(connectionId, { room, sessionId: null })
@@ -296,6 +314,9 @@ export class GameServer {
           room.duelRuntime = null
           room.state.shop = null
           room.state.potato = null
+          room.state.minigame = null
+          room.minigameRuntime = null
+          room.gameBag = []
           room.state.roundNumber = 1
           room.state.notice = "A new adventure · everyone starts with 6 coins."
           room.roundCompleted.clear()
@@ -419,6 +440,18 @@ export class GameServer {
           this.snapshot(room)
           break
         }
+        case CLIENT_EVENTS.MINIGAME_INPUT: {
+          const parsed = minigameInputRequestSchema.safeParse(payload)
+          if (!parsed.success) throw new CommandError("INVALID_PAYLOAD", "Invalid mini-game input")
+          requestId = parsed.data.requestId
+          const room = this.room(parsed.data.roomCode)
+          const player = this.authorizePlayer(room, connectionId, parsed.data.playerSessionId)
+          if (room.state.phase !== "MINIGAME" || !room.minigameRuntime)
+            throw new CommandError("INVALID_MINIGAME", "This mini-game is no longer active")
+          // Monotonic per-game sequences deduplicate without growing the request-ID set at 10Hz.
+          room.minigameRuntime.input(player.id, parsed.data, Date.now())
+          break
+        }
         case CLIENT_EVENTS.POTATO_PASS: {
           const parsed = potatoPassRequestSchema.safeParse(payload)
           if (!parsed.success) throw new CommandError("INVALID_PAYLOAD", "Invalid pass request")
@@ -505,6 +538,7 @@ export class GameServer {
       this.closeShop(room)
     if (room.state.potato && room.state.potato.stage !== "result")
       this.removePotatoPlayer(room, session.playerId)
+    room.minigameRuntime?.disconnect(session.playerId)
     if (
       room.state.duel &&
       room.state.duel.stage !== "result" &&
@@ -589,7 +623,7 @@ export class GameServer {
         connected.length >= 2 &&
         connected.every((player) => room.roundCompleted.has(player.id))
       ) {
-        this.beginPotato(room, connected)
+        this.beginRoundGame(room, connected)
         return
       }
     }
@@ -692,6 +726,72 @@ export class GameServer {
       : this.timing.potatoFuseMs + randomInt(-900, 901)
   }
 
+  private beginRoundGame(room: Room, players: PublicPlayer[]): void {
+    if (!room.gameBag.length) {
+      const kinds: Array<MinigameKind | "potato"> = [
+        "balance",
+        "fishing",
+        "dodge",
+        "archery",
+        "rhythm",
+      ]
+      for (let i = kinds.length - 1; i > 0; i--) {
+        const j = randomInt(i + 1)
+        ;[kinds[i], kinds[j]] = [kinds[j]!, kinds[i]!]
+      }
+      room.gameBag = ["potato", ...kinds]
+    }
+    const configured = this.options.roundGame
+    const kind =
+      typeof configured === "function"
+        ? configured(room.state.roundNumber ?? 1)
+        : (configured ?? room.gameBag.shift()!)
+    if (kind === "potato") {
+      this.beginPotato(room, players)
+      return
+    }
+    room.state.phase = "MINIGAME"
+    const runtime = new MinigameRound(
+      kind,
+      players.map((player) => player.id),
+      Date.now(),
+      this.timing.minigameIntroMs,
+      this.timing.minigameDurationMs,
+    )
+    room.minigameRuntime = runtime
+    room.state.minigame = runtime.state
+    this.snapshot(room)
+    const tick = () => {
+      if (room.minigameRuntime !== runtime) return
+      if (runtime.tick(Date.now())) {
+        runtime.finish(Date.now(), this.timing.minigameResultMs)
+        const winners = runtime.state.winnerIds
+        for (const entry of runtime.state.players) {
+          const player = this.player(room, entry.playerId)
+          player.coins = Math.min(999, (player.coins ?? 0) + (winners.includes(player.id) ? 8 : 2))
+        }
+        room.state.notice = `${MINIGAMES[kind].name} complete · winners +8 coins, everyone else +2.`
+        this.snapshot(room)
+        this.schedule(room, this.timing.minigameResultMs, () => {
+          room.state.minigame = null
+          room.minigameRuntime = null
+          this.resumeBoard(room)
+        })
+      } else {
+        this.snapshot(room)
+        this.schedule(room, 100, tick)
+      }
+    }
+    this.schedule(room, this.timing.minigameIntroMs, tick)
+  }
+
+  private resumeBoard(room: Room): void {
+    room.state.phase = "TURN_END"
+    room.roundCompleted.clear()
+    room.state.roundNumber = (room.state.roundNumber ?? 1) + 1
+    this.advance(room, false)
+  }
+
   private beginPotato(room: Room, players: PublicPlayer[]): void {
     room.state.phase = "POTATO"
     const ids = players.map((player) => player.id)
@@ -748,10 +848,7 @@ export class GameServer {
       this.snapshot(room)
       this.schedule(room, this.timing.potatoResultMs, () => {
         room.state.potato = null
-        room.state.phase = "TURN_END"
-        room.roundCompleted.clear()
-        room.state.roundNumber = (room.state.roundNumber ?? 1) + 1
-        this.advance(room, false)
+        this.resumeBoard(room)
       })
     } else {
       if (game.holderId === id) game.holderId = game.aliveIds[randomInt(game.aliveIds.length)]!
@@ -891,6 +988,7 @@ export class GameServer {
   }
 
   private snapshot(room: Room): void {
+    room.state.serverTime = Date.now()
     this.broadcast(room, "room.snapshot", room.state)
   }
 }

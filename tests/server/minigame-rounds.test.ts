@@ -1,0 +1,137 @@
+import { randomUUID } from "node:crypto"
+import { afterEach, expect, it, vi } from "vitest"
+import { GameServer } from "../../apps/server/src/game/game-server"
+import {
+  gameStateSchema,
+  roomCreatedEventSchema,
+  roomJoinedEventSchema,
+  type GameState,
+  type MinigameKind,
+} from "../../packages/protocol/src"
+
+let server: GameServer
+afterEach(() => {
+  server?.dispose()
+  vi.useRealTimers()
+})
+function setup(kind?: MinigameKind) {
+  vi.useFakeTimers()
+  let state: GameState
+  let room: ReturnType<typeof roomCreatedEventSchema.parse>
+  const players: Array<ReturnType<typeof roomJoinedEventSchema.parse>> = []
+  const errors: string[] = []
+  server = new GameServer({
+    ...(kind ? { roundGame: kind } : {}),
+    dice: () => 1,
+    rollDurationMs: 1,
+    millisecondsPerTile: 1,
+    turnEndMs: 1,
+    shopDurationMs: 1,
+    duelIntroMs: 1,
+    duelDurationMs: 1,
+    duelResultMs: 1,
+    potatoIntroMs: 1,
+    potatoFuseMs: 1,
+    potatoResultMs: 1,
+    minigameIntroMs: 100,
+    minigameDurationMs: 1000,
+    minigameResultMs: 100,
+    deliver: (connection, event, payload) => {
+      if (event === "room.created") room = roomCreatedEventSchema.parse(payload)
+      if (event === "room.joined") players.push(roomJoinedEventSchema.parse(payload))
+      if (connection === "host" && event === "room.snapshot") state = gameStateSchema.parse(payload)
+      if (event === "game.error") errors.push((payload as { code: string }).code)
+    },
+  })
+  server.handle("host", "room.create", {})
+  for (const [i, color] of (["coral", "cyan", "gold", "violet"] as const).entries())
+    server.handle(`p${i}`, "room.join", { roomCode: room!.roomCode, name: `Player ${i}`, color })
+  const startGame = () =>
+    server.handle("host", "game.restart", { roomCode: room!.roomCode, hostToken: room!.hostToken })
+  startGame()
+  function boardRound() {
+    for (let step = 0; step < 1000; step++) {
+      const current = state!
+      if (current.phase === "MINIGAME" || current.phase === "POTATO") return
+      if (current.phase === "AWAITING_ROLL") {
+        const i = players.findIndex((player) => player.playerId === current.currentPlayerId)
+        server.handle(`p${i}`, "dice.roll.request", {
+          roomCode: room!.roomCode,
+          playerSessionId: players[i]!.playerSessionId,
+          requestId: randomUUID(),
+        })
+      }
+      vi.advanceTimersByTime(1)
+    }
+    throw Error("No round game")
+  }
+  return { snapshot: () => state!, players, room: () => room!, errors, boardRound, startGame }
+}
+
+it.each(["balance", "fishing", "dodge", "archery", "rhythm"] as const)(
+  "finishes %s, pays exactly once and resumes the correct player",
+  (kind) => {
+    const game = setup(kind)
+    game.boardRound()
+    expect(game.snapshot().minigame?.stage).toBe("intro")
+    const balances = game.snapshot().players.map((player) => player.coins!)
+    vi.advanceTimersByTime(1100)
+    const result = game.snapshot()
+    expect(result.minigame?.stage).toBe("result")
+    expect(result.players.map((player, i) => player.coins! - balances[i]!)).toEqual(
+      result.players.map((player) => (result.minigame!.winnerIds.includes(player.id) ? 8 : 2)),
+    )
+    vi.advanceTimersByTime(100)
+    expect(game.snapshot()).toMatchObject({
+      phase: "AWAITING_ROLL",
+      roundNumber: 2,
+      currentPlayerId: game.players[0]!.playerId,
+      minigame: null,
+    })
+    expect(game.snapshot().players.map((player) => player.coins)).toEqual(
+      result.players.map((player) => player.coins),
+    )
+    expect(game.errors).toEqual([])
+  },
+)
+
+it("rotates all six games without repeats within a bag", () => {
+  const game = setup()
+  const kinds: string[] = []
+  for (let i = 0; i < 6; i++) {
+    game.boardRound()
+    kinds.push(game.snapshot().minigame?.kind ?? "potato")
+    while (["POTATO", "MINIGAME"].includes(game.snapshot().phase)) vi.advanceTimersByTime(10)
+  }
+  expect(kinds[0]).toBe("potato")
+  expect(new Set(kinds).size).toBe(6)
+})
+
+it("validates authentication and clears the game timer on host restart", () => {
+  const game = setup("archery")
+  game.boardRound()
+  vi.advanceTimersByTime(100)
+  const payload = {
+    roomCode: game.room().roomCode,
+    playerSessionId: game.players[0]!.playerSessionId,
+    requestId: randomUUID(),
+    gameId: game.snapshot().minigame!.id,
+    sequence: 1,
+    axis: 0,
+    action: true,
+  }
+  server.handle("p1", "minigame.input", payload)
+  expect(game.errors.at(-1)).toBe("UNAUTHORIZED")
+  server.handle("p0", "minigame.input", { ...payload, axis: 99 })
+  expect(game.errors.at(-1)).toBe("INVALID_PAYLOAD")
+  server.handle("p0", "minigame.input", payload)
+  vi.advanceTimersByTime(100)
+  expect(game.snapshot().minigame!.players[0]!.attempts).toBe(1)
+  server.disconnect("p0")
+  expect(game.snapshot().minigame!.players[0]!.alive).toBe(false)
+  game.startGame()
+  vi.advanceTimersByTime(2000)
+  expect(game.snapshot().phase).toBe("AWAITING_ROLL")
+  expect(game.snapshot().minigame).toBeNull()
+  expect(game.snapshot().players.every((player) => player.coins === 6)).toBe(true)
+})

@@ -22,6 +22,7 @@ beforeEach(() => {
   errors = []
   nextDice = 6
   server = new GameServer({
+    roundGame: "potato",
     dice: () => nextDice,
     rollDurationMs: 10,
     millisecondsPerTile: 5,

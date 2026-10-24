@@ -5,6 +5,7 @@ import * as THREE from "three"
 import { CharacterModel } from "./CharacterModel"
 import { MeadowGround, MeadowPlanting, WoodlandTree } from "./WoodlandDetails"
 import { createSurfaceTexture } from "./sceneryMaterials"
+import { useGameClock } from "../networking/gameClock"
 
 function ArenaCamera() {
   const { camera } = useThree()
@@ -49,6 +50,7 @@ function ClashFlash({ duel }: { duel: DuelState }) {
 }
 
 export function DuelArena({ state }: { state: GameState }) {
+  const clock = useGameClock(state.serverTime)
   const duel = state.duel!
   const stone = useMemo(() => createSurfaceTexture("stone"), [])
   useEffect(() => () => stone.dispose(), [stone])
@@ -140,12 +142,14 @@ export function DuelArena({ state }: { state: GameState }) {
         const player = state.players.find((entry) => entry.id === fighter.playerId)!
         return (
           <CharacterModel
+            clock={clock}
+            centered
             key={fighter.playerId}
             active={duel.winnerId === fighter.playerId}
             color={player.color}
             playerIndex={index}
             moving={false}
-            position={[index === 0 ? -1 : 1, -0.2, 0]}
+            position={[index === 0 ? -1 : 1, -0.23, 0]}
             facing={index === 0 ? Math.PI / 2 : -Math.PI / 2}
             combat={fighter}
           />

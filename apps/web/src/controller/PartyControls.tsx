@@ -2,6 +2,7 @@ import { SHOP_ITEMS, type GameState, type Item } from "@party-board/protocol"
 import { useEffect, useState } from "react"
 import type { ControllerClient } from "./controller-client"
 import { getDuelGesture } from "./duel-motion"
+import { useGameNow } from "../networking/gameClock"
 
 export function PartyControls({
   client,
@@ -16,12 +17,8 @@ export function PartyControls({
 }) {
   const me = state.players.find((player) => player.id === playerId)
   const [targetId, setTargetId] = useState("")
-  const [now, setNow] = useState(() => Date.now())
+  const now = useGameNow(state.serverTime)
   const canPass = client.canPass()
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 150)
-    return () => window.clearInterval(timer)
-  }, [])
   useEffect(() => {
     if (!motionEnabled || !canPass) return
     const motion = (event: DeviceMotionEvent) => {

@@ -1,12 +1,8 @@
 import { SHOP_ITEMS, type GameState } from "@party-board/protocol"
-import { useEffect, useState } from "react"
+import { useGameNow } from "../networking/gameClock"
 
 export function PartyOverlay({ state }: { state: GameState }) {
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 100)
-    return () => window.clearInterval(timer)
-  }, [])
+  const now = useGameNow(state.serverTime)
   if (state.phase === "SHOP" && state.shop) {
     const player = state.players.find((entry) => entry.id === state.shop!.playerId)!
     return (

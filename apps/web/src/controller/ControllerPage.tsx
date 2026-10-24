@@ -1,4 +1,4 @@
-import { PLAYER_COLORS } from "@party-board/protocol"
+import { PLAYER_COLORS, MINIGAMES } from "@party-board/protocol"
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 
 import {
@@ -10,6 +10,7 @@ import { createGameSocket } from "../networking/socket"
 import { ControllerClient } from "./controller-client"
 import { DuelControls } from "./DuelControls"
 import { PartyControls } from "./PartyControls"
+import { MinigameControls } from "./MinigameControls"
 import "./controller.css"
 
 function initialRoom(): string {
@@ -21,9 +22,11 @@ export default function ControllerPage() {
   // A missing server URL should yield a readable screen, including the Roll fallback.
   const [client] = useState(() => {
     try {
+      const slot = new URLSearchParams(window.location.search).get("slot")
+      const prefix = import.meta.env.DEV && slot && /^[1-4]$/.test(slot) ? `rehearsal:${slot}:` : ""
       const storage = {
-        getItem: (key: string) => window.localStorage.getItem(key),
-        setItem: (key: string, value: string) => window.localStorage.setItem(key, value),
+        getItem: (key: string) => window.localStorage.getItem(prefix + key),
+        setItem: (key: string, value: string) => window.localStorage.setItem(prefix + key, value),
       }
       return new ControllerClient(createGameSocket(), storage, initialRoom())
     } catch {
@@ -77,6 +80,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
 
   const me = view.state?.players.find((player) => player.id === view.playerId)
   const active = view.state?.players.find((player) => player.id === view.state?.currentPlayerId)
+  const inActivity = ["DUEL", "SHOP", "POTATO", "MINIGAME"].includes(view.state?.phase ?? "")
   let headline = "Join the table"
   if (me) {
     if (view.connection !== "connected") headline = "Reconnecting…"
@@ -84,6 +88,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
     else if (view.state?.phase === "DUEL") headline = "Sword duel"
     else if (view.state?.phase === "SHOP") headline = "Wildwood Market"
     else if (view.state?.phase === "POTATO") headline = "Hot Potato"
+    else if (view.state?.minigame) headline = MINIGAMES[view.state.minigame.kind].name
     else if (canRoll) headline = "Your turn!"
     else if (view.pending) headline = "Roll submitted"
     else if (active) headline = `${active.name}'s turn`
@@ -91,10 +96,10 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   }
 
   return (
-    <main className="controller-page">
+    <main className={`controller-page${inActivity ? " controller-page--activity" : ""}`}>
       <header>
         <p>Party Board · {view.connection}</p>
-        <h1>{headline}</h1>
+        {!inActivity && <h1>{headline}</h1>}
       </header>
       {view.error && (
         <p role="alert" className="controller-error">
@@ -153,11 +158,11 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           </p>
           {view.state?.phase === "LOBBY" ? (
             <p>Waiting for the host to start.</p>
-          ) : (
+          ) : !inActivity ? (
             <p>
               Turn {view.state?.turnNumber} · Last roll: {view.state?.lastRoll ?? "—"}
             </p>
-          )}
+          ) : null}
           {canRoll && (
             <p>
               {permission === "enabled"
@@ -167,7 +172,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           )}
         </section>
       )}
-      {me && view.state && view.state.phase !== "DUEL" && (
+      {me && view.state && view.state.phase !== "DUEL" && view.state.phase !== "MINIGAME" && (
         <PartyControls
           client={client}
           state={view.state}
@@ -175,8 +180,16 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           motionEnabled={permission === "enabled"}
         />
       )}
-      {view.state?.phase === "SHOP" || view.state?.phase === "POTATO" ? null : view.state?.phase ===
-          "DUEL" && view.state.duel ? (
+      {!me ? null : view.state?.phase === "MINIGAME" && view.state.minigame ? (
+        <MinigameControls
+          key={view.state.minigame.id}
+          client={client}
+          state={view.state}
+          playerId={view.playerId}
+          motionEnabled={permission === "enabled"}
+        />
+      ) : view.state?.phase === "SHOP" || view.state?.phase === "POTATO" ? null : view.state
+          ?.phase === "DUEL" && view.state.duel ? (
         <DuelControls
           client={client}
           state={view.state}
@@ -213,8 +226,8 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           {permission === "off"
             ? view.state?.phase === "DUEL"
               ? "Enable motion for swing and tilt, or use the Swing and Guard buttons."
-              : "Motion is optional. You can always use Roll."
-            : `Motion ${permission}. ${view.state?.phase === "DUEL" ? "Swing and Guard buttons stay available." : "The Roll button stays available on your turn."}`}
+              : "Motion is optional. Every game has touch controls."
+            : `Motion ${permission}. Touch controls stay available in every game.`}
         </p>
         <details>
           <summary>iPhone showing an Undo popup?</summary>

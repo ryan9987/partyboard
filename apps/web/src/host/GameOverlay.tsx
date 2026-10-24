@@ -11,6 +11,7 @@ const PHASE_LABELS: Record<GameState["phase"], string> = {
   DUEL: "A duel on the trail",
   SHOP: "Visiting the market",
   POTATO: "Hot Potato",
+  MINIGAME: "Mini-game",
   LOBBY: "Gather your friends",
   AWAITING_ROLL: "Ready to roll",
   ROLLING: "Rolling…",

@@ -1,5 +1,22 @@
 # Integration notes
 
+## 2026-10-24 — Full demo hardening and main integration
+
+Ryan requested the full gameplay/mobile/visual pass, fixes across all game lanes, more natural
+character detail, detailed shops, and committing/pushing the integrated result to main.
+These are explicitly authorized integration edits, including controller/server tests.
+The new snapshot server-time anchor and optional retained Archery shots are additive contracts.
+Jack's latest two commits (`6133d4e`, `00fd3f7`) contain verification notes and isolated temporary
+demo builds; they are included in this integration. No unrelated work is discarded.
+
+## 2026-10-24 — Ryan-approved five-game integration
+
+Ryan explicitly requested Balance, Fishing, Dodge, Archery and Rhythm, including clean UI,
+held equipment, cast animations and the Hot Potato attachment fix. This authorizes the
+corresponding server/controller integration and tests across the original ownership split.
+Jack's unrelated changes and status file are preserved. See `MINIGAMES.md` for the shared contract.
+Work is isolated on `feat/woodland-minigames`.
+
 Use this file for changes one lane needs from another lane or from a shared contract. Resolve entries during an integration checkpoint instead of making surprise cross-ownership edits.
 
 ## Open requests

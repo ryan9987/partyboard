@@ -13,20 +13,29 @@ import { createSurfaceTexture } from "./sceneryMaterials"
 import { WorldEnvironment } from "./WorldEnvironment"
 import { TrailMarkets } from "./MarketStall"
 import { PotatoArena } from "./PotatoArena"
+import { MinigameArena } from "./MinigameArena"
 
 type BoardSceneProps = {
   state: GameState
   movingPlayerId: string | null
 }
 
-function CameraRig({ focus }: { focus: readonly [number, number, number] }) {
+function CameraRig({
+  focus,
+  market,
+}: {
+  focus: readonly [number, number, number]
+  market: boolean
+}) {
   const { camera } = useThree()
   const lookTarget = useRef(new THREE.Vector3(focus[0] - 1.15, 1.05, focus[2] - 0.8))
 
   useFrame((_, delta) => {
     const smoothing = 1 - Math.exp(-delta * 4)
-    const desiredPosition = new THREE.Vector3(focus[0] + 2.75, 6.1, focus[2] + 8.9)
-    const desiredLook = new THREE.Vector3(focus[0] - 1.15, 1.05, focus[2] - 0.8)
+    const desiredPosition = market
+      ? new THREE.Vector3(focus[0] + 5.2, 4.4, focus[2] + 7.4)
+      : new THREE.Vector3(focus[0] + 2.75, 6.1, focus[2] + 8.9)
+    const desiredLook = new THREE.Vector3(focus[0] + (market ? 1.4 : -1.15), 1.05, focus[2] - 0.8)
     camera.position.lerp(desiredPosition, smoothing)
     lookTarget.current.lerp(desiredLook, smoothing)
     camera.lookAt(lookTarget.current)
@@ -107,13 +116,13 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
 
   return (
     <>
-      <CameraRig focus={focusTile.position} />
+      <CameraRig focus={focusTile.position} market={state.phase === "SHOP"} />
       <fog attach="fog" args={["#aed7e4", 17, 37]} />
       <hemisphereLight color="#e7f4ff" groundColor="#57643b" intensity={1.35} />
       <ambientLight intensity={0.25} />
       <TrailSunlight focus={focusTile.position} />
       <WorldEnvironment />
-      <TrailMarkets />
+      <TrailMarkets focusZ={focusTile.position[2]} />
 
       <mesh receiveShadow scale={[1, 0.16, 1]}>
         <tubeGeometry args={[pathCurve, 160, 0.62, 10, false]} />
@@ -164,9 +173,11 @@ export function BoardScene(props: BoardSceneProps) {
       shadows={{ type: THREE.PCFShadowMap }}
     >
       <color attach="background" args={["#aed7e4"]} />
-      {props.state.phase === "POTATO" &&
-      props.state.potato &&
-      props.state.potato.stage !== "intro" ? (
+      {props.state.phase === "MINIGAME" && props.state.minigame ? (
+        <MinigameArena state={props.state} />
+      ) : props.state.phase === "POTATO" &&
+        props.state.potato &&
+        props.state.potato.stage !== "intro" ? (
         <PotatoArena state={props.state} />
       ) : props.state.phase === "DUEL" && props.state.duel && props.state.duel.stage !== "intro" ? (
         <DuelArena state={props.state} />
