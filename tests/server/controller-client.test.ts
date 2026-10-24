@@ -275,3 +275,18 @@ it("enables duel input only for participants, shares a cooldown, and disables bo
   expect(first.client.canDuel()).toBe(false)
   expect(first.client.requestDuelAction("swing")).toBe(false)
 })
+
+it("blocks rolls after stopping and restores the same player when restarted", () => {
+  const room = host()
+  const { client, socket } = controller(room.roomCode)
+  client.join({ roomCode: room.roomCode, name: "Jack", color: "coral" })
+  start(room)
+  const playerId = client.getSnapshot().playerId
+  client.stop()
+  expect(client.getSnapshot().connection).toBe("disconnected")
+  expect(client.requestRoll()).toBe(false)
+  expect(socket.sent.some((message) => message.event === "dice.roll.request")).toBe(false)
+  client.start()
+  expect(client.getSnapshot().playerId).toBe(playerId)
+  expect(client.canRoll()).toBe(true)
+})

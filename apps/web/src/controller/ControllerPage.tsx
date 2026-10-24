@@ -216,6 +216,14 @@ function ConnectedController({ client }: { client: ControllerClient }) {
               : "Motion is optional. You can always use Roll."
             : `Motion ${permission}. ${view.state?.phase === "DUEL" ? "Swing and Guard buttons stay available." : "The Roll button stays available on your turn."}`}
         </p>
+        <details>
+          <summary>iPhone showing an Undo popup?</summary>
+          <p>
+            Open Settings → Accessibility → Touch and turn off Shake to Undo, then return here to
+            shake and roll. This is an iPhone setting; the game cannot turn it off. You can also use
+            the Roll button without changing your settings.
+          </p>
+        </details>
       </section>
     </main>
   )

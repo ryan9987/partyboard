@@ -17,16 +17,34 @@ Socket.IO 4.8.4 supplies the actual network transport, matching the browser clie
 
 `GameServer` is independently testable: deliver validated events using its `deliver(connectionId, event, payload)` callback; route raw client commands through `handle`; call `disconnect` for transport detach and `dispose` on shutdown. Its connection map only attaches transports to separately generated player/session IDs. `attachGameConnection` binds the exact shared event names to Socket.IO. `createGameApp` creates the HTTP and Socket.IO listeners and an asynchronous close operation.
 
-## Optional text host
+## Live host and optional text host
 
-To exercise the server and controllers without the 3D host:
+Ryan's `/host` now connects to this server when `VITE_SOCKET_URL` is configured for Vite. It creates the real room, displays its controller QR URL, starts/restarts the game, and consumes authoritative dice/movement events. With no server URL, it retains the fixture preview.
 
-1. Put `VITE_SOCKET_URL=http://localhost:3001` in `apps/web/.env.local` and run `pnpm dev`.
+For an independent backend check, the optional text host still supports real controllers:
+
+1. Put `VITE_SOCKET_URL=http://localhost:3001` in root `.env` and run `pnpm dev`.
 2. In another terminal, run `pnpm --filter @party-board/server debug:host`.
 3. Open the printed `/controller/ROOM` URL in up to four browser profiles or phones and choose distinct colors.
 4. Type `start` in the text-host terminal. Players use touch or shake while the terminal prints authoritative snapshots. Type `restart`, `show`, or `quit` as needed.
 
 For phones, replace localhost with the laptop's LAN address in the browser-facing URLs and include that web origin in `ALLOWED_ORIGINS`. Set root `VITE_CONTROLLER_URL` for the printed URL. `SOCKET_URL` can override the debug host's default local server address. Motion still requires a secure context on real devices; touch can be tested on local HTTP.
+
+## Temporary HTTPS phone demo
+
+Install the official [cloudflared tunnel client](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) on PATH, then run:
+
+```sh
+pnpm --filter @party-board/server demo
+```
+
+If the executable is elsewhere, set `CLOUDFLARED_BIN` to its absolute path. Optional `DEMO_PORT` defaults to 3001. The runner reserves that loopback port before opening the tunnel, builds the production web client with the generated HTTPS socket and QR URLs, serves only `apps/web/dist`, and waits up to two minutes for a successful public HTTPS response before printing the host link. Failed startup includes the last HTTP/network error and shuts down its tunnel/server. Host pages, controller deep links, and Socket.IO share one public origin. No npm dependencies or shared protocol changes are added.
+
+Open the printed `/host` URL on the laptop and scan its QR code on each phone. Tap Enable motion from the phone when prompted, or use Roll. The temporary URL lasts only while this process, its cloudflared child, the laptop, and the network remain running; restarting creates a new URL and loses in-memory rooms. Ctrl+C stops the tunnel and server. Avoid rebuilding the web app or running another demo against the same build directory while this demo is in use. This is a test/demo setup, not permanent hosting.
+
+The static server rejects unknown routes, dotfiles, missing assets, methods other than GET/HEAD, and symlinks escaping the compiled build. It serves HTML without caching and generated assets with immutable caching. `WEB_DIST_DIR` optionally enables the same static handler in the regular server entry point for a future HTTPS reverse proxy deployment; paths are resolved from the command's working directory.
+
+The initial Linux demo used cloudflared 2026.10.3 downloaded from the official GitHub release with its published SHA-256 digest verified. The binary lives outside the repository and is not committed. No account token is needed for a Quick Tunnel. Physical iPhone/Android motion and the four-phone venue-network run remain manual acceptance checks.
 
 ## Turn and recovery behavior
 

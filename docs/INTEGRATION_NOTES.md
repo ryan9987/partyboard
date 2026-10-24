@@ -69,3 +69,16 @@ No open cross-lane requests at this checkpoint.
 - Resolution: Merged Ryan's `f6dcafd` (`feat: build host board foundation`) into Jack's branch. It provides shared schemas, private response types, public snapshots without credentials, board traversal, and the browser socket factory.
 - Explicit delegation: Jack authorized the requested shared integration edits in this thread: server/motion lockfile entries, web motion dependency, controller route replacement, and root dev/typecheck/test commands. Only those integration files were edited outside Jack's original ownership. No protocol events or fields were changed, and Ryan's host remains his fixture implementation.
 - Verification: The frozen lockfile installs, package type checking, lint, formatting, automated tests, and production build are checked on Jack's branch. Details are in `docs/status/JACK.md`.
+
+### 2026-10-24 — Shared foundation and explicit integration delegation
+
+- Requested by: Jack's agent.
+- Owning area: Ryan — workspace, protocol, board, browser networking.
+- Resolution: Merged Ryan's `f6dcafd` (`feat: build host board foundation`) into Jack's branch. It provides shared schemas, private response types, public snapshots without credentials, board traversal, and the browser socket factory.
+- Explicit delegation: Jack authorized the requested shared integration edits in this thread: server/motion lockfile entries, web motion dependency, controller route replacement, and root dev/typecheck/test commands. Only those integration files were edited outside Jack's original ownership. No protocol events or fields were changed, and Ryan's host implementation was merged without local edits to his source files.
+- Verification: The frozen lockfile installs, package type checking, lint, formatting, automated tests, and production build are checked on Jack's branch. Details are in `docs/status/JACK.md`.
+
+### 2026-10-24 — HTTPS demo integration
+
+- Jack's single-origin production-build server and Quick Tunnel runner are retained alongside Ryan's host resume, root environment loading, movement snapshot handling, and 32-tile board.
+- Earlier host-refresh and movement reports described the previous integration; Ryan's merged changes address those code paths. Physical phone and venue-network checks remain pending.

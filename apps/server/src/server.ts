@@ -1,4 +1,4 @@
-import { createServer } from "node:http"
+import { createServer, type RequestListener } from "node:http"
 import { Server } from "socket.io"
 import type { ClientToServerEvents, ServerToClientEvents } from "@party-board/protocol"
 
@@ -8,15 +8,20 @@ import { attachGameConnection } from "./sockets/connection"
 export function createGameApp({
   allowedOrigins,
   gameOptions = {},
+  webHandler,
 }: {
   allowedOrigins: string[]
+  webHandler?: RequestListener
   gameOptions?: Omit<GameServerOptions, "deliver">
 }) {
   if (!allowedOrigins.length) throw new Error("At least one browser origin must be configured")
-  const httpServer = createServer((_request, response) => {
-    response.writeHead(404)
-    response.end()
-  })
+  const httpServer = createServer(
+    webHandler ??
+      ((_request, response) => {
+        response.writeHead(404)
+        response.end()
+      }),
+  )
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     cors: { origin: allowedOrigins },
     // CORS alone does not restrict WebSocket connections. Native debug clients have no Origin.
