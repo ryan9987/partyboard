@@ -2,7 +2,10 @@
 
 ## First board
 
-The first board is a deterministic loop of approximately 20 tiles. Every tile has exactly one next tile. There are no branches or tile effects.
+The board is a deterministic 48-tile winding expedition. Each tile has one next tile. Market stops
+at 3, 11, 19, 27, 35, and 43 are shared metadata; the server pauses a passing movement for a purchase.
+The data graph wraps from the last tile to Start, while the renderer shows an open, fogged trail.
+See `PARTY_ECONOMY.md` for Boots and shops.
 
 ```ts
 type Vec3 = readonly [number, number, number]
@@ -27,8 +30,8 @@ The board package contains pure data and traversal logic. It must not contain Re
 The core function returns every tile visited, excluding the starting tile:
 
 ```ts
-getMovementPath(board, "tile-18", 4)
-// ["tile-19", "tile-0", "tile-1", "tile-2"]
+getMovementPath(board, "tile-30", 4)
+// ["tile-31", "tile-0", "tile-1", "tile-2"]
 ```
 
 Required validation:
@@ -41,7 +44,7 @@ Required validation:
 
 ## Rendering
 
-The host converts tile positions into rendered meshes. Board data should not prescribe materials, geometry, or animation. The host may interpolate between the positions returned by the movement path.
+The host converts tile positions into rendered meshes. Board data should not prescribe materials, geometry, or animation. The host renders the route as an open curve, follows the active piece with the camera, and may interpolate between the positions returned by the movement path.
 
 ## Future compatibility
 

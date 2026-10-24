@@ -53,7 +53,7 @@ The controller owns:
 10. The host animates the path while the server schedules the next phase.
 11. The server advances the turn and broadcasts a fresh snapshot.
 
-The host does not send `animation.finished` to control the game. Known server durations prevent a lost host message from freezing the room. A reconnecting host renders the latest authoritative snapshot and may snap to the current position.
+The host does not send `animation.finished` to control the game. Known server durations prevent a lost host message from freezing the room. The browser keeps the room code and private host token in session storage. A reconnecting host sends `room.host.resume`, receives the latest authoritative snapshot, and does not create or reset a room.
 
 ## Timing defaults
 
@@ -69,7 +69,7 @@ These are configuration values, not protocol constants.
 
 ## Deployment shape
 
-The final demo must use HTTPS because mobile motion permission may require a secure context. Prefer one public origin for the web client and an HTTPS/WSS-compatible server endpoint. The QR URL comes from `PUBLIC_CONTROLLER_URL`; do not hard-code localhost into the host UI.
+The final demo must use HTTPS because mobile motion permission may require a secure context. Prefer one public origin for the web client and an HTTPS/WSS-compatible server endpoint. The browser-visible QR URL comes from `VITE_CONTROLLER_URL`; do not hard-code localhost into the host UI.
 
 ## Failure behavior
 

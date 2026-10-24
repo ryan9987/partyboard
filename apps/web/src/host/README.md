@@ -2,15 +2,63 @@
 
 Laptop-facing code belongs here.
 
-Planned components:
+Implemented components:
+
+- `DuelArena.tsx`: woodland stone arena, armed characters, spectators, and combat effects
+- `DuelOverlay.tsx`: animated crossed-swords introduction, scores, countdown, and outcome
+- `SwordModel.tsx`: beveled blade, fuller, crossguard, wrapped grip, and pommel
 
 - `HostPage.tsx`: room lifecycle and top-level host state
 - `LobbyOverlay.tsx`: room code, QR code, players, and Start
 - `GameOverlay.tsx`: current player, phase, and restart controls
+- `DemoPreflight.tsx`: production URL, security, server, and controller readiness checks
 - `BoardScene.tsx`: React Three Fiber scene
 - `BoardTile.tsx`: one visual board tile
-- `PlayerPiece.tsx`: one colored placeholder piece
+- `CharacterModel.tsx`: animated humanoid assembled from local Three.js geometry with customization-ready appearance data
+- `characterLayout.ts`: shared per-player offsets used by characters, camera framing, and dice placement
 - `DiceView.tsx`: visual die driven by a server result
+- `WorldEnvironment.tsx`: grass island, trees, rocks, flowers, clouds, and daylight environment
+- `WoodlandDetails.tsx`: instanced foliage/ground planting, branching trees, benches, lanterns, and distant hills
+- `sceneryMaterials.ts`: deterministic local grass, bark, and stone textures
+- `ART_DIRECTION.md`: palette, asset provenance, rendering choices, and verification notes
+- `hostState.ts`: pure projection of authoritative server events into display state
+- `useLiveHostGame.ts`: validated Socket.IO room creation, snapshots, host commands, and animation events
 - `usePieceAnimation.ts`: path animation driven by `player.moving`
 
 The host renders authoritative state but never generates dice values or advances turns.
+
+Character appearances are data-driven through `CharacterAppearance`, so a future pre-game
+customizer can swap skin tone, hair, outfit, shoes, and accessories without replacing movement or
+networking code. The current four presets are intentionally distinct and require no external model
+files, keeping the hackathon demo deterministic and offline-friendly. The woodland art pass adds
+modeled facial features, layered hair, outfit trim, scarves, backpack straps/buckles, and rounded
+shoes with soles and laces. World details use local textures and instancing rather than runtime
+asset downloads.
+
+The board uses layered route stones, denser trees and shrubs, small flowers and mushrooms, and a
+clearly labeled start gate. Its decorative trail mesh is deliberately open, so the logical
+last-to-first wraparound never draws a shortcut across the world. The camera closely tracks the
+active character, whose pulsing floor marker and local light identify the current turn. The die
+floats directly above that character, follows them along the movement path, and includes six fully
+modeled pip faces, camera-facing result poses, hover motion, and a light ring during rolls.
+
+The host interface follows a woodland field-journal style: warm ivory surfaces, forest-green
+type, serif map headings, fine borders, and restrained shadows. Turn state uses plain-language
+labels and a small pip-face illustration for the last roll. The lobby, Preflight controls, and
+loading/error screens share this palette. No gradients or remote fonts are required.
+
+The header uses the same original trail-and-leaf mark as `public/favicon.svg`. The browser also
+receives `public/favicon.ico` (16/32/48/64 px) and an Apple touch icon (180 px). Rebuild the raster
+variants on Windows with `apps/web/scripts/generate-favicon.ps1`; keep its geometry and palette in
+sync with the SVG when changing the mark.
+
+The host selects its mode from `VITE_SOCKET_URL`. With no URL it runs the deterministic fixture
+preview. With a URL it creates a live room, validates every received payload, renders snapshots and
+incremental player updates, animates server-supplied dice and movement events, and sends only
+authenticated Start/Restart commands. It never chooses a live dice value or movement path.
+
+The live host keeps its room code and private host token in tab-scoped session storage. On a socket
+reconnect or page refresh it authenticates with `room.host.resume` and renders the server snapshot;
+if the in-memory room no longer exists, it clears the stale credentials and creates a new room.
+During `MOVING`, the display preserves the animated piece position even though recovery snapshots
+already contain the destination, then accepts the final authoritative position at turn end.

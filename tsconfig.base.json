@@ -5,9 +5,12 @@
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "module": "ESNext",
     "moduleResolution": "Bundler",
+    "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "target": "ES2022"
+    "target": "ES2022",
+    "useDefineForClassFields": true
   }
 }

@@ -1,5 +1,8 @@
 # Core milestone scope
 
+This file records the original core milestone. Ryan subsequently approved sword duels and the
+round-game/shop economy; see `SWORD_DUEL.md` and `PARTY_ECONOMY.md` for the current extensions.
+
 ## Goal
 
 Prove the full multiplayer board-game loop before adding content. A laptop hosts a shared 3D board, four phones join as controllers, and each active player shakes their phone to request a server-generated dice roll. The correct piece then moves and the turn advances.

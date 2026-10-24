@@ -1,17 +1,17 @@
 # Protocol contract
 
+The round-game/economy extension in [PARTY_ECONOMY.md](./PARTY_ECONOMY.md) adds `SHOP`, `POTATO`,
+optional public economy state, and validated `shop.choice`, `item.use`, and `potato.pass` commands.
+
+The combat extension is documented in [SWORD_DUEL.md](./SWORD_DUEL.md): `DUEL`, validated snapshot
+combat state, and the authenticated `duel.action` command.
+
 This is the initial contract to implement in `packages/protocol`. Change it deliberately and update every affected consumer in the same integration cycle.
 
 ## Shared state
 
 ```ts
-type GamePhase =
-  | "LOBBY"
-  | "AWAITING_ROLL"
-  | "ROLLING"
-  | "MOVING"
-  | "TURN_END"
-  | "FINISHED"
+type GamePhase = "LOBBY" | "AWAITING_ROLL" | "ROLLING" | "MOVING" | "TURN_END" | "FINISHED" | "DUEL"
 
 type PlayerState = {
   id: string
@@ -32,7 +32,7 @@ type GameState = {
 }
 ```
 
-Before implementation, decide whether `sessionId` must be omitted from public room snapshots. The likely answer is yes: controllers should receive their own private session token separately, while shared snapshots contain only public player data.
+Private session IDs are omitted from public room snapshots. Controllers receive their own private session token only in the `room.joined` response. The shared `PublicPlayer` schema contains no session field.
 
 ## Client-to-server events
 
@@ -50,6 +50,12 @@ type JoinRoomRequest = {
   existingSessionId?: string
 }
 ```
+
+### `room.host.resume`
+
+Sent by a returning host with its private `roomCode` and `hostToken`. A valid request attaches the
+new transport to the existing room and returns the current `room.snapshot`; it never creates or
+restarts a room.
 
 ### `player.ready`
 
@@ -152,5 +158,6 @@ type GameErrorEvent = {
 - Normalize room codes to uppercase.
 - Validate colors against an allowed list.
 - Treat session and host tokens as private values.
+- Require the host token for host resume, start, and restart commands.
 - Reject unknown event payload fields where practical.
 - Never trust a client-provided player ID, dice value, tile ID, or turn number as authority.

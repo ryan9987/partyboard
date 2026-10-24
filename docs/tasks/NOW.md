@@ -1,56 +1,82 @@
 # Current task board
 
-No mini-game work belongs on this board.
+Occupied-space sword duels and round-end Hot Potato are approved, along with the shop economy.
 
 ## Phase 0: joint foundation
 
-- [ ] Confirm the project name and GitHub repository destination.
+- [x] Confirm the project name and GitHub repository destination.
 - [x] Assign Ryan as host/board and integration owner.
 - [x] Assign Jack as server/controller and motion owner.
 - [x] Assign Ryan as the sole editor of shared manifests and `packages/protocol`.
-- [ ] Review and approve `docs/PROTOCOL.md`.
-- [ ] Decide whether public snapshots omit private session IDs.
-- [ ] Scaffold the pnpm packages and commit exact dependency versions.
-- [ ] Add formatting, linting, test, and type-check configuration.
-- [ ] Add a CI workflow that runs build, tests, and type checking.
+- [x] Review and implement `docs/PROTOCOL.md` for the initial integration contract.
+- [x] Keep private session IDs out of public snapshots.
+- [x] Scaffold the pnpm packages and lock exact dependency versions.
+- [x] Add formatting, linting, test, and type-check configuration.
+- [x] Add a CI workflow that runs the full repository check.
 
 ## Phase 1: parallel foundations
 
 ### Ryan — host/board lane
 
-- [ ] Define and validate a 20-tile loop.
-- [ ] Test wraparound traversal.
-- [ ] Render board tiles from the board definition.
-- [ ] Render four placeholder player pieces.
-- [ ] Animate a supplied dice value.
-- [ ] Animate a supplied movement path.
-- [ ] Build a host lobby against a typed fixture.
+- [x] Define and validate a winding 32-tile route with safe wraparound.
+- [x] Test wraparound traversal.
+- [x] Render board tiles from the board definition.
+- [x] Render four placeholder player pieces.
+- [x] Animate a supplied dice value.
+- [x] Animate a supplied movement path.
+- [x] Build a host lobby against a typed fixture.
+- [x] Render the route as a forward journey with distance fog and a following camera.
 
 ### Jack — server/controller lane
 
-- [ ] Create and join an in-memory room.
-- [ ] Issue private player session IDs.
-- [ ] Store the controller session ID locally.
-- [ ] Implement the authoritative phase machine.
-- [ ] Validate and deduplicate roll requests.
-- [ ] Generate dice values on the server.
-- [ ] Implement the touch Roll button.
-- [ ] Build motion permission and shake detection.
+- [x] Create and join an in-memory room.
+- [x] Issue private player session IDs.
+- [x] Store the controller session ID locally.
+- [x] Implement the authoritative phase machine.
+- [x] Validate and deduplicate roll requests.
+- [x] Generate dice values on the server.
+- [x] Implement the touch Roll button.
+- [x] Build motion permission and shake detection.
 
 ## Phase 2: integration
 
-- [ ] Replace the host fixture with live room snapshots.
-- [ ] Connect dice events to the host animation.
-- [ ] Connect movement events to the correct piece.
-- [ ] Confirm the controller disables after submission.
-- [ ] Confirm the server advances turns on its own timers.
-- [ ] Add reconnection and active-player timeout behavior.
+- [x] Replace the host fixture with live room snapshots.
+- [x] Connect dice events to the host animation.
+- [x] Connect movement events to the correct piece.
+- [x] Confirm the controller disables after submission.
+- [x] Confirm the server advances turns on its own timers.
+- [x] Add reconnection and active-player timeout behavior.
 
 ## Phase 3: deployment and proof
 
 - [ ] Deploy an HTTPS build.
-- [ ] Generate the controller QR code from environment configuration.
+- [x] Generate and validate the controller QR code from environment configuration.
+- [x] Add an in-app preflight for HTTPS, server connection, and controller readiness.
+- [x] Complete the automated and desktop-browser portions of the demo checklist.
+- [x] Polish the floating die, start marker, route tiles, and world dressing for presentation.
 - [ ] Test iPhone motion permission.
 - [ ] Test Android motion behavior.
 - [ ] Complete the full demo checklist.
 - [ ] Tag a known-good demo version.
+
+## Phase 4: occupied-space sword duel
+
+- [x] Detect completed landings on occupied non-start spaces on the server.
+- [x] Play a crossed-swords announcement and transition to a woodland arena.
+- [x] Add validated, authenticated, deduplicated swing/guard commands.
+- [x] Resolve attacks, parries, clashes, scores, draws, forfeits, and action cooldowns on the server.
+- [x] Provide phone motion inputs and equivalent touch buttons.
+- [x] Move the loser back up to three spaces and resume the interrupted turn order.
+- [x] Test scoring, abuse rejection, timeout, restart, and four-controller rotations.
+- [ ] Tune physical-device gesture thresholds on iPhone and Android.
+
+## Phase 5: round games and shops
+
+- [x] Extend the route to 48 spaces with recurring markets.
+- [x] Pause movement at a passed market, then resume the same roll.
+- [x] Add coins, a three-item inventory, and authoritative purchases.
+- [x] Add Frost Charm, Trail Boots, and Leaf Shield with target/effect validation.
+- [x] Run Hot Potato after each full round and award coins exactly once.
+- [x] Add a woodland acorn arena, motion passing, and touch fallback.
+- [x] Verify rules, timers, disconnects, rewards, and browser screens.
+- [ ] Verify physical phone motion and venue-network pacing.

@@ -1,0 +1,116 @@
+.controller-page {
+  box-sizing: border-box;
+  width: min(100%, 32rem);
+  margin: 0 auto;
+  padding: 2rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+  color: #f4f7ff;
+  font-family: system-ui, sans-serif;
+}
+.controller-page form,
+.controller-page label {
+  display: grid;
+  gap: 0.6rem;
+}
+.controller-page form {
+  gap: 1.25rem;
+}
+.controller-page input,
+.controller-page select,
+.controller-page button {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem;
+  border: 1px solid #72839e;
+  border-radius: 0.75rem;
+  background: #17243c;
+  color: #f4f7ff;
+  font: inherit;
+}
+.controller-page button {
+  cursor: pointer;
+  font-weight: 700;
+}
+.controller-page button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.controller-page .controller-roll {
+  min-height: 7rem;
+  margin: 1.5rem 0;
+  background: #334d89;
+  font-size: 2rem;
+  touch-action: manipulation;
+}
+.controller-page .controller-error {
+  padding: 1rem;
+  border: 1px solid #ff8298;
+  border-radius: 0.75rem;
+}
+.controller-page :focus-visible {
+  outline: 3px solid #f6cc58;
+  outline-offset: 3px;
+}
+
+.duel-controller {
+  padding: 1.25rem;
+  margin: 1.25rem 0;
+  border: 1px solid #72896c;
+  border-radius: 1rem;
+  background: #20382d;
+}
+.duel-controller h2 {
+  font-family: Georgia, serif;
+  font-size: 1.8rem;
+}
+.duel-kicker {
+  font-size: 0.75rem;
+  color: #d8c991;
+}
+.duel-controller__buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.duel-controller__buttons button {
+  min-height: 6rem;
+  background: #f0e5c9;
+  color: #294638;
+  border-color: #e3cd93;
+}
+.duel-controller small {
+  color: #cad4c6;
+}
+
+.party-controller,
+.inventory-controller {
+  margin: 1rem 0;
+  padding: 1.1rem;
+  border: 1px solid #6c8265;
+  border-radius: 12px;
+  background: #20382d;
+}
+.party-controller h2 {
+  font:
+    1.7rem Georgia,
+    serif;
+}
+.shop-choices {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.8rem 0;
+}
+.shop-choices button {
+  text-align: left;
+  background: #efe8d3;
+  color: #294638;
+}
+.shop-choices small {
+  display: block;
+  margin-top: 0.3rem;
+  line-height: 1.4;
+}
+.party-notice {
+  color: #e2cd8f;
+  font-size: 0.85rem;
+}

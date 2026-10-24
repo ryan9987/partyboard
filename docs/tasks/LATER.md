@@ -2,7 +2,7 @@
 
 Do not begin these items until the core definition of done is satisfied.
 
-- Mini-games and mini-game selection
+- Additional mini-games and mini-game selection (occupied-space sword duel is approved in NOW.md)
 - Power-ups and inventory
 - Special tile effects
 - Branching paths
