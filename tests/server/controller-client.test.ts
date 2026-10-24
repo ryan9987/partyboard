@@ -64,6 +64,7 @@ beforeEach(() => {
   storage = new Map()
   server = new GameServer({
     manualStageAdvance: false,
+    millisecondsPerTile: 300,
     dice: () => 1,
     deliver: (id, event, payload) => {
       if (id === "host") hostMessages.push({ event, payload })

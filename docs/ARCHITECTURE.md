@@ -57,13 +57,15 @@ The host does not send `animation.finished` to control the game. Known server du
 
 ## Timing defaults
 
-| Action | Initial value |
+| Action | Current default |
 |---|---:|
 | Dice animation | 900 ms |
-| Movement per tile | 300 ms |
+| Movement per tile | 420 ms |
 | Turn-end pause | 500 ms |
-| Roll request timeout | 30 seconds |
-| Disconnected player reservation | 60 seconds |
+| Connected player's roll deadline | None |
+| Shop deadline | None |
+| Rules/results | Host continues when ready |
+| Active-player disconnect grace | 60 seconds |
 
 These are configuration values, not protocol constants.
 

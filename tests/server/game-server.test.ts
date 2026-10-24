@@ -58,6 +58,7 @@ beforeEach(() => {
   messages = []
   server = new GameServer({
     manualStageAdvance: false,
+    millisecondsPerTile: 300,
     rollTimeoutMs: 30_000,
     roundGame: "potato",
     dice: () => 6,

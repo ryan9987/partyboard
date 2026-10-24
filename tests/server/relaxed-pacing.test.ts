@@ -116,7 +116,7 @@ it("never skips a connected player or closes a shop just because time passes", (
   expect(state.shop?.id).toBe(visitId)
   command(0, "shop.choice", { visitId, item: "boots" })
   settle()
-  expect(state.players[0]).toMatchObject({ tileId: "tile-6", inventory: ["boots"], coins: 3 })
+  expect(state.players[0]).toMatchObject({ tileId: "tile-6", inventory: ["boots"], coins: 8 })
 })
 
 it("still recovers disconnected turns and finishes an abandoned shop's exact path", () => {
@@ -239,6 +239,7 @@ it("shows an authoritative power-up effect on the owner's turn and clears it on 
   expect(state.itemEffect!.id).toBe(effectId)
   roll(0, 1)
   expect(state.itemEffect).toBeNull()
+  expect(state.notice).toBeUndefined()
   settle()
   expect(state.players[0]!.tileId).toBe("tile-9")
 })

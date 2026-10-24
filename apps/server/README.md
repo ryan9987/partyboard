@@ -52,9 +52,10 @@ The initial Linux demo used cloudflared 2026.10.3 downloaded from the official G
 - Host commands require the private host token. Private create/join replies go only to their requesting connection. Public snapshots never contain credentials.
 - Refreshing with an existing private session reattaches the same player and replaces the previous transport. A superseded connection cannot roll or mark that player disconnected.
 - Only the active attached player can roll during `AWAITING_ROLL`. Each accepted session/request pair remains deduplicated for the room lifetime, including across restarts.
-- Server dice use `crypto.randomInt(1, 7)`. Board movement uses `getMovementPath(defaultBoard, tileId, diceValue)`.
-- The server schedules 900 ms rolling, 300 ms per tile, and a 500 ms turn-end pause. It requires no animation completion acknowledgement. At movement start, snapshots contain the destination so rejoining screens can recover immediately.
-- Connected players have 30 seconds to request a roll. An awaiting active player's disconnect replaces that deadline with a 60-second reconnect grace period. Reattachment restores a 30-second deadline.
+- Server dice use `crypto.randomInt(1, 7)`. Board movement uses `getMovementPath` with the die value plus any equipped Boots bonus.
+- The server schedules 900 ms rolling, 420 ms per tile, and a 500 ms turn-end pause. It requires no animation completion acknowledgement. At movement start, snapshots contain the destination so rejoining screens can recover immediately.
+- Each actual forward crossing awards one coin, capped at 999, including the market tile before purchasing and any Boots spaces. There is no extra landing bonus. Shop continuation cannot replay previous crossings; restart cancels unpaid crossing timers.
+- Connected players and shops have no deadline. An awaiting active player's disconnect starts a 60-second reconnect grace period; reattachment cancels it. Duel/mini-game rules and results wait for host Continue; active gameplay clocks remain.
 - Turn order skips disconnected players. With nobody connected, the room pauses in `TURN_END` with no active player or timer; a rejoining player resumes it. No `turn.ended` event is emitted while no next player exists, because the shared schema requires a next player. Public snapshots remain authoritative.
 - Membership/session reservations last for the room lifetime; disconnected players are not evicted or replaced. Restart cancels pending animation timers, resets positions, retains membership and request deduplication, and starts a new turn. Turn numbers remain monotonic across restarts to distinguish old UI events.
 

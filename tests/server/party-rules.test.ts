@@ -120,10 +120,65 @@ it("pauses at a passed shop, buys once, and finishes the original path without a
   const visitId = state.shop!.id
   const id = shop(0, "boots")
   shop(0, "boots", id, visitId)
-  expect(state.players[0]).toMatchObject({ coins: 2, inventory: ["boots"] })
+  expect(state.players[0]).toMatchObject({ coins: 5, inventory: ["boots"] })
   settle()
-  expect(state.players[0]).toMatchObject({ tileId: "tile-6", coins: 3 })
+  expect(state.players[0]).toMatchObject({ tileId: "tile-6", coins: 8 })
   expect(state.currentPlayerId).toBe(players[1]!.playerId)
+})
+
+it("awards one coin at each actual crossing, including the market, and no extra landing coin", () => {
+  setup(1)
+  roll(0)
+  vi.advanceTimersByTime(14)
+  expect(state.players[0]!.coins).toBe(6)
+  vi.advanceTimersByTime(1)
+  expect(state.players[0]!.coins).toBe(7)
+  vi.advanceTimersByTime(5)
+  expect(state.players[0]!.coins).toBe(8)
+  vi.advanceTimersByTime(5)
+  expect(state.phase).toBe("SHOP")
+  expect(state.players[0]!.coins).toBe(9)
+  const visitId = state.shop!.id
+  vi.advanceTimersByTime(500)
+  expect(state.players[0]!.coins).toBe(9)
+  const id = shop(0, "skip")
+  shop(0, "skip", id, visitId)
+  settle()
+  expect(state.players[0]).toMatchObject({ coins: 12, tileId: "tile-6" })
+})
+
+it("pays all eight Boots spaces exactly once and does not pay for rejected duplicate rolls", () => {
+  setup(1)
+  roll(0)
+  vi.advanceTimersByTime(25)
+  shop(0, "boots")
+  settle()
+  use(0, "boots")
+  const coins = state.players[0]!.coins!
+  const id = command(0, "dice.roll.request", {})
+  command(0, "dice.roll.request", {}, id)
+  settle()
+  expect(state.players[0]!.coins).toBe(coins + 8)
+  expect(state.players[0]!.tileId).toBe("tile-14")
+})
+
+it("cancels future crossing rewards on restart and resets the purse", () => {
+  setup(1)
+  roll(0)
+  vi.advanceTimersByTime(20)
+  expect(state.players[0]!.coins).toBe(8)
+  server.handle("host", "game.restart", { roomCode: room.roomCode, hostToken: room.hostToken })
+  vi.advanceTimersByTime(10_000)
+  expect(state.players[0]).toMatchObject({ coins: 6, tileId: "tile-0" })
+  expect(state.phase).toBe("AWAITING_ROLL")
+})
+
+it("pays a wrap-to-Start space once, respects the coin cap and never adds a turn-end bonus", () => {
+  setup(1)
+  for (let i = 0; i < 8; i++) play(0)
+  expect(state.players[0]).toMatchObject({ coins: 54, tileId: "tile-0" })
+  for (let i = 0; i < 160; i++) play(0)
+  expect(state.players[0]!.coins).toBe(999)
 })
 
 it("auto-skips expired shops and still finishes a disconnected player's movement", () => {
@@ -160,19 +215,22 @@ it("consumes Boots once and applies exactly two additional spaces", () => {
 })
 
 it("freezes precisely one board turn and resumes the round without losing turn order", () => {
-  setup()
+  setup(3)
   roll(0)
   vi.advanceTimersByTime(25)
   shop(0, "freeze")
   settle()
   play(1, 1)
+  play(2, 2)
   use(0, "freeze", 1)
   expect(state.players[1]!.frozen).toBe(true)
   const before = state.turnNumber
+  const frozenCoins = state.players[1]!.coins
   play(0, 1)
-  expect(state.currentPlayerId).toBe(players[0]!.playerId)
+  expect(state.currentPlayerId).toBe(players[2]!.playerId)
   expect(state.turnNumber).toBe(before + 2)
   expect(state.players[1]).toMatchObject({ frozen: false, tileId: "tile-1" })
+  expect(state.players[1]!.coins).toBe(frozenCoins)
 })
 
 it("consumes a shield when it blocks sabotage and leaves the protected player unfrozen", () => {

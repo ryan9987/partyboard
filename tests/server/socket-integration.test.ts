@@ -86,6 +86,10 @@ it("uses actual Socket.IO for private joins, schema errors, a roll, and refresh 
   phone.emit("dice.roll.request", { roomCode: room.roomCode } as never)
   expect(gameErrorEventSchema.parse(await rejected).code).toBe("INVALID_PAYLOAD")
   const rolled = next(host, "dice.rolled")
+  const crossingCoins: number[] = []
+  host.on("room.snapshot", (state) => {
+    crossingCoins.push(gameStateSchema.parse(state).players[0]!.coins!)
+  })
   const moved = next(host, "player.moving")
   const ended = next(host, "turn.ended")
   phone.emit("dice.roll.request", {
@@ -100,6 +104,8 @@ it("uses actual Socket.IO for private joins, schema errors, a roll, and refresh 
     path: ["tile-1", "tile-2"],
   })
   await ended
+  expect(crossingCoins).toContain(7)
+  expect(crossingCoins).toContain(8)
   phone.disconnect()
   const replacement = client(url)
   await connected(replacement)
@@ -260,6 +266,6 @@ it("carries validated mini-game inputs over real sockets and returns coin reward
     (state) => state.phase === "AWAITING_ROLL" && state.roundNumber === 2,
   )
   expect(resumed.currentPlayerId).toBe(result.players[0]!.id)
-  expect(resumed.players[0]!.coins).toBe(15)
-  expect(resumed.players[1]!.coins).toBe(9)
+  expect(resumed.players[0]!.coins).toBe(16)
+  expect(resumed.players[1]!.coins).toBe(10)
 })

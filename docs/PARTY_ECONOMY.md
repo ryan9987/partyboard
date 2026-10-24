@@ -20,9 +20,16 @@ has 48 spaces. Shops sit at spaces 3, 11, 19, 27, 35, and 43 so content appears 
 
 ## Economy
 
-Each player starts with 6 coins and a three-item pack. Finishing a move gives 1 coin. Hot Potato's
+Each player starts with 6 coins and a three-item pack. Every forward space crossed gives 1 coin,
+at that space's arrival time. A six-space roll therefore earns 6 coins, not one. Passing a market
+earns its coin before shopping; resuming the unused path cannot pay for earlier spaces twice.
+Boots bonus spaces and crossing Start also pay. Skipped turns, backwards duel penalties, and
+duplicate requests do not. There is no additional landing/turn-end bonus. Hot Potato's
 last survivor receives 8 coins; each other participant receives 2. Payouts happen exactly once.
 Balances are capped at 999; restart resets coins, packs, effects, and round progress.
+
+Travel defaults to 420 ms per space. The host follows a continuous curve through the same
+server-approved tile path; animation never decides the route, reward, or dice value.
 
 | Item        | Price | Effect                                                                            |
 | ----------- | ----: | --------------------------------------------------------------------------------- |

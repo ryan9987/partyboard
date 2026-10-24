@@ -129,7 +129,7 @@ export class GameServer {
     this.dice = options.dice ?? (() => randomInt(1, 7))
     this.timing = {
       rollDurationMs: options.rollDurationMs ?? 900,
-      millisecondsPerTile: options.millisecondsPerTile ?? 300,
+      millisecondsPerTile: options.millisecondsPerTile ?? 420,
       turnEndMs: options.turnEndMs ?? 500,
       rollTimeoutMs: options.rollTimeoutMs ?? 0,
       disconnectTimeoutMs: options.disconnectTimeoutMs ?? 60_000,
@@ -382,6 +382,7 @@ export class GameServer {
           this.clearTimer(room)
           room.state.phase = "ROLLING"
           room.state.itemEffect = null
+          delete room.state.notice
           room.state.lastRoll = value
           this.broadcast(room, "dice.rolled", {
             playerId: player.id,
@@ -631,6 +632,7 @@ export class GameServer {
 
   private beginTurn(room: Room, playerId: string): void {
     room.state.itemEffect = null
+    delete room.state.notice
     room.state.duel = null
     room.duelRuntime = null
     room.state.currentPlayerId = playerId
@@ -706,8 +708,6 @@ export class GameServer {
     room.state.phase = "TURN_END"
     room.state.duel = null
     room.duelRuntime = null
-    const current = this.player(room, room.state.currentPlayerId!)
-    current.coins = Math.min(999, (current.coins ?? 0) + 1)
     this.snapshot(room)
     this.schedule(room, this.timing.turnEndMs, () => this.advance(room))
   }
@@ -722,6 +722,7 @@ export class GameServer {
     const rest = path.slice(segment.length)
     const fromTileId = player.tileId
     const toTileId = segment.at(-1)!
+    const startedAt = Date.now()
     room.state.phase = "MOVING"
     player.tileId = toTileId
     this.broadcast(room, "player.moving", {
@@ -733,7 +734,20 @@ export class GameServer {
       turnNumber: room.state.turnNumber,
     })
     this.snapshot(room)
-    this.schedule(room, segment.length * this.timing.millisecondsPerTile, () => {
+    let crossed = 0
+    const step = () => {
+      // Only the server awards travel coins, once per reached space (including Boots).
+      player.coins = Math.min(999, (player.coins ?? 0) + 1)
+      crossed++
+      if (crossed < segment.length) {
+        this.snapshot(room)
+        this.schedule(
+          room,
+          Math.max(1, startedAt + (crossed + 1) * this.timing.millisecondsPerTile - Date.now()),
+          step,
+        )
+        return
+      }
       if (shopIndex >= 0 && player.connected) {
         room.remainingPath = rest
         room.state.phase = "SHOP"
@@ -748,7 +762,8 @@ export class GameServer {
           this.schedule(room, this.timing.shopDurationMs, () => this.closeShop(room))
       } else if (rest.length) this.movePath(room, player, rest)
       else this.resolveLanding(room, player)
-    })
+    }
+    this.schedule(room, this.timing.millisecondsPerTile, step)
   }
 
   private closeShop(room: Room): void {

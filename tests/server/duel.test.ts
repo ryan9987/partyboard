@@ -116,6 +116,8 @@ it("deduplicates attacks, limits action rate, awards two hits, caps the penalty 
   })
   expect(state.players[0]!.tileId).toBe("tile-0")
   expect(state.players[1]!.tileId).toBe("tile-2")
+  expect(state.players[0]!.coins).toBe(8) // No extra coins for penalty movement.
+  expect(state.players[1]!.coins).toBe(8)
   vi.advanceTimersByTime(210)
   expect(state.phase).toBe("AWAITING_ROLL")
   expect(state.currentPlayerId).toBe(players[2]!.playerId)

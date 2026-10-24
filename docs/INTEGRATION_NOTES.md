@@ -1,5 +1,11 @@
 # Integration notes
 
+## 2026-10-24 — Ryan-approved smooth animation and per-space coins
+
+Ryan requested smoother travel/animation while preserving performance, one coin for every space
+crossed, and pushing the verified integration to main. This authorizes the corresponding server
+economy/test changes alongside Ryan's rendering work. No new dependencies or protocol fields.
+
 ## 2026-10-24 — Integrate Jack's visual overhaul into current main
 
 Ryan requested pulling Jack's features and pushing the integrated result to main.
