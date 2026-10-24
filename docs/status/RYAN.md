@@ -4,8 +4,8 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
-- Ryan's host/board foundation, visual-polish pass, and Phase 2 live host adapter are implemented on
-  `feat/host-board`.
+- Ryan's host/board foundation, visual-polish pass, Phase 2 live host adapter, and Phase 3 preflight
+  foundation are implemented on `feat/host-board`.
 - Waiting for Jack's server branch to run the first real host/controller integration checkpoint.
 
 ## Completed
@@ -32,6 +32,11 @@ Ryan or Ryan's agent owns this file.
 - Connected authoritative movement paths to the existing per-tile character animation without
   allowing the host to generate live dice values or choose a path.
 - Added authenticated live Start and Restart commands plus explicit connecting/disconnected UI.
+- Added centralized runtime configuration validation for controller and Socket.IO URLs, including
+  insecure remote endpoint and secure-context warnings.
+- Added a polished in-app Preflight panel for host security, controller URL, server connection, and
+  joined/ready controller counts. It can open automatically with `/host?preflight=1`.
+- Added a platform-neutral deployment and release-proof playbook.
 - CI, lint, formatting, tests, type checking, and production build configured.
 
 ## Blockers and handoffs
@@ -44,7 +49,7 @@ Ryan or Ryan's agent owns this file.
 ## Verification
 
 - `pnpm check` passes.
-- 12 unit tests pass across board, protocol, and host event-projection suites.
+- 16 unit tests pass across board, protocol, host event-projection, and runtime-config suites.
 - Production Vite build succeeds with the host isolated into a lazy-loaded chunk.
 - Browser-tested the detailed lobby world, character placement, a six-space dice/movement turn,
   turn advancement, and updated player positions at a 944-by-804 viewport.

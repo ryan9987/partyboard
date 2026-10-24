@@ -49,7 +49,8 @@ No mini-game work belongs on this board.
 ## Phase 3: deployment and proof
 
 - [ ] Deploy an HTTPS build.
-- [ ] Generate the controller QR code from environment configuration.
+- [x] Generate and validate the controller QR code from environment configuration.
+- [x] Add an in-app preflight for HTTPS, server connection, and controller readiness.
 - [ ] Test iPhone motion permission.
 - [ ] Test Android motion behavior.
 - [ ] Complete the full demo checklist.

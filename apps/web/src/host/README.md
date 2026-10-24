@@ -7,6 +7,7 @@ Implemented components:
 - `HostPage.tsx`: room lifecycle and top-level host state
 - `LobbyOverlay.tsx`: room code, QR code, players, and Start
 - `GameOverlay.tsx`: current player, phase, and restart controls
+- `DemoPreflight.tsx`: production URL, security, server, and controller readiness checks
 - `BoardScene.tsx`: React Three Fiber scene
 - `BoardTile.tsx`: one visual board tile
 - `CharacterModel.tsx`: animated humanoid assembled from local Three.js geometry with customization-ready appearance data

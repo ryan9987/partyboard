@@ -83,7 +83,7 @@ a {
 
 .topbar {
   position: absolute;
-  z-index: 5;
+  z-index: 8;
   top: 24px;
   right: 28px;
   left: 28px;
@@ -91,6 +91,12 @@ a {
   align-items: center;
   justify-content: space-between;
   pointer-events: none;
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .brand {
@@ -127,6 +133,121 @@ a {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   backdrop-filter: blur(14px);
+}
+
+.preflight-control {
+  position: relative;
+  pointer-events: auto;
+}
+
+.preflight-button,
+.preflight-close {
+  color: #fff;
+  cursor: pointer;
+}
+
+.preflight-button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 13%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(14px);
+}
+
+.preflight-panel {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  display: grid;
+  width: min(360px, calc(100vw - 32px));
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 22px;
+  background: rgb(9 16 34 / 94%);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 38%);
+  backdrop-filter: blur(20px);
+}
+
+.preflight-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.preflight-heading h2 {
+  margin: 4px 0 0;
+  font-size: 1.45rem;
+}
+
+.preflight-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 9%);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.preflight-row {
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 11px;
+  align-items: start;
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 5%);
+}
+
+.preflight-row strong,
+.preflight-row small {
+  display: block;
+}
+
+.preflight-row strong {
+  margin-bottom: 3px;
+  font-size: 0.9rem;
+}
+
+.preflight-row small,
+.preflight-footnote {
+  color: #9eacc2;
+  line-height: 1.4;
+}
+
+.preflight-status {
+  width: 10px;
+  height: 10px;
+  margin-top: 4px;
+  border-radius: 50%;
+  box-shadow: 0 0 12px currentColor;
+}
+
+.preflight-status--pass {
+  color: #58e4ae;
+  background: currentColor;
+}
+
+.preflight-status--warning {
+  color: #ffd05e;
+  background: currentColor;
+}
+
+.preflight-status--error {
+  color: #ff697d;
+  background: currentColor;
+}
+
+.preflight-footnote {
+  margin: 2px 2px 0;
+  font-size: 0.75rem;
 }
 
 .host-panel {
@@ -329,6 +450,14 @@ a {
 
   .fixture-badge {
     display: none;
+  }
+
+  .preflight-panel {
+    position: fixed;
+    top: 64px;
+    right: 16px;
+    left: 16px;
+    width: auto;
   }
 
   .host-panel {

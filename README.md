@@ -27,6 +27,7 @@ No mini-games, power-ups, currency, branching paths, or finished art belong in t
 - [Jack's role](docs/roles/JACK.md)
 - [Current task board](docs/tasks/NOW.md)
 - [Demo checklist](docs/DEMO_CHECKLIST.md)
+- [Deployment and preflight](docs/DEPLOYMENT.md)
 
 ## Planned technology
 
