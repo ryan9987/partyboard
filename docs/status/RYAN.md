@@ -8,6 +8,9 @@ Ryan or Ryan's agent owns this file.
 - The first real host/controller integration checkpoint and host-refresh recovery test pass.
 - Woodland visual pass implemented with local geometry/textures and instanced planting; no
   external assets, new dependencies, or controller/server changes required.
+- Host UI now matches the woodland palette with ivory journal panels, forest-green text, plain
+  turn labels, a pip-face last-roll display, and a matching original trail/leaf logo. SVG, multi-size
+  ICO, and Apple touch icons are bundled locally with a reproducible Windows generator.
 
 ## Completed
 

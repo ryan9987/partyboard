@@ -38,9 +38,15 @@ active character, whose pulsing floor marker and local light identify the curren
 floats directly above that character, follows them along the movement path, and includes six fully
 modeled pip faces, camera-facing result poses, hover motion, and a light ring during rolls.
 
-The host interface uses a compact broadcast-style layout with flat colors, restrained type, and
-solid controls. It avoids gradients, oversized cards, decorative dashboard copy, and other visual
-elements that compete with the 3D board.
+The host interface follows a woodland field-journal style: warm ivory surfaces, forest-green
+type, serif map headings, fine borders, and restrained shadows. Turn state uses plain-language
+labels and a small pip-face illustration for the last roll. The lobby, Preflight controls, and
+loading/error screens share this palette. No gradients or remote fonts are required.
+
+The header uses the same original trail-and-leaf mark as `public/favicon.svg`. The browser also
+receives `public/favicon.ico` (16/32/48/64 px) and an Apple touch icon (180 px). Rebuild the raster
+variants on Windows with `apps/web/scripts/generate-favicon.ps1`; keep its geometry and palette in
+sync with the SVG when changing the mark.
 
 The host selects its mode from `VITE_SOCKET_URL`. With no URL it runs the deterministic fixture
 preview. With a URL it creates a live room, validates every received payload, renders snapshots and

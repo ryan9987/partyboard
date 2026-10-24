@@ -147,12 +147,14 @@ export default function HostPage() {
 
       <header className="topbar">
         <div className="brand">
-          <span className="brand__mark">PB</span>
+          <img className="brand__mark" src="/favicon.svg" alt="" width="36" height="36" />
           Party Board
         </div>
         <div className="topbar__actions">
           <span className="fixture-badge">
-            <span className="connection-dot" />
+            <span
+              className={`connection-dot connection-dot--${liveMode ? live.connectionState : "preview"}`}
+            />
             {liveMode ? live.connectionState : "Preview"}
           </span>
           <DemoPreflight
