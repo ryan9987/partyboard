@@ -7,7 +7,6 @@ export function PartyOverlay({ state }: { state: GameState }) {
     const player = state.players.find((entry) => entry.id === state.shop!.playerId)!
     return (
       <aside className="host-panel market-panel" aria-label="Wildwood Market">
-        <p className="eyebrow">A little stop along the way</p>
         <h2>Wildwood Market</h2>
         <p className="muted">
           {player.name} is browsing · {player.coins ?? 0} coins

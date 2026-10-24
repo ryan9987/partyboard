@@ -4,7 +4,7 @@
   margin: 0 auto;
   padding: 2rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
   color: #294638;
-  font-family: system-ui, sans-serif;
+  font-family: Calibri, Carlito, "Segoe UI", Arial, sans-serif;
 }
 body:has(.controller-page) {
   background: #e5e9db;
@@ -71,7 +71,7 @@ body:has(.controller-page),
   background: #f4efdf;
 }
 .duel-controller h2 {
-  font-family: Georgia, serif;
+  font-family: "Times New Roman", Times, "Liberation Serif", serif;
   font-size: 1.8rem;
 }
 .duel-kicker {

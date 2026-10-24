@@ -52,9 +52,11 @@ export default function HostPage() {
   const [fixtureState, setFixtureState] = useState<GameState>(() => createFixtureState())
   const [fixtureMovingPlayerId, setFixtureMovingPlayerId] = useState<string | null>(null)
   const [fixtureBusy, setFixtureBusy] = useState(false)
-  const [preflightOpen, setPreflightOpen] = useState(
+  // The demo preflight checklist is an operator tool; it only appears with ?preflight=1.
+  const [preflightEnabled] = useState(
     () => new URLSearchParams(window.location.search).get("preflight") === "1",
   )
+  const [preflightOpen, setPreflightOpen] = useState(preflightEnabled)
   const state = liveMode ? (live.state ?? PENDING_LIVE_STATE) : fixtureState
   const movingPlayerId = liveMode ? live.movingPlayerId : fixtureMovingPlayerId
   const busy = liveMode ? live.busy : fixtureBusy
@@ -149,25 +151,23 @@ export default function HostPage() {
       <BoardScene movingPlayerId={movingPlayerId} state={state} />
 
       <header className="topbar">
-        <div className="brand">
-          <img className="brand__mark" src="/favicon.svg" alt="" width="36" height="36" />
-          Party Board
-        </div>
+        <div className="brand">Party Board</div>
         <div className="topbar__actions">
-          <span className="fixture-badge">
-            <span
-              className={`connection-dot connection-dot--${liveMode ? live.connectionState : "preview"}`}
+          {liveMode && live.connectionState !== "connected" && (
+            <span className="connection-notice" role="status">
+              {live.connectionState === "disconnected" ? "Reconnecting to server…" : "Connecting…"}
+            </span>
+          )}
+          {preflightEnabled && (
+            <DemoPreflight
+              config={runtimeConfig}
+              connectionState={liveMode ? live.connectionState : "idle"}
+              liveMode={liveMode}
+              onToggle={() => setPreflightOpen((current) => !current)}
+              open={preflightOpen}
+              state={state}
             />
-            {liveMode ? live.connectionState : "Preview"}
-          </span>
-          <DemoPreflight
-            config={runtimeConfig}
-            connectionState={liveMode ? live.connectionState : "idle"}
-            liveMode={liveMode}
-            onToggle={() => setPreflightOpen((current) => !current)}
-            open={preflightOpen}
-            state={state}
-          />
+          )}
         </div>
       </header>
 

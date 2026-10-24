@@ -33,7 +33,6 @@ export function DuelOverlay({ state }: { state: GameState }) {
             <SwordIcon className="crossed-swords__left" />
             <SwordIcon className="crossed-swords__right" />
           </div>
-          <p className="eyebrow">One space. Two challengers.</p>
           <h1>A woodland duel</h1>
           <p>
             {players[0]!.name} <span>vs</span> {players[1]!.name}
@@ -44,7 +43,6 @@ export function DuelOverlay({ state }: { state: GameState }) {
         <>
           <div className="duel-scoreboard">
             <div>
-              <p className="eyebrow">Woodland duel</p>
               <h2>
                 {duel.stage === "result"
                   ? winner
