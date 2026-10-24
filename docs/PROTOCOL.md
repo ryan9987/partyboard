@@ -32,7 +32,7 @@ type GameState = {
 }
 ```
 
-Before implementation, decide whether `sessionId` must be omitted from public room snapshots. The likely answer is yes: controllers should receive their own private session token separately, while shared snapshots contain only public player data.
+Private session IDs are omitted from public room snapshots. Controllers receive their own private session token only in the `room.joined` response. The shared `PublicPlayer` schema contains no session field.
 
 ## Client-to-server events
 

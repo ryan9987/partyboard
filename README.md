@@ -39,11 +39,26 @@ No mini-games, power-ups, currency, branching paths, or finished art belong in t
 - Vitest for unit and integration tests
 - pnpm workspaces
 
-Dependencies have deliberately not been installed yet. The next implementation step is the shared foundation described in [NOW.md](docs/tasks/NOW.md), after which exact dependency versions will be committed in the lockfile.
+Exact dependency versions are committed in `pnpm-lock.yaml`.
+
+## Run Ryan's host preview
+
+```powershell
+pnpm install
+pnpm dev
+```
+
+Open `http://localhost:5173/host`. Start the fixture preview and use **Preview roll** to exercise the dice, movement, and four-player turn rotation without depending on the unfinished server.
+
+Run the same verification used by CI:
+
+```powershell
+pnpm check
+```
 
 ## Repository status
 
-This commit establishes the repository contract and ownership boundaries. Directories contain README files describing the code that belongs there. Placeholder documentation is not an assertion that the corresponding feature is implemented.
+Ryan's host/board foundation is implemented on `feat/host-board`. Jack-owned server, controller, and motion areas remain documentation-only until Jack's branch is integrated.
 
 ## Named owners
 
