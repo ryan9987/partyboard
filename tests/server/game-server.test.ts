@@ -163,19 +163,19 @@ describe("authoritative room and turn loop", () => {
     expect(snapshot().currentPlayerId).toBe(players[0]!.playerId)
   })
 
-  it("wraps the 32-tile board on the sixth six-space roll", () => {
+  it("wraps the 48-tile board on the eighth six-space roll, including shop pauses", () => {
     const { roomCode, players } = setup(1)
-    for (let turn = 0; turn < 6; turn++) {
+    for (let turn = 0; turn < 8; turn++) {
       roll(roomCode, players[0]!)
-      vi.advanceTimersByTime(3200)
+      vi.advanceTimersByTime(4000)
     }
     expect(last("host", "player.moving")).toMatchObject({
-      fromTileId: "tile-30",
-      toTileId: "tile-4",
-      path: ["tile-31", "tile-0", "tile-1", "tile-2", "tile-3", "tile-4"],
+      fromTileId: "tile-43",
+      toTileId: "tile-0",
+      path: ["tile-44", "tile-45", "tile-46", "tile-47", "tile-0"],
     })
-    expect(snapshot().players[0]?.tileId).toBe("tile-4")
-    expect(snapshot().turnNumber).toBe(7)
+    expect(snapshot().players[0]?.tileId).toBe("tile-0")
+    expect(snapshot().turnNumber).toBe(9)
   })
 
   it("rejects wrong players, forged tokens, duplicate new requests, and invalid payloads", () => {

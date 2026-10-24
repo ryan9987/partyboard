@@ -7,7 +7,7 @@ import { createGameApp } from "../../apps/server/src/server"
 import { createStaticWebHandler } from "../../apps/server/src/static-web"
 
 let directory: string
-let app: ReturnType<typeof createGameApp>
+let app: ReturnType<typeof createGameApp> | undefined
 let origin: string
 beforeEach(async () => {
   directory = await mkdtemp(join(tmpdir(), "partyboard-web-"))
@@ -16,18 +16,23 @@ beforeEach(async () => {
   await writeFile(join(web, "index.html"), "<main>Party Board</main>")
   await writeFile(join(web, "assets", "demo.js"), "console.log('demo')")
   await writeFile(join(directory, "private.env"), "PRIVATE=hidden")
-  await symlink(join(directory, "private.env"), join(web, "escape.txt"))
+  const outside = join(directory, "outside")
+  await mkdir(outside)
+  await writeFile(join(outside, "private.env"), "PRIVATE=hidden")
+  // A directory junction needs no Windows symlink privilege and exercises the same realpath check.
+  await symlink(outside, join(web, "escape"), process.platform === "win32" ? "junction" : "dir")
   app = createGameApp({
     allowedOrigins: ["https://demo.example"],
     webHandler: await createStaticWebHandler(web),
   })
-  await new Promise<void>((done) => app.httpServer.listen(0, "127.0.0.1", done))
+  await new Promise<void>((done) => app!.httpServer.listen(0, "127.0.0.1", done))
   const address = app.httpServer.address()
   if (!address || typeof address === "string") throw Error("No HTTP address")
   origin = `http://127.0.0.1:${address.port}`
 })
 afterEach(async () => {
-  await app.close()
+  await app?.close()
+  app = undefined
   await rm(directory, { recursive: true, force: true })
 })
 
@@ -60,7 +65,7 @@ it("keeps unknown routes, missing assets, dotfiles, symlinks, and traversal outs
     "/assets/missing.js",
     "/.env",
     "/%2eenv",
-    "/escape.txt",
+    "/escape/private.env",
     "/%2e%2e%2fprivate.env",
     "/controller/INVALID",
     "/src/main.tsx",

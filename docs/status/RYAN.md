@@ -61,6 +61,13 @@ Ryan or Ryan's agent owns this file.
 
 ## Verification
 
+- Combined Ryan/Jack integration: 59 Vitest checks plus 10 motion checks pass, alongside typecheck,
+  lint, formatting, and production build. The static-host tests use a Windows-safe directory
+  junction to retain path-escape coverage without elevated file-symlink permission.
+- Browser rehearsal verified pass-by shopping, a four-coin Boots purchase, exact continuation to
+  space six, Boots bonus movement, another shop, round-end Hot Potato, clockwise passing, and
+  eight/two-coin rewards. Jack's controller-stop fix and iPhone guidance are preserved.
+
 - Duel tests cover scoring, parries, clashes, deduplication, cooldowns, spectator rejection,
   timeouts, forfeits, restart cancellation, and four-controller rotations.
 - Separate browser rehearsal verified joins, two moves onto space three, a successful guard,
