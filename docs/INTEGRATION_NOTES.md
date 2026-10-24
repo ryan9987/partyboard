@@ -4,26 +4,22 @@ Use this file for changes one lane needs from another lane or from a shared cont
 
 ## Open requests
 
-### 2026-10-24 — Shared foundation needed for Jack's server/controller slice
+### 2026-10-24 — Connect Ryan's host to Jack's live server
+
+- Requested by: Jack's agent.
+- Owning area: Ryan — host, shared networking, protocol, shared configuration.
+- Blocking or non-blocking: Blocks the complete visual board demo; the text host and phone controllers can exercise the live server independently.
+- Requested contract or behavior change: Replace host fixtures with `room.create`, authenticated start/restart, snapshots, dice, and movement events. Validate all consumed browser payloads in the shared adapter. Add a jointly approved read-only host reattachment command; the current protocol has no way for a refreshed host to subscribe without restarting the game. Consider an explicit turn identity on roll requests to reject an original request delayed into a later turn, and agree on retryable error codes before controllers unlock rejected submissions.
+- Reason: Server and controller now implement the committed schemas, without inventing events or fields. Reconnecting movement snapshots contain the destination; live hosts should use movement events for animation and snapshots for recovery. When no connected next player exists, the server pauses in `TURN_END` with null current player and emits no `turn.ended` until a next player exists; the schema requires a non-null next player. Turn numbers remain monotonic across restart. Session memberships remain reserved for the room lifetime.
+- Proposed acceptance check: Four real phones complete five rotations on the intended HTTPS demo network, including refresh, motion denial, active-player disconnect, and host recovery. Ensure snapshots do not interrupt event-driven animation. Configure Vite to load root `.env` (currently browser values must be set in `apps/web/.env.local` or exported); extend shared formatting coverage to the new owned paths when integrating.
+- Resolution: Open handoff recorded for Ryan. No external message sent. The physical-device milestone is not claimed complete.
+
+## Resolved requests
+
+### 2026-10-24 — Shared foundation and explicit integration delegation
 
 - Requested by: Jack's agent.
 - Owning area: Ryan — workspace, protocol, board, browser networking.
-- Blocking or non-blocking: Blocks connected server/controller work; standalone motion work is unblocked.
-- Requested contract or behavior change: Scaffold package manifests and exact dependency versions for the documented stack, including test/typecheck scripts. Commit shared event schemas and inferred types, a public snapshot type excluding session/host tokens, private create/join response schemas, allowed colors, host authentication payloads, and reconnect/error semantics. Supply the board start tile and movement traversal API and typed browser adapter. Jointly approve final protocol details before implementation.
-- Reason: Only documentation exists today. Jack must validate network messages against shared schemas and consume the public board API rather than invent competing contracts or edit Ryan-owned files.
-- Proposed acceptance check: A consumer can import shared schemas/types and board traversal, validate all documented events, create/join/rejoin rooms privately, and run package tests/type checking. Wire the dependency-free motion source and tests into the shared toolchain; preserve the visible touch Roll fallback in the controller.
-- Resolution: Open; recorded for Ryan. No external message sent.
-
-## Template
-
-```md
-### YYYY-MM-DD — Short request title
-
-- Requested by:
-- Owning area:
-- Blocking or non-blocking:
-- Requested contract or behavior change:
-- Reason:
-- Proposed acceptance check:
-- Resolution:
-```
+- Resolution: Merged Ryan's `f6dcafd` (`feat: build host board foundation`) into Jack's branch. It provides shared schemas, private response types, public snapshots without credentials, board traversal, and the browser socket factory.
+- Explicit delegation: Jack authorized the requested shared integration edits in this thread: server/motion lockfile entries, web motion dependency, controller route replacement, and root dev/typecheck/test commands. Only those integration files were edited outside Jack's original ownership. No protocol events or fields were changed, and Ryan's host remains his fixture implementation.
+- Verification: The frozen lockfile installs, package type checking, lint, formatting, automated tests, and production build are checked on Jack's branch. Details are in `docs/status/JACK.md`.

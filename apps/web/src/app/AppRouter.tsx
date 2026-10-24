@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react"
 
 const HostPage = lazy(() => import("../host/HostPage"))
+const ControllerPage = lazy(() => import("../controller/ControllerPage"))
 
 function LoadingScreen() {
   return (
@@ -8,20 +9,6 @@ function LoadingScreen() {
       <div className="route-message__card">
         <p className="eyebrow">Party Board</p>
         <h1>Loading the table…</h1>
-      </div>
-    </main>
-  )
-}
-
-function ControllerPlaceholder() {
-  return (
-    <main className="route-message">
-      <div className="route-message__card">
-        <p className="eyebrow">Controller route reserved</p>
-        <h1>Jack's controller client connects here.</h1>
-        <p>
-          The host and board can be previewed now at <a href="/host">/host</a>.
-        </p>
       </div>
     </main>
   )
@@ -53,7 +40,11 @@ export function AppRouter() {
   }
 
   if (path === "/controller" || path.startsWith("/controller/")) {
-    return <ControllerPlaceholder />
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <ControllerPage />
+      </Suspense>
+    )
   }
 
   return <NotFound />
