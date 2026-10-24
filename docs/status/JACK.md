@@ -72,3 +72,9 @@ Jack or Jack's agent owns this file.
 - Fixed `ControllerClient.stop()` leaving its view marked connected after socket listeners were removed. It now explicitly marks the client disconnected and clears joining, preventing a roll from being buffered while stopped.
 - One regression test failed before the one-line fix and passes afterward: stop blocks roll requests, then start reclaims the same player and permits the next valid roll.
 - Verification: package type checking, lint, formatting, 42 Vitest tests plus 10 motion tests, and production web build in an isolated output directory. The live server and room state are preserved; generated assets are copied before atomically replacing index.html, retaining older hashed assets for open clients.
+
+## Main integration — 2026-10-24
+
+- Fast-forwarded Jack's branch to `origin/main` at `90a9eb3`, including the 48-space woodland board, sword duels, Hot Potato, markets/power-ups, and existing controller/hosting fixes. No merge conflicts or additional source edits were needed.
+- Frozen dependency installation, package type checking, lint, formatting, 59 Vitest tests plus 10 motion tests, and an isolated production web build pass.
+- The running HTTPS demo is intentionally still on its previous release. The new client was built outside the live asset directory; server state and rooms were not interrupted or mixed with the new protocol.
