@@ -15,11 +15,12 @@ const VALUE_ROTATIONS: Record<number, readonly [number, number, number]> = {
 const DEFAULT_ROTATION: readonly [number, number, number] = [0.15, 0.2, 0]
 
 type DiceViewProps = {
+  position?: readonly [number, number, number]
   value: number | null
   rolling: boolean
 }
 
-export function DiceView({ value, rolling }: DiceViewProps) {
+export function DiceView({ position = [0, 1.38, 0], value, rolling }: DiceViewProps) {
   const dieRef = useRef<THREE.Group>(null)
 
   useFrame((_, delta) => {
@@ -40,7 +41,7 @@ export function DiceView({ value, rolling }: DiceViewProps) {
   })
 
   return (
-    <group position={[0, 1.38, 0]}>
+    <group position={position}>
       <group ref={dieRef}>
         <RoundedBox args={[1.25, 1.25, 1.25]} castShadow radius={0.14} smoothness={5}>
           <meshStandardMaterial color="#fffdf7" metalness={0.04} roughness={0.32} />

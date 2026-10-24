@@ -21,7 +21,7 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
   return (
     <aside className="host-panel" aria-label="Game status">
       <p className="eyebrow">Turn {state.turnNumber}</p>
-      <h2>Core board preview</h2>
+      <h2>The Winding Trail</h2>
       <span className="phase-badge">{state.phase.replaceAll("_", " ")}</span>
 
       <div className="turn-callout">

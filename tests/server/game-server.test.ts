@@ -151,7 +151,7 @@ describe("authoritative room and turn loop", () => {
         (message) => message.connection === "host" && message.event === "dice.rolled",
       ),
     ).toHaveLength(20)
-    expect(snapshot().players.map((player) => player.tileId)).toEqual(Array(4).fill("tile-10"))
+    expect(snapshot().players.map((player) => player.tileId)).toEqual(Array(4).fill("tile-30"))
     expect(snapshot().currentPlayerId).toBe(players[0]!.playerId)
   })
 

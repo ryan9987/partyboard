@@ -9,14 +9,15 @@ import {
 } from "./index"
 
 describe("default board", () => {
-  it("contains one valid 20-tile loop", () => {
+  it("contains one valid 32-tile winding route", () => {
     expect(() => validateBoard(defaultBoard)).not.toThrow()
-    expect(defaultBoard.tiles).toHaveLength(20)
+    expect(defaultBoard.tiles).toHaveLength(32)
+    expect(defaultBoard.tiles.at(-1)?.position[2]).toBeLessThan(-40)
   })
 
   it("returns each visited tile and wraps around", () => {
-    expect(getMovementPath(defaultBoard, "tile-18", 4)).toEqual([
-      "tile-19",
+    expect(getMovementPath(defaultBoard, "tile-30", 4)).toEqual([
+      "tile-31",
       "tile-0",
       "tile-1",
       "tile-2",

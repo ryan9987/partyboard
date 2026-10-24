@@ -24,7 +24,7 @@ Ryan is also the integration owner responsible for connecting Jack's server even
 
 1. Convert `docs/PROTOCOL.md` into Zod schemas and inferred TypeScript types.
 2. Scaffold the workspace dependencies and shared configuration.
-3. Define and validate a 20-tile loop.
+3. Define and validate a winding 32-tile route with safe wraparound.
 4. Test movement and wraparound traversal.
 5. Create `/host` and lazy role-based routing.
 6. Render the board from its data definition.

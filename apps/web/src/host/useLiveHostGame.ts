@@ -113,6 +113,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
       hostCredentialsRef.current = credentials
       setHostCredentials(credentials)
       storeHostCredentials(credentials)
+      setError(null)
       setState(result.data.state)
     }
     const handleSnapshot = (payload: unknown) => {
@@ -122,6 +123,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
         return
       }
 
+      setError(null)
       const movingId = movingPlayerIdRef.current
       if (["LOBBY", "AWAITING_ROLL", "TURN_END", "FINISHED"].includes(result.data.phase)) {
         cancel()

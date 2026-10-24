@@ -18,13 +18,14 @@ No mini-game work belongs on this board.
 
 ### Ryan — host/board lane
 
-- [x] Define and validate a 20-tile loop.
+- [x] Define and validate a winding 32-tile route with safe wraparound.
 - [x] Test wraparound traversal.
 - [x] Render board tiles from the board definition.
 - [x] Render four placeholder player pieces.
 - [x] Animate a supplied dice value.
 - [x] Animate a supplied movement path.
 - [x] Build a host lobby against a typed fixture.
+- [x] Render the route as a forward journey with distance fog and a following camera.
 
 ### Jack — server/controller lane
 

@@ -12,7 +12,7 @@ Ryan or Ryan's agent owns this file.
 - Named ownership assigned.
 - Exact workspace dependencies and lockfile added.
 - Public protocol implemented with Zod; private session IDs are excluded from snapshots.
-- Validated 20-tile board and wraparound traversal implemented.
+- Validated 32-tile winding board and wraparound traversal implemented.
 - Lazy `/host` route, lobby, QR code, four detailed characters, die, and turn overlay implemented.
 - Fixture-driven dice and movement sequence completes a full player rotation.
 - Typed Socket.IO client and room-state hook added for integration.
@@ -40,6 +40,9 @@ Ryan or Ryan's agent owns this file.
 - Added authenticated host resume without room creation or state reset.
 - Configured Vite to read root environment files and expanded formatting coverage to every merged
   application/package lane.
+- Replaced the circular overview with an open visible trail, active-player follow camera, hidden
+  distance, long meadow, route-side trees/rocks/flowers/clouds, a start gate, and a moving dice
+  plaza. The logical last-to-first edge remains invisible for safe long-session wraparound.
 
 ## Blockers and handoffs
 
@@ -57,3 +60,5 @@ Ryan or Ryan's agent owns this file.
   displays a clear error, keeps the board rendered, and disables Start.
 - Browser-tested a real controller join, server-generated roll, four-tile movement, automatic turn
   advancement, and host-page refresh with the same authoritative room and position.
+- Browser-tested the follow camera through four live turns to space 12; the active character, local
+  dice plaza, nearby scenery, forward trail, and fogged horizon stayed framed throughout.
