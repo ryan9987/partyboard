@@ -40,14 +40,15 @@ clearly labeled start gate. Its decorative trail mesh is deliberately open, so t
 last-to-first wraparound never draws a shortcut across the world. The camera closely tracks the
 active character, whose pulsing floor marker and local light identify the current turn. The die
 floats directly above that character, follows them along the movement path, and includes six fully
-modeled pip faces, camera-facing result poses, hover motion, and a light ring during rolls.
+modeled pip faces and hover motion. When the roll ends, the server's value is turned square to the
+actual camera (`diceOrientation.ts`), so the face players read always matches the engine result.
 
-The host interface follows a woodland field-journal style: warm ivory surfaces, forest-green
-type, serif map headings, fine borders, and restrained shadows. Turn state uses plain-language
-labels and a small pip-face illustration for the last roll. The lobby, Preflight controls, and
-loading/error screens share this palette. No gradients or remote fonts are required.
+The host interface is styled like a printed game card: flat ivory panels, ink rules, Times New
+Roman headings, and Calibri body text (Carlito is the metric-compatible fallback). There are no
+status pills or decorative labels. The header shows a connection notice only while the server is
+unreachable, and the operator Preflight checklist appears only with `?preflight=1`.
 
-The header uses the same original trail-and-leaf mark as `public/favicon.svg`. The browser also
+The header is a plain Times New Roman wordmark; the trail-and-leaf mark lives in `public/favicon.svg`. The browser also
 receives `public/favicon.ico` (16/32/48/64 px) and an Apple touch icon (180 px). Rebuild the raster
 variants on Windows with `apps/web/scripts/generate-favicon.ps1`; keep its geometry and palette in
 sync with the SVG when changing the mark.

@@ -86,3 +86,12 @@ Jack or Jack's agent owns this file.
 - Verification: server type checking, lint, formatting, and a full real demo-runner build/start/public reachability check. The preceding integrated-main checks passed all 69 tests.
 - A public WSS rehearsal with two controller clients completed exactly two rolls, one market stop/purchase, Hot Potato, one successful pass, result/payouts (15 and 5 coins), and return to board turn 3. This random rehearsal did not trigger a duel; automated duel coverage remains passing.
 - Physical iPhone/Android sensitivity, four-phone venue testing, and release-proof recording/tag remain outstanding. A tutorial or practice screen was discussed as a possible next feature, not implemented without a request.
+
+## Visual overhaul — `feat/visual-overhaul`
+
+- Fixed the host die showing a different face from the server roll (see `docs/INTEGRATION_NOTES.md`).
+- Regenerated static board props in Blender as one instanced, vertex-colored glb; replaced fonts
+  with Calibri/Times New Roman; removed decorative UI chrome. Controller CSS fonts updated too.
+- Verification: `pnpm check` passes (86 Vitest tests including 8 new dice tests, 10 motion tests,
+  production build). A fixture preview roll of 2 displayed 2 and moved two spaces. Rendering was
+  checked only in a software-GPU browser; real-device frame rate is not yet measured.

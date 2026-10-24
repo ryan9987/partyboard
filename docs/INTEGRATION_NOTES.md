@@ -99,3 +99,22 @@ No open cross-lane requests at this checkpoint.
 
 - Jack's single-origin production-build server and Quick Tunnel runner are retained alongside Ryan's host resume, root environment loading, movement snapshot handling, and 32-tile board.
 - Earlier host-refresh and movement reports described the previous integration; Ryan's merged changes address those code paths. Physical phone and venue-network checks remain pending.
+
+### 2026-10-24 — Host visual overhaul (Jack-authorized edit of Ryan's area)
+
+- Requested by: Jack, who explicitly authorized his agent to edit Ryan-owned host and app styles on
+  branch `feat/visual-overhaul`. Ryan should review before merge. No protocol, board, networking,
+  dependency, or lockfile changes.
+- Dice mismatch fix: the server roll was always correct; the host die turned its result face to +Z
+  regardless of the angled overhead camera and unwound accumulated spin, so players often read a
+  different face. `diceOrientation.ts` now aims the rolled face at the real camera with quaternion
+  slerp. `tests/dice-orientation.test.ts` covers every value and checks the exported model's pips.
+- Assets: static props are generated in Blender (`apps/web/scripts/blender/build-world.py`) into
+  `apps/web/public/models/world.glb` and drawn as instanced meshes with one shared material.
+  Measured in the fixture lobby: meshes 1,973 → 512, textures 37 → 11, triangles 733k → 196k.
+  Blender is a build-time tool only; the glb is committed, so CI and deploys do not need it.
+- UI: Calibri/Times New Roman replace Inter/Georgia; the connection pill, header logo mark,
+  Preflight button (now `?preflight=1`), eyebrow taglines, room-count chip, and phase badge were
+  removed; minimum host text size raised to 0.8rem.
+- Remaining: characters are still procedural (~80 meshes each) because their limbs animate for
+  minigames; moving them to a rigged Blender model is the next memory win.

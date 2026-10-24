@@ -7,16 +7,25 @@ more decoration.
 
 ## Assets and materials
 
-All current assets are authored locally in TypeScript/Three.js. No external models, CDN requests,
-font downloads, new packages, or third-party attribution requirements were added in this pass.
+Static props are modeled in Blender by a committed script and exported to one compact glTF file:
 
-- `sceneryMaterials.ts` generates repeatable grass, bark, and stone textures from seeded canvas
-  drawing. Textures use sRGB, repeat wrapping, anisotropic filtering, and explicit disposal.
-- `WoodlandDetails.tsx` contains branching trees with 110 individually colored foliage clusters per
-  tree, exposed roots, textured trunks, a textured meadow, trail benches, lanterns, stones, distant
-  hills, and layered planting.
+```sh
+blender --background --factory-startup --python apps/web/scripts/blender/build-world.py
+```
+
+The script writes `apps/web/public/models/world.glb` (about 8k triangles, ~0.5 MB, no textures).
+It contains `TreeOakA`, `TreeOakB`, `TreePine`, `Shrub`, `Rock`, `Mushroom`, `Flower`, `Tile`,
+`StartGate`, `Bench`, `Lantern`, `MarketStall`, `Hill`, `Cloud`, and `Die`. Colors are baked
+into vertex colors, so every prop shares one material and each prop type is drawn as a single
+`InstancedMesh` (`worldAssets.tsx`). Instance colors tint tiles, shrubs, flowers, and hills.
+Sign lettering uses Times New Roman Bold (or the metric-compatible Liberation Serif Bold).
+Rerun the script after changing a prop; `tests/dice-orientation.test.ts` checks the exported die
+against `diceOrientation.ts`.
+
+- `sceneryMaterials.ts` still generates the meadow and trail-path textures. Characters remain
+  procedural because their limbs are animated for minigames.
 - Ground planting uses 10,000 grass blades, 500 scattered flower heads, 896 ground leaves, and
-  768 flower petals. These use four instanced meshes; foliage uses one instanced mesh per tree.
+  768 flower petals. These use four instanced meshes.
   The seeded placement leaves a clear margin around board tiles.
 - `BoardTile.tsx` adds textured stone sides, inset edge marks, and small base rocks.
 - `CharacterModel.tsx` includes facial features, eye highlights, ears, noses, eyebrows, hair locks,
