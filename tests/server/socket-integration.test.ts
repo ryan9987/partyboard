@@ -101,6 +101,19 @@ it("uses actual Socket.IO for private joins, schema errors, a roll, and refresh 
     playerId: joined.playerId,
     state: { players: [{ tileId: "tile-2" }] },
   })
+
+  host.disconnect()
+  const replacementHost = client(url)
+  await connected(replacementHost)
+  const hostSnapshot = next(replacementHost, "room.snapshot")
+  replacementHost.emit("room.host.resume", {
+    roomCode: room.roomCode,
+    hostToken: room.hostToken,
+  })
+  expect(gameStateSchema.parse(await hostSnapshot)).toMatchObject({
+    roomCode: room.roomCode,
+    players: [{ id: joined.playerId, tileId: "tile-2" }],
+  })
 })
 
 it("rejects WebSocket handshakes from an unconfigured browser origin", async () => {

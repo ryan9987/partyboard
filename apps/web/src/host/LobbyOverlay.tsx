@@ -26,14 +26,20 @@ export function LobbyOverlay({
   onStart,
 }: LobbyOverlayProps) {
   return (
-    <aside className="host-panel" aria-label="Game lobby">
-      <p className="eyebrow">Room code</p>
-      <h1>{state.roomCode}</h1>
+    <aside className="host-panel host-panel--lobby" aria-label="Game lobby">
+      <p className="eyebrow">Join game</p>
+      <div className="room-heading">
+        <div>
+          <span className="room-heading__label">Room code</span>
+          <h1>{state.roomCode}</h1>
+        </div>
+        <span className="room-count">{state.players.length}/4</span>
+      </div>
       <p className="muted">{description}</p>
 
       {controllerUrl && (
         <div className="qr-card" aria-label={`QR code for ${controllerUrl}`}>
-          <QRCodeSVG bgColor="#ffffff" fgColor="#081226" size={132} value={controllerUrl} />
+          <QRCodeSVG bgColor="#ffffff" fgColor="#111820" size={112} value={controllerUrl} />
         </div>
       )}
 

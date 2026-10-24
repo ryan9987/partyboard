@@ -19,7 +19,7 @@ Ryan's `/host` now connects to this server when `VITE_SOCKET_URL` is configured 
 
 For an independent backend check, the optional text host still supports real controllers:
 
-1. Put `VITE_SOCKET_URL=http://localhost:3001` in `apps/web/.env.local` and run `pnpm dev`.
+1. Put `VITE_SOCKET_URL=http://localhost:3001` in root `.env` and run `pnpm dev`.
 2. In another terminal, run `pnpm --filter @party-board/server debug:host`.
 3. Open the printed `/controller/ROOM` URL in up to four browser profiles or phones and choose distinct colors.
 4. Type `start` in the text-host terminal. Players use touch or shake while the terminal prints authoritative snapshots. Type `restart`, `show`, or `quit` as needed.
@@ -54,7 +54,9 @@ The initial Linux demo used cloudflared 2026.10.3 downloaded from the official G
 - Turn order skips disconnected players. With nobody connected, the room pauses in `TURN_END` with no active player or timer; a rejoining player resumes it. No `turn.ended` event is emitted while no next player exists, because the shared schema requires a next player. Public snapshots remain authoritative.
 - Membership/session reservations last for the room lifetime; disconnected players are not evicted or replaced. Restart cancels pending animation timers, resets positions, retains membership and request deduplication, and starts a new turn. Turn numbers remain monotonic across restarts to distinguish old UI events.
 
-Read-only host reattachment is not defined in the current shared protocol. An authenticated start/restart can attach a host connection; a future host resume command needs joint protocol approval. No new events or fields are invented here.
+An authenticated `room.host.resume` attaches a replacement host connection and immediately sends
+the current public snapshot. It neither creates a room nor changes game state. Invalid room codes or
+tokens return a safe error.
 
 ## Verification
 

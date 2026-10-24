@@ -20,6 +20,7 @@ party-board/
 │   ├── COLLABORATION.md          ownership, branches, and merge rules
 │   ├── INTEGRATION_NOTES.md      cross-lane requests and blockers
 │   ├── DEMO_CHECKLIST.md         real-device acceptance checks
+│   ├── DEPLOYMENT.md             production configuration and preflight
 │   ├── decisions/                durable architectural decisions
 │   ├── roles/                    Ryan and Jack agent briefs
 │   ├── status/                   separate collision-free progress logs

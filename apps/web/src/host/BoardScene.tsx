@@ -1,7 +1,7 @@
 import { defaultBoard } from "@party-board/board"
 import type { GameState } from "@party-board/protocol"
-import { Canvas, useThree } from "@react-three/fiber"
-import { useEffect, useMemo } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import { useMemo, useRef } from "react"
 import * as THREE from "three"
 
 import { BoardTile } from "./BoardTile"
@@ -14,12 +14,18 @@ type BoardSceneProps = {
   movingPlayerId: string | null
 }
 
-function CameraRig() {
+function CameraRig({ focus }: { focus: readonly [number, number, number] }) {
   const { camera } = useThree()
+  const lookTarget = useRef(new THREE.Vector3(focus[0] - 1.7, 0.45, focus[2] - 2.2))
 
-  useEffect(() => {
-    camera.lookAt(new THREE.Vector3(-1.6, 0.35, 0))
-  }, [camera])
+  useFrame((_, delta) => {
+    const smoothing = 1 - Math.exp(-delta * 3.2)
+    const desiredPosition = new THREE.Vector3(focus[0] + 3.7, 8.8, focus[2] + 12.8)
+    const desiredLook = new THREE.Vector3(focus[0] - 1.7, 0.45, focus[2] - 2.2)
+    camera.position.lerp(desiredPosition, smoothing)
+    lookTarget.current.lerp(desiredLook, smoothing)
+    camera.lookAt(lookTarget.current)
+  })
 
   return null
 }
@@ -27,13 +33,16 @@ function CameraRig() {
 function Scene({ state, movingPlayerId }: BoardSceneProps) {
   const tileMap = new Map(defaultBoard.tiles.map((tile) => [tile.id, tile]))
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
+  const focusTile =
+    tileMap.get(activePlayer?.tileId ?? defaultBoard.startingTileId) ?? defaultBoard.tiles[0]!
+  const dicePosition = [focusTile.position[0] + 4.2, 4.8, focusTile.position[2] - 1.4] as const
   const pathCurve = useMemo(
     () =>
       new THREE.CatmullRomCurve3(
         defaultBoard.tiles.map(
           (tile) => new THREE.Vector3(tile.position[0], -0.16, tile.position[2]),
         ),
-        true,
+        false,
         "centripetal",
       ),
     [],
@@ -41,8 +50,8 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
 
   return (
     <>
-      <CameraRig />
-      <fog attach="fog" args={["#94d9f0", 19, 36]} />
+      <CameraRig focus={focusTile.position} />
+      <fog attach="fog" args={["#94d9f0", 13, 29]} />
       <hemisphereLight color="#dff6ff" groundColor="#4d7d42" intensity={2.2} />
       <ambientLight intensity={0.7} />
       <directionalLight
@@ -58,15 +67,6 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
       <mesh receiveShadow scale={[1, 0.16, 1]}>
         <tubeGeometry args={[pathCurve, 160, 0.62, 10, true]} />
         <meshStandardMaterial color="#cbbd9f" roughness={0.88} />
-      </mesh>
-
-      <mesh receiveShadow position={[0, -0.08, 0]}>
-        <cylinderGeometry args={[3.15, 3.45, 0.34, 48]} />
-        <meshStandardMaterial color="#77bf67" roughness={0.92} />
-      </mesh>
-      <mesh receiveShadow position={[0, 0.12, 0]}>
-        <cylinderGeometry args={[1.45, 1.65, 0.32, 32]} />
-        <meshStandardMaterial color="#e1d2b5" roughness={0.8} />
       </mesh>
 
       {defaultBoard.tiles.map((tile) => (
@@ -94,7 +94,11 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
         )
       })}
 
-      <DiceView value={state.lastRoll} rolling={state.phase === "ROLLING"} />
+      <DiceView
+        position={dicePosition}
+        value={state.lastRoll}
+        rolling={state.phase === "ROLLING"}
+      />
     </>
   )
 }
@@ -103,7 +107,7 @@ export function BoardScene(props: BoardSceneProps) {
   return (
     <Canvas
       className="board-canvas"
-      camera={{ position: [0, 9.6, 17], fov: 39, near: 0.1, far: 70 }}
+      camera={{ position: [3.7, 8.8, 20.8], fov: 42, near: 0.1, far: 72 }}
       dpr={[1, 1.75]}
       shadows="basic"
     >

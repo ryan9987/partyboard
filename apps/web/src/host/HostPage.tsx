@@ -2,7 +2,9 @@ import { defaultBoard, getMovementPath } from "@party-board/board"
 import type { GameState } from "@party-board/protocol"
 import { useCallback, useMemo, useState } from "react"
 
+import { buildControllerUrl, createRuntimeConfig } from "../app/runtimeConfig"
 import { BoardScene } from "./BoardScene"
+import { DemoPreflight } from "./DemoPreflight"
 import { createFixtureState } from "./fixture"
 import { GameOverlay } from "./GameOverlay"
 import { LobbyOverlay } from "./LobbyOverlay"
@@ -31,26 +33,35 @@ function getPreviewDiceValue(): number {
   return ((sample[0] ?? 0) % 6) + 1
 }
 
-function getControllerUrl(roomCode: string): string {
-  const configuredBase = import.meta.env.VITE_CONTROLLER_URL as string | undefined
-  const base = configuredBase?.trim() || `${window.location.origin}/controller`
-  return `${base.replace(/\/+$/, "")}/${roomCode}`
-}
-
 export default function HostPage() {
-  const serverUrl = (import.meta.env.VITE_SOCKET_URL as string | undefined)?.trim()
-  const liveMode = Boolean(serverUrl)
-  const live = useLiveHostGame(liveMode, serverUrl)
+  const runtimeConfig = useMemo(
+    () =>
+      createRuntimeConfig({
+        controllerBaseUrl: import.meta.env.VITE_CONTROLLER_URL as string | undefined,
+        isSecureContext: window.isSecureContext,
+        origin: window.location.origin,
+        socketUrl: import.meta.env.VITE_SOCKET_URL as string | undefined,
+      }),
+    [],
+  )
+  const liveMode = Boolean(runtimeConfig.socketUrl)
+  const live = useLiveHostGame(liveMode, runtimeConfig.socketUrl ?? undefined)
   const [fixtureState, setFixtureState] = useState<GameState>(() => createFixtureState())
   const [fixtureMovingPlayerId, setFixtureMovingPlayerId] = useState<string | null>(null)
   const [fixtureBusy, setFixtureBusy] = useState(false)
+  const [preflightOpen, setPreflightOpen] = useState(
+    () => new URLSearchParams(window.location.search).get("preflight") === "1",
+  )
   const state = liveMode ? (live.state ?? PENDING_LIVE_STATE) : fixtureState
   const movingPlayerId = liveMode ? live.movingPlayerId : fixtureMovingPlayerId
   const busy = liveMode ? live.busy : fixtureBusy
 
   const controllerUrl = useMemo(
-    () => (liveMode && !live.state ? null : getControllerUrl(state.roomCode)),
-    [live.state, liveMode, state.roomCode],
+    () =>
+      liveMode && !live.state
+        ? null
+        : buildControllerUrl(runtimeConfig.controllerBaseUrl, state.roomCode),
+    [live.state, liveMode, runtimeConfig.controllerBaseUrl, state.roomCode],
   )
 
   const { animatePath, cancel } = usePieceAnimation()
@@ -139,9 +150,20 @@ export default function HostPage() {
           <span className="brand__mark">PB</span>
           Party Board
         </div>
-        <span className="fixture-badge">
-          {liveMode ? `Live host · ${live.connectionState}` : "Ryan lane · fixture preview"}
-        </span>
+        <div className="topbar__actions">
+          <span className="fixture-badge">
+            <span className="connection-dot" />
+            {liveMode ? live.connectionState : "Preview"}
+          </span>
+          <DemoPreflight
+            config={runtimeConfig}
+            connectionState={liveMode ? live.connectionState : "idle"}
+            liveMode={liveMode}
+            onToggle={() => setPreflightOpen((current) => !current)}
+            open={preflightOpen}
+            state={state}
+          />
+        </div>
       </header>
 
       {state.phase === "LOBBY" ? (

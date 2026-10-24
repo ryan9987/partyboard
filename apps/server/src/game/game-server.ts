@@ -137,6 +137,20 @@ export class GameServer {
           })
           break
         }
+        case CLIENT_EVENTS.HOST_RESUME: {
+          const parsed = hostCommandSchema.safeParse(payload)
+          if (!parsed.success) throw new CommandError("INVALID_PAYLOAD", "Invalid host credentials")
+          const room = this.room(parsed.data.roomCode)
+          if (room.hostToken !== parsed.data.hostToken)
+            throw new CommandError("UNAUTHORIZED", "Invalid host credentials")
+          const binding = this.bindings.get(connectionId)
+          if (binding && (binding.room !== room || binding.sessionId !== null))
+            throw new CommandError("UNAUTHORIZED", "This connection is a controller")
+          room.connections.add(connectionId)
+          this.bindings.set(connectionId, { room, sessionId: null })
+          this.send(connectionId, "room.snapshot", room.state)
+          break
+        }
         case CLIENT_EVENTS.ROOM_JOIN: {
           const parsed = joinRoomRequestSchema.safeParse(payload)
           if (!parsed.success) throw new CommandError("INVALID_PAYLOAD", "Invalid join request")

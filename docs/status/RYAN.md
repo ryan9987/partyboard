@@ -4,21 +4,20 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
-- Ryan's host/board foundation, visual-polish pass, and Phase 2 live host adapter are implemented on
-  `feat/host-board`.
-- Waiting for Jack's server branch to run the first real host/controller integration checkpoint.
+- Jack's server/controller/motion branch is integrated with Ryan's live 3D host.
+- The first real host/controller integration checkpoint and host-refresh recovery test pass.
 
 ## Completed
 
 - Named ownership assigned.
 - Exact workspace dependencies and lockfile added.
 - Public protocol implemented with Zod; private session IDs are excluded from snapshots.
-- Validated 20-tile board and wraparound traversal implemented.
+- Validated 32-tile winding board and wraparound traversal implemented.
 - Lazy `/host` route, lobby, QR code, four detailed characters, die, and turn overlay implemented.
 - Fixture-driven dice and movement sequence completes a full player rotation.
 - Typed Socket.IO client and room-state hook added for integration.
-- Added a bright Three.js world with a layered grass island, stone path, trees, rocks, flowers,
-  moving clouds, daylight, fog, shadows, and a central dice plaza.
+- Added a bright Three.js world with layered terrain, a stone path, trees, rocks, flowers, moving
+  clouds, daylight, fog, shadows, and a floating die focus.
 - Replaced placeholder pawns with animated stylized humanoids featuring four distinct skin tones,
   outfits, hairstyles, accessories, idle motion, walking motion, and an active-player indicator.
 - Character appearance is represented by typed data so a later pre-game customizer can reuse the
@@ -32,22 +31,45 @@ Ryan or Ryan's agent owns this file.
 - Connected authoritative movement paths to the existing per-tile character animation without
   allowing the host to generate live dice values or choose a path.
 - Added authenticated live Start and Restart commands plus explicit connecting/disconnected UI.
+- Added centralized runtime configuration validation for controller and Socket.IO URLs, including
+  insecure remote endpoint and secure-context warnings.
+- Added a polished in-app Preflight panel for host security, controller URL, server connection, and
+  joined/ready controller counts. It can open automatically with `/host?preflight=1`.
+- Added a platform-neutral deployment and release-proof playbook.
 - CI, lint, formatting, tests, type checking, and production build configured.
+- Added authenticated host resume without room creation or state reset.
+- Configured Vite to read root environment files and expanded formatting coverage to every merged
+  application/package lane.
+- Replaced the circular overview with an open visible trail, active-player follow camera, hidden
+  distance, long meadow, route-side trees/rocks/flowers/clouds, a start gate, and a moving dice
+  plaza. The logical last-to-first edge remains invisible for safe long-session wraparound.
 
 ## Blockers and handoffs
 
-- Live room creation, host authentication, and authoritative game events depend on Jack's server lane.
-- The controller route deliberately remains a placeholder until Jack's controller is integrated.
-- Host refresh/reconnection needs a server-side resume contract; the request is documented in
-  `docs/INTEGRATION_NOTES.md`.
+- Physical iPhone/Android motion and intended demo-network testing remain outstanding.
 
 ## Verification
 
 - `pnpm check` passes.
-- 12 unit tests pass across board, protocol, and host event-projection suites.
+- 37 Vitest checks and 10 motion tests pass across the integrated workspace.
 - Production Vite build succeeds with the host isolated into a lazy-loaded chunk.
 - Browser-tested the detailed lobby world, character placement, a six-space dice/movement turn,
   turn advancement, and updated player positions at a 944-by-804 viewport.
 - No browser console errors were observed.
 - Browser-tested the live-mode disconnected state with a configured unavailable server: the host
   displays a clear error, keeps the board rendered, and disables Start.
+- Browser-tested a real controller join, server-generated roll, four-tile movement, automatic turn
+  advancement, and host-page refresh with the same authoritative room and position.
+- Browser-tested the follow camera through four live turns to space 12; the active character, local
+  floating die, nearby scenery, forward trail, and fogged horizon stayed framed throughout.
+- Reworked the die with six complete inset-pip faces, rounded layered materials, camera-readable
+  result poses, hover motion, and roll lighting; removed its pedestal entirely.
+- Added a readable 3D start sign, detailed route rims, fuller tree canopies and roots, shrubs, and
+  mushrooms. Browser-tested a live six-space roll and camera move from space 12 to space 18.
+- Recorded automated and desktop-browser evidence directly in the demo checklist. Physical phone,
+  venue-network, HTTPS deployment, recording, and release-tag proof remain intentionally open.
+- Replaced the oversized host dashboard with a compact flat broadcast UI: no gradients, smaller
+  typography, solid controls, a concise turn summary, and no technical explainer card.
+- Reduced the 3D die to roughly half scale and moved it high beside the camera framing so it remains
+  readable without covering the character or route. Browser-checked both lobby and active-game
+  layouts with no console errors.

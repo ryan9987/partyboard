@@ -67,6 +67,41 @@ afterEach(() => {
 })
 
 describe("authoritative room and turn loop", () => {
+  it("reattaches an authenticated host without creating or resetting a room", () => {
+    const created = create()
+    const player = join(created.roomCode, 0)
+    server.handle("host", "game.start", {
+      roomCode: created.roomCode,
+      hostToken: created.hostToken,
+    })
+    roll(created.roomCode, player)
+    server.disconnect("host")
+
+    server.handle("replacement-host", "room.host.resume", {
+      roomCode: created.roomCode,
+      hostToken: created.hostToken,
+    })
+
+    expect(gameStateSchema.parse(last("replacement-host", "room.snapshot"))).toMatchObject({
+      roomCode: created.roomCode,
+      phase: "ROLLING",
+      lastRoll: 6,
+    })
+    expect(
+      messages.filter(
+        (message) => message.connection === "replacement-host" && message.event === "room.created",
+      ),
+    ).toHaveLength(0)
+
+    server.handle("intruder-host", "room.host.resume", {
+      roomCode: created.roomCode,
+      hostToken: randomUUID(),
+    })
+    expect(gameErrorEventSchema.parse(last("intruder-host", "game.error")).code).toBe(
+      "UNAUTHORIZED",
+    )
+  })
+
   it("joins four players privately, normalizes input, rejects full rooms and taken colors", () => {
     const created = create()
     server.handle("phone-0", "room.join", {
@@ -116,8 +151,23 @@ describe("authoritative room and turn loop", () => {
         (message) => message.connection === "host" && message.event === "dice.rolled",
       ),
     ).toHaveLength(20)
-    expect(snapshot().players.map((player) => player.tileId)).toEqual(Array(4).fill("tile-10"))
+    expect(snapshot().players.map((player) => player.tileId)).toEqual(Array(4).fill("tile-30"))
     expect(snapshot().currentPlayerId).toBe(players[0]!.playerId)
+  })
+
+  it("wraps the 32-tile board on the sixth six-space roll", () => {
+    const { roomCode, players } = setup(1)
+    for (let turn = 0; turn < 6; turn++) {
+      roll(roomCode, players[0]!)
+      vi.advanceTimersByTime(3200)
+    }
+    expect(last("host", "player.moving")).toMatchObject({
+      fromTileId: "tile-30",
+      toTileId: "tile-4",
+      path: ["tile-31", "tile-0", "tile-1", "tile-2", "tile-3", "tile-4"],
+    })
+    expect(snapshot().players[0]?.tileId).toBe("tile-4")
+    expect(snapshot().turnNumber).toBe(7)
   })
 
   it("rejects wrong players, forged tokens, duplicate new requests, and invalid payloads", () => {

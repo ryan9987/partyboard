@@ -18,7 +18,7 @@ Owns:
 
 Delivers:
 
-- A 20-tile generated 3D board
+- A 32-tile winding 3D expedition
 - Four placeholder pieces
 - Dice animation driven by a supplied value
 - Piece animation driven by a supplied path
