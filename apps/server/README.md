@@ -34,7 +34,7 @@ Install the official [cloudflared tunnel client](https://developers.cloudflare.c
 pnpm --filter @party-board/server demo
 ```
 
-If the executable is elsewhere, set `CLOUDFLARED_BIN` to its absolute path. Optional `DEMO_PORT` defaults to 3001. The runner reserves that loopback port before opening the tunnel, builds the production web client with the generated HTTPS socket and QR URLs, serves only `apps/web/dist`, and waits for a successful public HTTPS response before printing the host link. Host pages, controller deep links, and Socket.IO share one public origin. No npm dependencies or shared protocol changes are added.
+If the executable is elsewhere, set `CLOUDFLARED_BIN` to its absolute path. Optional `DEMO_PORT` defaults to 3001. The runner reserves that loopback port before opening the tunnel, builds the production web client with the generated HTTPS socket and QR URLs, serves only `apps/web/dist`, and waits up to two minutes for a successful public HTTPS response before printing the host link. Failed startup includes the last HTTP/network error and shuts down its tunnel/server. Host pages, controller deep links, and Socket.IO share one public origin. No npm dependencies or shared protocol changes are added.
 
 Open the printed `/host` URL on the laptop and scan its QR code on each phone. Tap Enable motion from the phone when prompted, or use Roll. The temporary URL lasts only while this process, its cloudflared child, the laptop, and the network remain running; restarting creates a new URL and loses in-memory rooms. Ctrl+C stops the tunnel and server. Avoid rebuilding the web app or running another demo against the same build directory while this demo is in use. This is a test/demo setup, not permanent hosting.
 

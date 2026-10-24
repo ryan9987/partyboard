@@ -102,24 +102,26 @@ try {
     app!.httpServer.once("error", reject)
     app!.httpServer.listen(port, "127.0.0.1", done)
   })
-  const deadline = Date.now() + 45_000
+  const deadline = Date.now() + 120_000
   let reachable = false
+  let lastFailure = "No response"
   while (!stopping && Date.now() < deadline) {
     try {
       const response = await fetch(`${origin}/host`, {
         method: "HEAD",
         signal: AbortSignal.timeout(3000),
       })
+      lastFailure = `HTTP ${response.status}`
       if (response.status === 200) {
         reachable = true
         break
       }
-    } catch {
-      /* The quick tunnel can take a few seconds to register at the edge. */
+    } catch (error) {
+      lastFailure = error instanceof Error ? error.message : String(error)
     }
     await delay(1000)
   }
-  if (!reachable) throw Error("The public HTTPS URL did not become reachable")
+  if (!reachable) throw Error(`The public HTTPS URL did not become reachable: ${lastFailure}`)
   console.log(
     `\nHTTPS demo ready: ${origin}/host\nControllers: ${origin}/controller\nKeep this process and laptop running. Press Ctrl+C to stop.\n`,
   )
