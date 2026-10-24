@@ -59,3 +59,9 @@ Jack or Jack's agent owns this file.
 - Browser and server configuration now both load root `.env`. Run instructions are in `apps/server/README.md` and `apps/web/src/controller/README.md`.
 - No physical iPhone/Android motion tuning or four-phone HTTPS/demo-network proof has been completed. The full milestone is not complete.
 - Rooms, session memberships, and accepted request IDs remain in memory for the room lifetime. No database or player replacement feature is implemented.
+
+## iPhone Shake to Undo report
+
+- The reported Undo popup is the iPhone system editing gesture. Added an optional, keyboard-accessible disclosure beside motion controls with the exact system-settings path and the existing touch Roll alternative.
+- No gesture thresholds, roll submission logic, or shared protocol changed. The website does not claim to disable the operating-system setting. The player must turn off Shake to Undo on the phone to suppress it while shaking.
+- Verification: controller/web type checking, lint, formatting, and build; physical iPhone popup suppression requires the device setting and manual confirmation.
