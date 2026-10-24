@@ -13,21 +13,63 @@ const CLOUD_PUFFS = [
 const ROUTE_CENTER_Z =
   ((defaultBoard.tiles[0]?.position[2] ?? 0) + (defaultBoard.tiles.at(-1)?.position[2] ?? 0)) / 2
 
+const START_LETTERS = [
+  ["111", "100", "111", "001", "111"],
+  ["111", "010", "010", "010", "010"],
+  ["010", "101", "111", "101", "101"],
+  ["110", "101", "110", "101", "101"],
+  ["111", "010", "010", "010", "010"],
+] as const
+
 function Tree({ position, scale }: { position: readonly [number, number]; scale: number }) {
   return (
     <group position={[position[0], -0.12, position[1]]} scale={scale}>
+      {[0, 1, 2].map((index) => (
+        <mesh
+          castShadow
+          key={index}
+          position={[(index - 1) * 0.2, 0.09, index % 2 === 0 ? 0.05 : -0.08]}
+          rotation={[0, index * 1.8, Math.PI / 2.8]}
+        >
+          <cylinderGeometry args={[0.07, 0.12, 0.65, 7]} />
+          <meshStandardMaterial color="#704128" roughness={1} />
+        </mesh>
+      ))}
       <mesh castShadow position={[0, 0.75, 0]}>
-        <cylinderGeometry args={[0.17, 0.25, 1.5, 9]} />
+        <cylinderGeometry args={[0.16, 0.27, 1.65, 10]} />
         <meshStandardMaterial color="#865332" roughness={0.96} />
       </mesh>
-      <mesh castShadow position={[0, 1.72, 0]}>
-        <coneGeometry args={[0.9, 1.55, 9]} />
+      <mesh castShadow position={[-0.28, 1.63, 0.04]} scale={[1.05, 0.9, 1]}>
+        <dodecahedronGeometry args={[0.72, 1]} />
         <meshStandardMaterial color="#257d50" roughness={0.88} />
       </mesh>
-      <mesh castShadow position={[0, 2.35, 0]}>
-        <coneGeometry args={[0.66, 1.25, 9]} />
+      <mesh castShadow position={[0.34, 1.72, -0.04]} scale={[0.92, 1.02, 0.92]}>
+        <dodecahedronGeometry args={[0.7, 1]} />
+        <meshStandardMaterial color="#2d9659" roughness={0.88} />
+      </mesh>
+      <mesh castShadow position={[0.02, 2.24, 0]} scale={[0.9, 1, 0.9]}>
+        <dodecahedronGeometry args={[0.72, 1]} />
         <meshStandardMaterial color="#36a966" roughness={0.85} />
       </mesh>
+    </group>
+  )
+}
+
+function Shrub({ position, tint }: { position: readonly [number, number]; tint: string }) {
+  return (
+    <group position={[position[0], 0.08, position[1]]}>
+      {(
+        [
+          [-0.22, 0.16, 0, 0.34],
+          [0.2, 0.17, 0.04, 0.3],
+          [0, 0.34, -0.05, 0.38],
+        ] as const
+      ).map(([x, y, z, scale], index) => (
+        <mesh castShadow key={index} position={[x, y, z]} scale={scale}>
+          <dodecahedronGeometry args={[1, 1]} />
+          <meshStandardMaterial color={index === 2 ? tint : "#348b4f"} roughness={0.94} />
+        </mesh>
+      ))}
     </group>
   )
 }
@@ -60,6 +102,32 @@ function Cloud({
   )
 }
 
+function StartLabel() {
+  return (
+    <group position={[0, 2.05, 0.13]}>
+      {START_LETTERS.flatMap((rows, letterIndex) =>
+        rows.flatMap((row, rowIndex) =>
+          [...row].map((cell, columnIndex) =>
+            cell === "1" ? (
+              <mesh
+                key={`${letterIndex}-${rowIndex}-${columnIndex}`}
+                position={[
+                  (letterIndex - 2) * 0.34 + (columnIndex - 1) * 0.072,
+                  (2 - rowIndex) * 0.072,
+                  0,
+                ]}
+              >
+                <boxGeometry args={[0.058, 0.058, 0.03]} />
+                <meshStandardMaterial color="#713f26" roughness={0.62} />
+              </mesh>
+            ) : null,
+          ),
+        ),
+      )}
+    </group>
+  )
+}
+
 function StartGate() {
   const start = defaultBoard.tiles[0]?.position ?? [0, 0, 8]
 
@@ -81,10 +149,19 @@ function StartGate() {
         <boxGeometry args={[2.65, 0.5, 0.22]} />
         <meshStandardMaterial color="#f2d78c" roughness={0.8} />
       </mesh>
-      <mesh position={[0, 2.06, 0.12]}>
-        <boxGeometry args={[1.45, 0.12, 0.03]} />
-        <meshStandardMaterial color="#cf6a54" roughness={0.7} />
-      </mesh>
+      <StartLabel />
+      {[-0.72, 0.72].map((x, index) => (
+        <group key={x} position={[x, 2.48, 0]}>
+          <mesh castShadow position={[0, 0.26, 0]}>
+            <cylinderGeometry args={[0.025, 0.025, 0.55, 6]} />
+            <meshStandardMaterial color="#5a3724" roughness={0.9} />
+          </mesh>
+          <mesh castShadow position={[index === 0 ? 0.13 : -0.13, 0.42, 0]}>
+            <boxGeometry args={[0.28, 0.2, 0.035]} />
+            <meshStandardMaterial color={index === 0 ? "#6ce3ea" : "#ff6f7d"} roughness={0.7} />
+          </mesh>
+        </group>
+      ))}
     </group>
   )
 }
@@ -130,11 +207,29 @@ export function WorldEnvironment() {
               <meshStandardMaterial color="#8e9aa0" roughness={0.92} />
             </mesh>
           )}
+          {index % 4 === 1 && (
+            <Shrub
+              position={[tile.position[0] - side * 3.9, tile.position[2] - 0.5]}
+              tint={index % 3 === 0 ? "#4cb86c" : "#2fa461"}
+            />
+          )}
           <group position={[tile.position[0] + side * 2.35, -0.08, tile.position[2] + 0.42]}>
             <mesh position={[0, 0.12, 0]}>
               <cylinderGeometry args={[0.018, 0.025, 0.26, 6]} />
               <meshStandardMaterial color="#3c8d48" roughness={0.9} />
             </mesh>
+            {index % 5 === 0 && (
+              <>
+                <mesh castShadow position={[0.22, 0.12, 0.08]}>
+                  <cylinderGeometry args={[0.035, 0.045, 0.22, 7]} />
+                  <meshStandardMaterial color="#f4eee2" roughness={0.9} />
+                </mesh>
+                <mesh castShadow position={[0.22, 0.24, 0.08]} scale={[1, 0.55, 1]}>
+                  <sphereGeometry args={[0.12, 10, 8]} />
+                  <meshStandardMaterial color="#ef685f" roughness={0.76} />
+                </mesh>
+              </>
+            )}
             <mesh position={[0, 0.27, 0]}>
               <sphereGeometry args={[0.07, 8, 6]} />
               <meshStandardMaterial color={flowerColor} roughness={0.78} />

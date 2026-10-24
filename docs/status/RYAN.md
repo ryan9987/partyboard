@@ -16,8 +16,8 @@ Ryan or Ryan's agent owns this file.
 - Lazy `/host` route, lobby, QR code, four detailed characters, die, and turn overlay implemented.
 - Fixture-driven dice and movement sequence completes a full player rotation.
 - Typed Socket.IO client and room-state hook added for integration.
-- Added a bright Three.js world with a layered grass island, stone path, trees, rocks, flowers,
-  moving clouds, daylight, fog, shadows, and a central dice plaza.
+- Added a bright Three.js world with layered terrain, a stone path, trees, rocks, flowers, moving
+  clouds, daylight, fog, shadows, and a floating die focus.
 - Replaced placeholder pawns with animated stylized humanoids featuring four distinct skin tones,
   outfits, hairstyles, accessories, idle motion, walking motion, and an active-player indicator.
 - Character appearance is represented by typed data so a later pre-game customizer can reuse the
@@ -61,4 +61,10 @@ Ryan or Ryan's agent owns this file.
 - Browser-tested a real controller join, server-generated roll, four-tile movement, automatic turn
   advancement, and host-page refresh with the same authoritative room and position.
 - Browser-tested the follow camera through four live turns to space 12; the active character, local
-  dice plaza, nearby scenery, forward trail, and fogged horizon stayed framed throughout.
+  floating die, nearby scenery, forward trail, and fogged horizon stayed framed throughout.
+- Reworked the die with six complete inset-pip faces, rounded layered materials, camera-readable
+  result poses, hover motion, and roll lighting; removed its pedestal entirely.
+- Added a readable 3D start sign, detailed route rims, fuller tree canopies and roots, shrubs, and
+  mushrooms. Browser-tested a live six-space roll and camera move from space 12 to space 18.
+- Recorded automated and desktop-browser evidence directly in the demo checklist. Physical phone,
+  venue-network, HTTPS deployment, recording, and release-tag proof remain intentionally open.

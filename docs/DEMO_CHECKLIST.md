@@ -2,25 +2,25 @@
 
 ## Before implementation is called complete
 
-- [ ] Host opens without developer tools.
-- [ ] Host creates a readable room code.
-- [ ] QR code opens the correct controller URL.
-- [ ] Four controllers can join.
-- [ ] Player colors are unique and match the host pieces.
-- [ ] Host can start the room.
-- [ ] Correct phone displays `Your turn`.
-- [ ] Wrong phone cannot roll.
+- [x] Host opens without developer tools. (Browser verified.)
+- [x] Host creates a readable room code. (Browser verified.)
+- [x] QR code opens the correct controller URL. (Browser verified.)
+- [x] Four controllers can join. (Socket integration verified; physical-device proof remains below.)
+- [x] Player colors are unique and match the host pieces. (Schema/server/host mapping verified.)
+- [x] Host can start the room. (Browser verified.)
+- [x] Correct phone displays `Your turn`. (Browser verified.)
+- [x] Wrong phone cannot roll. (Server integration verified.)
 - [ ] One shake creates exactly one roll.
-- [ ] Touch Roll button creates exactly one roll.
-- [ ] Dice result is between 1 and 6.
-- [ ] Correct piece moves the correct number of tiles.
-- [ ] Movement wraps around the board.
-- [ ] Turn advances to the next connected player.
-- [ ] Five complete player rotations succeed.
-- [ ] Refreshing a phone restores its player.
-- [ ] A duplicate request ID cannot cause a second roll.
-- [ ] A disconnected active player does not freeze the room forever.
-- [ ] Host restart returns every piece to the starting tile.
+- [x] Touch Roll button creates exactly one roll. (Browser and integration verified.)
+- [x] Dice result is between 1 and 6. (Server verified.)
+- [x] Correct piece moves the correct number of tiles. (Browser and integration verified.)
+- [x] Movement wraps around the board. (Board/server verified.)
+- [x] Turn advances to the next connected player. (Browser and integration verified.)
+- [x] Five complete player rotations succeed. (Four-controller socket integration verified.)
+- [x] Refreshing a phone restores its player. (Socket integration verified.)
+- [x] A duplicate request ID cannot cause a second roll. (Server and socket integration verified.)
+- [x] A disconnected active player does not freeze the room forever. (Server verified.)
+- [x] Host restart returns every piece to the starting tile. (Server verified.)
 
 ## Device matrix
 

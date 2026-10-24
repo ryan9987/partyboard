@@ -52,6 +52,8 @@ No mini-game work belongs on this board.
 - [ ] Deploy an HTTPS build.
 - [x] Generate and validate the controller QR code from environment configuration.
 - [x] Add an in-app preflight for HTTPS, server connection, and controller readiness.
+- [x] Complete the automated and desktop-browser portions of the demo checklist.
+- [x] Polish the floating die, start marker, route tiles, and world dressing for presentation.
 - [ ] Test iPhone motion permission.
 - [ ] Test Android motion behavior.
 - [ ] Complete the full demo checklist.

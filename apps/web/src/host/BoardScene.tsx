@@ -35,7 +35,7 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
   const focusTile =
     tileMap.get(activePlayer?.tileId ?? defaultBoard.startingTileId) ?? defaultBoard.tiles[0]!
-  const dicePosition = [focusTile.position[0] + 2.35, 1.38, focusTile.position[2] - 0.2] as const
+  const dicePosition = [focusTile.position[0] + 3.15, 2.15, focusTile.position[2] - 0.1] as const
   const pathCurve = useMemo(
     () =>
       new THREE.CatmullRomCurve3(
@@ -67,11 +67,6 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
       <mesh receiveShadow scale={[1, 0.16, 1]}>
         <tubeGeometry args={[pathCurve, 160, 0.62, 10, true]} />
         <meshStandardMaterial color="#cbbd9f" roughness={0.88} />
-      </mesh>
-
-      <mesh receiveShadow position={[dicePosition[0], 0.08, dicePosition[2]]}>
-        <cylinderGeometry args={[1.45, 1.65, 0.3, 32]} />
-        <meshStandardMaterial color="#e1d2b5" roughness={0.8} />
       </mesh>
 
       {defaultBoard.tiles.map((tile) => (

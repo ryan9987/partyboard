@@ -24,6 +24,11 @@ customizer can swap skin tone, hair, outfit, shoes, and accessories without repl
 networking code. The current four presets are intentionally distinct and require no external model
 files, keeping the hackathon demo deterministic and offline-friendly.
 
+The board uses layered route stones, denser trees and shrubs, small flowers and mushrooms, and a
+clearly labeled start gate. The die floats without a pedestal and includes six fully modeled pip
+faces, a rounded translucent edge treatment, camera-facing result poses, hover motion, and a light
+ring during rolls.
+
 The host selects its mode from `VITE_SOCKET_URL`. With no URL it runs the deterministic fixture
 preview. With a URL it creates a live room, validates every received payload, renders snapshots and
 incremental player updates, animates server-supplied dice and movement events, and sends only
