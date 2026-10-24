@@ -6,11 +6,20 @@ import { BoardScene } from "./BoardScene"
 import { createFixtureState } from "./fixture"
 import { GameOverlay } from "./GameOverlay"
 import { LobbyOverlay } from "./LobbyOverlay"
+import { useLiveHostGame } from "./useLiveHostGame"
 import { usePieceAnimation } from "./usePieceAnimation"
 
 const DICE_DURATION_MS = 900
 const MOVEMENT_DURATION_MS = 300
 const TURN_END_DURATION_MS = 500
+const PENDING_LIVE_STATE: GameState = {
+  roomCode: "WAIT",
+  phase: "LOBBY",
+  players: [],
+  currentPlayerId: null,
+  turnNumber: 0,
+  lastRoll: null,
+}
 
 function wait(milliseconds: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, milliseconds))
@@ -29,16 +38,25 @@ function getControllerUrl(roomCode: string): string {
 }
 
 export default function HostPage() {
-  const [state, setState] = useState<GameState>(() => createFixtureState())
-  const [movingPlayerId, setMovingPlayerId] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const serverUrl = (import.meta.env.VITE_SOCKET_URL as string | undefined)?.trim()
+  const liveMode = Boolean(serverUrl)
+  const live = useLiveHostGame(liveMode, serverUrl)
+  const [fixtureState, setFixtureState] = useState<GameState>(() => createFixtureState())
+  const [fixtureMovingPlayerId, setFixtureMovingPlayerId] = useState<string | null>(null)
+  const [fixtureBusy, setFixtureBusy] = useState(false)
+  const state = liveMode ? (live.state ?? PENDING_LIVE_STATE) : fixtureState
+  const movingPlayerId = liveMode ? live.movingPlayerId : fixtureMovingPlayerId
+  const busy = liveMode ? live.busy : fixtureBusy
 
-  const controllerUrl = useMemo(() => getControllerUrl(state.roomCode), [state.roomCode])
+  const controllerUrl = useMemo(
+    () => (liveMode && !live.state ? null : getControllerUrl(state.roomCode)),
+    [live.state, liveMode, state.roomCode],
+  )
 
   const { animatePath, cancel } = usePieceAnimation()
 
   const startPreview = useCallback(() => {
-    setState((current) => ({
+    setFixtureState((current) => ({
       ...current,
       phase: "AWAITING_ROLL",
       currentPlayerId: current.players[0]?.id ?? null,
@@ -48,28 +66,29 @@ export default function HostPage() {
 
   const resetPreview = useCallback(() => {
     cancel()
-    setBusy(false)
-    setMovingPlayerId(null)
-    setState(createFixtureState())
+    setFixtureBusy(false)
+    setFixtureMovingPlayerId(null)
+    setFixtureState(createFixtureState())
   }, [cancel])
 
   const previewRoll = useCallback(async () => {
-    if (busy || state.phase !== "AWAITING_ROLL" || !state.currentPlayerId) return
+    if (fixtureBusy || fixtureState.phase !== "AWAITING_ROLL" || !fixtureState.currentPlayerId)
+      return
 
-    const activePlayerId = state.currentPlayerId
-    const activePlayer = state.players.find((player) => player.id === activePlayerId)
+    const activePlayerId = fixtureState.currentPlayerId
+    const activePlayer = fixtureState.players.find((player) => player.id === activePlayerId)
     if (!activePlayer) return
 
-    setBusy(true)
+    setFixtureBusy(true)
     const diceValue = getPreviewDiceValue()
-    setState((current) => ({ ...current, phase: "ROLLING", lastRoll: diceValue }))
+    setFixtureState((current) => ({ ...current, phase: "ROLLING", lastRoll: diceValue }))
     await wait(DICE_DURATION_MS)
 
     const path = getMovementPath(defaultBoard, activePlayer.tileId, diceValue)
-    setMovingPlayerId(activePlayerId)
-    setState((current) => ({ ...current, phase: "MOVING" }))
+    setFixtureMovingPlayerId(activePlayerId)
+    setFixtureState((current) => ({ ...current, phase: "MOVING" }))
     const completed = await animatePath(path, MOVEMENT_DURATION_MS, (tileId) => {
-      setState((current) => ({
+      setFixtureState((current) => ({
         ...current,
         players: current.players.map((player) =>
           player.id === activePlayerId ? { ...player, tileId } : player,
@@ -78,11 +97,11 @@ export default function HostPage() {
     })
     if (!completed) return
 
-    setMovingPlayerId(null)
-    setState((current) => ({ ...current, phase: "TURN_END" }))
+    setFixtureMovingPlayerId(null)
+    setFixtureState((current) => ({ ...current, phase: "TURN_END" }))
     await wait(TURN_END_DURATION_MS)
 
-    setState((current) => {
+    setFixtureState((current) => {
       const connectedPlayers = current.players.filter((player) => player.connected)
       const currentIndex = connectedPlayers.findIndex((player) => player.id === activePlayerId)
       const nextPlayer = connectedPlayers[(currentIndex + 1) % connectedPlayers.length]
@@ -94,8 +113,22 @@ export default function HostPage() {
         turnNumber: current.turnNumber + 1,
       }
     })
-    setBusy(false)
-  }, [animatePath, busy, state])
+    setFixtureBusy(false)
+  }, [animatePath, fixtureBusy, fixtureState])
+
+  const start = liveMode ? live.start : startPreview
+  const reset = liveMode ? live.restart : resetPreview
+  const canStart = liveMode
+    ? live.connectionState === "connected" &&
+      Boolean(live.state) &&
+      state.players.some((player) => player.ready)
+    : true
+  const lobbyDescription = liveMode
+    ? (live.error ??
+      (live.state
+        ? "Scan to join from a phone. Start once at least one connected player is ready."
+        : "Connecting to the authoritative game server and creating a room…"))
+    : "Scan to join from a phone. Four fixture players are shown for Ryan's host preview."
 
   return (
     <main className="host-shell">
@@ -106,13 +139,28 @@ export default function HostPage() {
           <span className="brand__mark">PB</span>
           Party Board
         </div>
-        <span className="fixture-badge">Ryan lane · fixture preview</span>
+        <span className="fixture-badge">
+          {liveMode ? `Live host · ${live.connectionState}` : "Ryan lane · fixture preview"}
+        </span>
       </header>
 
       {state.phase === "LOBBY" ? (
-        <LobbyOverlay controllerUrl={controllerUrl} onStart={startPreview} state={state} />
+        <LobbyOverlay
+          actionLabel={liveMode ? "Start game" : "Start host preview"}
+          controllerUrl={controllerUrl}
+          description={lobbyDescription}
+          disabled={!canStart}
+          onStart={start}
+          state={state}
+        />
       ) : (
-        <GameOverlay busy={busy} onPreviewRoll={previewRoll} onReset={resetPreview} state={state} />
+        <GameOverlay
+          busy={busy}
+          live={liveMode}
+          onPreviewRoll={liveMode ? undefined : previewRoll}
+          onReset={reset}
+          state={state}
+        />
       )}
     </main>
   )

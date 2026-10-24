@@ -9,12 +9,13 @@ const COLOR_VALUES: Record<PlayerColor, string> = {
 
 type GameOverlayProps = {
   busy: boolean
+  live: boolean
   state: GameState
-  onPreviewRoll: () => void
+  onPreviewRoll: (() => void) | undefined
   onReset: () => void
 }
 
-export function GameOverlay({ busy, state, onPreviewRoll, onReset }: GameOverlayProps) {
+export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameOverlayProps) {
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
 
   return (
@@ -60,8 +61,9 @@ export function GameOverlay({ busy, state, onPreviewRoll, onReset }: GameOverlay
       </div>
 
       <p className="technical-note">
-        Preview Roll is a fixture-only test control. In the integrated game, the phone requests a
-        roll and Jack's server supplies the authoritative value and path.
+        {live
+          ? "The active phone requests each roll. The server supplies the authoritative value, movement path, and next turn."
+          : "Preview Roll is a fixture-only test control. In the integrated game, the phone requests a roll and Jack's server supplies the authoritative value and path."}
       </p>
 
       <div className="button-row">
@@ -71,16 +73,18 @@ export function GameOverlay({ busy, state, onPreviewRoll, onReset }: GameOverlay
           onClick={onReset}
           type="button"
         >
-          Reset
+          {live ? "Restart game" : "Reset"}
         </button>
-        <button
-          className="button button--primary"
-          disabled={busy || state.phase !== "AWAITING_ROLL"}
-          onClick={onPreviewRoll}
-          type="button"
-        >
-          {busy ? "Resolving…" : "Preview roll"}
-        </button>
+        {onPreviewRoll && (
+          <button
+            className="button button--primary"
+            disabled={busy || state.phase !== "AWAITING_ROLL"}
+            onClick={onPreviewRoll}
+            type="button"
+          >
+            {busy ? "Resolving…" : "Preview roll"}
+          </button>
+        )}
       </div>
     </aside>
   )
