@@ -69,7 +69,7 @@ These are configuration values, not protocol constants.
 
 ## Deployment shape
 
-The final demo must use HTTPS because mobile motion permission may require a secure context. Prefer one public origin for the web client and an HTTPS/WSS-compatible server endpoint. The QR URL comes from `PUBLIC_CONTROLLER_URL`; do not hard-code localhost into the host UI.
+The final demo must use HTTPS because mobile motion permission may require a secure context. Prefer one public origin for the web client and an HTTPS/WSS-compatible server endpoint. The browser-visible QR URL comes from `VITE_CONTROLLER_URL`; do not hard-code localhost into the host UI.
 
 ## Failure behavior
 

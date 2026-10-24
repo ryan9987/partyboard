@@ -4,27 +4,27 @@ No mini-game work belongs on this board.
 
 ## Phase 0: joint foundation
 
-- [ ] Confirm the project name and GitHub repository destination.
+- [x] Confirm the project name and GitHub repository destination.
 - [x] Assign Ryan as host/board and integration owner.
 - [x] Assign Jack as server/controller and motion owner.
 - [x] Assign Ryan as the sole editor of shared manifests and `packages/protocol`.
-- [ ] Review and approve `docs/PROTOCOL.md`.
-- [ ] Decide whether public snapshots omit private session IDs.
-- [ ] Scaffold the pnpm packages and commit exact dependency versions.
-- [ ] Add formatting, linting, test, and type-check configuration.
-- [ ] Add a CI workflow that runs build, tests, and type checking.
+- [x] Review and implement `docs/PROTOCOL.md` for the initial integration contract.
+- [x] Keep private session IDs out of public snapshots.
+- [x] Scaffold the pnpm packages and lock exact dependency versions.
+- [x] Add formatting, linting, test, and type-check configuration.
+- [x] Add a CI workflow that runs the full repository check.
 
 ## Phase 1: parallel foundations
 
 ### Ryan — host/board lane
 
-- [ ] Define and validate a 20-tile loop.
-- [ ] Test wraparound traversal.
-- [ ] Render board tiles from the board definition.
-- [ ] Render four placeholder player pieces.
-- [ ] Animate a supplied dice value.
-- [ ] Animate a supplied movement path.
-- [ ] Build a host lobby against a typed fixture.
+- [x] Define and validate a 20-tile loop.
+- [x] Test wraparound traversal.
+- [x] Render board tiles from the board definition.
+- [x] Render four placeholder player pieces.
+- [x] Animate a supplied dice value.
+- [x] Animate a supplied movement path.
+- [x] Build a host lobby against a typed fixture.
 
 ### Jack — server/controller lane
 
