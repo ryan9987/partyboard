@@ -1,17 +1,14 @@
 # Protocol contract
 
+The combat extension is documented in [SWORD_DUEL.md](./SWORD_DUEL.md): `DUEL`, validated snapshot
+combat state, and the authenticated `duel.action` command.
+
 This is the initial contract to implement in `packages/protocol`. Change it deliberately and update every affected consumer in the same integration cycle.
 
 ## Shared state
 
 ```ts
-type GamePhase =
-  | "LOBBY"
-  | "AWAITING_ROLL"
-  | "ROLLING"
-  | "MOVING"
-  | "TURN_END"
-  | "FINISHED"
+type GamePhase = "LOBBY" | "AWAITING_ROLL" | "ROLLING" | "MOVING" | "TURN_END" | "FINISHED" | "DUEL"
 
 type PlayerState = {
   id: string

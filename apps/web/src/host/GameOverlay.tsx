@@ -8,6 +8,7 @@ const COLOR_VALUES: Record<PlayerColor, string> = {
 }
 
 const PHASE_LABELS: Record<GameState["phase"], string> = {
+  DUEL: "A duel on the trail",
   LOBBY: "Gather your friends",
   AWAITING_ROLL: "Ready to roll",
   ROLLING: "Rolling…",

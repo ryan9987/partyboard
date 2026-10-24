@@ -73,7 +73,7 @@ export function MeadowGround() {
   )
 }
 
-export function MeadowPlanting() {
+export function MeadowPlanting({ clearingRadius = 0 }: { clearingRadius?: number }) {
   const grassRef = useRef<THREE.InstancedMesh>(null)
   const flowerRef = useRef<THREE.InstancedMesh>(null)
   useEffect(() => {
@@ -87,6 +87,7 @@ export function MeadowPlanting() {
     while (count < 10000) {
       const x = (random() - 0.5) * 22
       const z = 12 - random() * 65
+      if (Math.hypot(x, z) < clearingRadius) continue
       if (
         defaultBoard.tiles.some(
           (tile) => Math.hypot(x - tile.position[0], z - tile.position[2]) < 1.25,
@@ -125,7 +126,7 @@ export function MeadowPlanting() {
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
       mesh.computeBoundingSphere()
     }
-  }, [])
+  }, [clearingRadius])
   return (
     <group>
       <instancedMesh ref={grassRef} args={[undefined, undefined, 10000]} receiveShadow>

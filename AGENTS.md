@@ -4,13 +4,13 @@ These instructions apply to every contributor and coding agent working in this r
 
 ## Current objective
 
-Build only the core board loop: room creation, four phone controllers, server-authoritative dice rolls, 3D piece movement, turn rotation, and reconnection.
+Maintain the core board loop and the user-approved occupied-space sword duel: four phone controllers, server-authoritative rolls/combat, 3D movement, turn rotation, and recovery.
 
 ## Scope guardrails
 
-- Do not implement mini-games yet.
-- Do not implement power-ups, shops, currency, combat, accounts, matchmaking, databases, multiple boards, or detailed character assets.
-- Use generated placeholder geometry until the core loop is reliable.
+- Sword duels on occupied spaces are approved. Other mini-games remain deferred.
+- Do not implement power-ups, shops, currency, accounts, matchmaking, databases, or multiple boards without a new request.
+- Preserve the detailed woodland art direction and locally authored character assets.
 - The server is authoritative for game phase, turn order, dice values, and player positions.
 - A phone shake requests a roll; it never calculates the dice value.
 - Every motion action must retain a visible touch fallback.

@@ -125,7 +125,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
 
       setError(null)
       const movingId = movingPlayerIdRef.current
-      if (["LOBBY", "AWAITING_ROLL", "TURN_END", "FINISHED"].includes(result.data.phase)) {
+      if (["LOBBY", "AWAITING_ROLL", "TURN_END", "FINISHED", "DUEL"].includes(result.data.phase)) {
         cancel()
         movingPlayerIdRef.current = null
         setMovingPlayerId(null)
@@ -264,7 +264,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
   }, [cancel, hostCredentials, socket, state])
 
   return {
-    busy: state ? ["ROLLING", "MOVING", "TURN_END"].includes(state.phase) : true,
+    busy: state ? ["ROLLING", "MOVING", "TURN_END", "DUEL"].includes(state.phase) : true,
     connectionState,
     error,
     movingPlayerId,

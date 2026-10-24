@@ -3,6 +3,7 @@ import { randomInt, randomUUID } from "node:crypto"
 import { defaultBoard, getMovementPath } from "@party-board/board"
 import {
   CLIENT_EVENTS,
+  duelActionRequestSchema,
   diceRolledEventSchema,
   gameErrorEventSchema,
   gameStateSchema,
@@ -47,6 +48,10 @@ type Room = {
   connections: Set<string>
   acceptedRequests: Set<string>
   timer: ReturnType<typeof setTimeout> | null
+  duelRuntime: Map<
+    string,
+    { nextInputAt: number; guardUntil: number; attackAt: number | null }
+  > | null
 }
 type Binding = { room: Room; sessionId: string | null }
 
@@ -58,6 +63,9 @@ export type GameServerOptions = {
   turnEndMs?: number
   rollTimeoutMs?: number
   disconnectTimeoutMs?: number
+  duelIntroMs?: number
+  duelDurationMs?: number
+  duelResultMs?: number
 }
 
 class CommandError extends Error {
@@ -80,6 +88,9 @@ export class GameServer {
     turnEndMs: number
     rollTimeoutMs: number
     disconnectTimeoutMs: number
+    duelIntroMs: number
+    duelDurationMs: number
+    duelResultMs: number
   }
 
   constructor(private readonly options: GameServerOptions) {
@@ -90,6 +101,9 @@ export class GameServer {
       turnEndMs: options.turnEndMs ?? 500,
       rollTimeoutMs: options.rollTimeoutMs ?? 30_000,
       disconnectTimeoutMs: options.disconnectTimeoutMs ?? 60_000,
+      duelIntroMs: options.duelIntroMs ?? 2400,
+      duelDurationMs: options.duelDurationMs ?? 25_000,
+      duelResultMs: options.duelResultMs ?? 3200,
     }
     if (Object.values(this.timing).some((value) => !Number.isInteger(value) || value <= 0)) {
       throw new RangeError("Server durations must be positive integer milliseconds")
@@ -127,6 +141,7 @@ export class GameServer {
             connections: new Set([connectionId]),
             acceptedRequests: new Set(),
             timer: null,
+            duelRuntime: null,
           }
           this.rooms.set(code, room)
           this.bindings.set(connectionId, { room, sessionId: null })
@@ -242,6 +257,8 @@ export class GameServer {
           for (const player of room.state.players) player.tileId = defaultBoard.startingTileId
           // Turn numbers remain monotonic across restarts to distinguish delayed UI events.
           room.state.lastRoll = null
+          room.state.duel = null
+          room.duelRuntime = null
           this.beginTurn(room, first.id)
           this.broadcast(room, "game.started", room.state)
           break
@@ -290,11 +307,46 @@ export class GameServer {
             })
             this.snapshot(room)
             this.schedule(room, value * this.timing.millisecondsPerTile, () => {
-              room.state.phase = "TURN_END"
-              this.snapshot(room)
-              this.schedule(room, this.timing.turnEndMs, () => this.advance(room))
+              const opponent = room.state.players.find(
+                (other) => other.id !== player.id && other.connected && other.tileId === toTileId,
+              )
+              if (opponent && player.connected && toTileId !== defaultBoard.startingTileId) {
+                this.beginDuel(room, player, opponent)
+              } else this.endBoardTurn(room)
             })
           })
+          break
+        }
+        case CLIENT_EVENTS.DUEL_ACTION: {
+          const parsed = duelActionRequestSchema.safeParse(payload)
+          if (!parsed.success) throw new CommandError("INVALID_PAYLOAD", "Invalid duel action")
+          requestId = parsed.data.requestId
+          const room = this.room(parsed.data.roomCode)
+          const player = this.authorizePlayer(room, connectionId, parsed.data.playerSessionId)
+          const duel = room.state.duel
+          const key = `${parsed.data.playerSessionId}:${requestId}`
+          if (room.acceptedRequests.has(key)) return
+          if (
+            room.state.phase !== "DUEL" ||
+            !duel ||
+            duel.id !== parsed.data.duelId ||
+            duel.stage !== "active"
+          )
+            throw new CommandError("INVALID_DUEL", "This duel is not accepting actions")
+          const fighter = duel.fighters.find((candidate) => candidate.playerId === player.id)
+          const runtime = room.duelRuntime?.get(player.id)
+          if (!fighter || !runtime)
+            throw new CommandError("NOT_A_DUELIST", "Watch this duel from the sidelines")
+          const now = Date.now()
+          if (now >= duel.stageEndsAt || now < runtime.nextInputAt) return
+          room.acceptedRequests.add(key)
+          runtime.nextInputAt = now + 900
+          fighter.action = parsed.data.action
+          fighter.actionAt = now
+          if (parsed.data.action === "guard") runtime.guardUntil = now + 700
+          else runtime.attackAt = now + 450
+          duel.revision++
+          this.snapshot(room)
           break
         }
         default:
@@ -320,6 +372,16 @@ export class GameServer {
     const session = room.sessions.get(sessionId)!
     session.connectionId = null
     this.player(room, session.playerId).connected = false
+    if (
+      room.state.duel &&
+      room.state.duel.stage !== "result" &&
+      room.state.duel.fighters.some((fighter) => fighter.playerId === session.playerId)
+    ) {
+      const opponent = room.state.duel.fighters.find(
+        (fighter) => fighter.playerId !== session.playerId,
+      )!
+      this.finishDuel(room, opponent.playerId, "forfeit")
+    }
     if (room.state.phase === "AWAITING_ROLL" && room.state.currentPlayerId === session.playerId) {
       this.schedule(room, this.timing.disconnectTimeoutMs, () => this.advance(room))
     }
@@ -357,6 +419,8 @@ export class GameServer {
   }
 
   private beginTurn(room: Room, playerId: string): void {
+    room.state.duel = null
+    room.duelRuntime = null
     room.state.currentPlayerId = playerId
     room.state.turnNumber += 1
     room.state.phase = "AWAITING_ROLL"
@@ -402,6 +466,119 @@ export class GameServer {
   private clearTimer(room: Room): void {
     if (room.timer !== null) clearTimeout(room.timer)
     room.timer = null
+  }
+
+  private endBoardTurn(room: Room): void {
+    room.state.phase = "TURN_END"
+    room.state.duel = null
+    room.duelRuntime = null
+    this.snapshot(room)
+    this.schedule(room, this.timing.turnEndMs, () => this.advance(room))
+  }
+
+  private beginDuel(room: Room, challenger: PublicPlayer, defender: PublicPlayer): void {
+    room.state.phase = "DUEL"
+    room.state.duel = {
+      id: randomUUID(),
+      tileId: challenger.tileId,
+      stage: "intro",
+      fighters: [challenger, defender].map((player) => ({
+        playerId: player.id,
+        score: 0,
+        action: "idle" as const,
+        actionAt: 0,
+      })) as NonNullable<GameState["duel"]>["fighters"],
+      stageEndsAt: Date.now() + this.timing.duelIntroMs,
+      winnerId: null,
+      loserId: null,
+      outcome: "pending",
+      revision: 0,
+      penaltySpaces: 0,
+    }
+    room.duelRuntime = new Map(
+      [challenger, defender].map((player) => [
+        player.id,
+        { nextInputAt: 0, guardUntil: 0, attackAt: null },
+      ]),
+    )
+    this.snapshot(room)
+    this.schedule(room, this.timing.duelIntroMs, () => {
+      const duel = room.state.duel!
+      duel.stage = "active"
+      duel.stageEndsAt = Date.now() + this.timing.duelDurationMs
+      duel.revision++
+      this.snapshot(room)
+      this.schedule(room, 50, () => this.tickDuel(room))
+    })
+  }
+
+  private tickDuel(room: Room): void {
+    const duel = room.state.duel
+    const runtimes = room.duelRuntime
+    if (!duel || duel.stage !== "active" || !runtimes) return
+    const now = Date.now()
+    let changed = false
+    for (const fighter of duel.fighters) {
+      const attacker = runtimes.get(fighter.playerId)!
+      if (attacker.attackAt === null || attacker.attackAt > now) continue
+      const opponent = duel.fighters.find((other) => other.playerId !== fighter.playerId)!
+      const defender = runtimes.get(opponent.playerId)!
+      const impactAt = attacker.attackAt
+      attacker.attackAt = null
+      if (defender.attackAt !== null && Math.abs(defender.attackAt - impactAt) <= 180) {
+        defender.attackAt = null
+        duel.outcome = "clash"
+      } else if (defender.guardUntil >= impactAt) duel.outcome = "block"
+      else {
+        fighter.score++
+        opponent.action = "hit"
+        opponent.actionAt = now
+        duel.outcome = "hit"
+        if (fighter.score >= 2) {
+          this.finishDuel(room, fighter.playerId, "victory")
+          return
+        }
+      }
+      changed = true
+    }
+    if (now >= duel.stageEndsAt) {
+      const [first, second] = duel.fighters
+      this.finishDuel(
+        room,
+        first.score === second.score
+          ? null
+          : first.score > second.score
+            ? first.playerId
+            : second.playerId,
+        "victory",
+      )
+      return
+    }
+    if (changed) {
+      duel.revision++
+      this.snapshot(room)
+    }
+    this.schedule(room, 50, () => this.tickDuel(room))
+  }
+
+  private finishDuel(room: Room, winnerId: string | null, outcome: "victory" | "forfeit"): void {
+    const duel = room.state.duel!
+    duel.stage = "result"
+    duel.winnerId = winnerId
+    duel.loserId = winnerId
+      ? duel.fighters.find((fighter) => fighter.playerId !== winnerId)!.playerId
+      : null
+    duel.outcome = winnerId ? outcome : "draw"
+    duel.stageEndsAt = Date.now() + this.timing.duelResultMs
+    duel.revision++
+    if (duel.loserId) {
+      const loser = this.player(room, duel.loserId)
+      const index = defaultBoard.tiles.findIndex((tile) => tile.id === loser.tileId)
+      duel.penaltySpaces = Math.min(3, index)
+      loser.tileId = defaultBoard.tiles[Math.max(0, index - 3)]!.id
+    }
+    this.snapshot(room)
+    this.schedule(room, this.timing.duelResultMs, () => this.endBoardTurn(room))
   }
 
   private schedule(room: Room, delay: number, task: () => void): void {

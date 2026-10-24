@@ -1,6 +1,6 @@
 # Current task board
 
-No mini-game work belongs on this board.
+The occupied-space sword duel is the first user-approved mini-game. Other mini-games remain deferred.
 
 ## Phase 0: joint foundation
 
@@ -58,3 +58,14 @@ No mini-game work belongs on this board.
 - [ ] Test Android motion behavior.
 - [ ] Complete the full demo checklist.
 - [ ] Tag a known-good demo version.
+
+## Phase 4: occupied-space sword duel
+
+- [x] Detect completed landings on occupied non-start spaces on the server.
+- [x] Play a crossed-swords announcement and transition to a woodland arena.
+- [x] Add validated, authenticated, deduplicated swing/guard commands.
+- [x] Resolve attacks, parries, clashes, scores, draws, forfeits, and action cooldowns on the server.
+- [x] Provide phone motion inputs and equivalent touch buttons.
+- [x] Move the loser back up to three spaces and resume the interrupted turn order.
+- [x] Test scoring, abuse rejection, timeout, restart, and four-controller rotations.
+- [ ] Tune physical-device gesture thresholds on iPhone and Android.

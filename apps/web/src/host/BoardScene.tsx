@@ -8,6 +8,7 @@ import { BoardTile } from "./BoardTile"
 import { getCharacterOffset } from "./characterLayout"
 import { CharacterModel } from "./CharacterModel"
 import { DiceView } from "./DiceView"
+import { DuelArena } from "./DuelArena"
 import { createSurfaceTexture } from "./sceneryMaterials"
 import { WorldEnvironment } from "./WorldEnvironment"
 
@@ -160,7 +161,11 @@ export function BoardScene(props: BoardSceneProps) {
       shadows={{ type: THREE.PCFShadowMap }}
     >
       <color attach="background" args={["#aed7e4"]} />
-      <Scene {...props} />
+      {props.state.phase === "DUEL" && props.state.duel && props.state.duel.stage !== "intro" ? (
+        <DuelArena state={props.state} />
+      ) : (
+        <Scene {...props} />
+      )}
     </Canvas>
   )
 }

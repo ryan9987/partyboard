@@ -1,5 +1,10 @@
 # Phone controller
 
+Occupied-space duels replace Roll with `DuelControls.tsx`: Swing/Guard buttons, score, recovery,
+and a spectator state. `duel-motion.ts` classifies deliberate wrist motion and sideways tilt. The
+existing permission flow enables sensors; no inputs are buffered across disconnects. See
+`docs/SWORD_DUEL.md` for timings and real-device verification still needed.
+
 `ControllerPage.tsx` renders the join form, lobby/waiting/current-turn status, connection state, explicit motion permission, and the always-visible touch Roll button. `/controller/ABCD` pre-fills the room code; `/controller?room=ABCD` and manually entering a code also work.
 
 Set `VITE_SOCKET_URL` in `apps/web/.env.local` (for example `http://localhost:3001`), or export it before starting Vite. Vite currently reads environment files from `apps/web`; the server separately reads root `.env`. A missing connection URL produces a readable error screen with a disabled Roll button. Deployment requires HTTPS/WSS and a configured public server URL.

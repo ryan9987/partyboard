@@ -8,6 +8,7 @@ import {
 } from "@party-board/motion"
 import { createGameSocket } from "../networking/socket"
 import { ControllerClient } from "./controller-client"
+import { DuelControls } from "./DuelControls"
 import "./controller.css"
 
 function initialRoom(): string {
@@ -79,6 +80,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   if (me) {
     if (view.connection !== "connected") headline = "Reconnecting…"
     else if (view.state?.phase === "LOBBY") headline = "You're in!"
+    else if (view.state?.phase === "DUEL") headline = "Sword duel"
     else if (canRoll) headline = "Your turn!"
     else if (view.pending) headline = "Roll submitted"
     else if (active) headline = `${active.name}'s turn`
@@ -162,17 +164,26 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           )}
         </section>
       )}
-      <button
-        className="controller-roll"
-        type="button"
-        disabled={!canRoll}
-        onClick={() => {
-          detector.current?.stop()
-          client.requestRoll()
-        }}
-      >
-        Roll
-      </button>
+      {view.state?.phase === "DUEL" && view.state.duel ? (
+        <DuelControls
+          client={client}
+          state={view.state}
+          playerId={view.playerId}
+          motionEnabled={permission === "enabled"}
+        />
+      ) : (
+        <button
+          className="controller-roll"
+          type="button"
+          disabled={!canRoll}
+          onClick={() => {
+            detector.current?.stop()
+            client.requestRoll()
+          }}
+        >
+          Roll
+        </button>
+      )}
       <section aria-label="Motion control">
         <button
           type="button"
@@ -188,8 +199,10 @@ function ConnectedController({ client }: { client: ControllerClient }) {
         </button>
         <p aria-live="polite">
           {permission === "off"
-            ? "Motion is optional. You can always use Roll."
-            : `Motion ${permission}. The Roll button stays available on your turn.`}
+            ? view.state?.phase === "DUEL"
+              ? "Enable motion for swing and tilt, or use the Swing and Guard buttons."
+              : "Motion is optional. You can always use Roll."
+            : `Motion ${permission}. ${view.state?.phase === "DUEL" ? "Swing and Guard buttons stay available." : "The Roll button stays available on your turn."}`}
         </p>
       </section>
     </main>

@@ -1,5 +1,6 @@
 import type {
   DiceRolledEvent,
+  DuelActionRequest,
   GameErrorEvent,
   HostCommand,
   JoinRoomRequest,
@@ -22,6 +23,7 @@ export const CLIENT_EVENTS = {
   GAME_START: "game.start",
   GAME_RESTART: "game.restart",
   DICE_ROLL_REQUEST: "dice.roll.request",
+  DUEL_ACTION: "duel.action",
 } as const
 
 export const SERVER_EVENTS = {
@@ -46,6 +48,7 @@ export interface ClientToServerEvents {
   "game.start": (payload: HostCommand) => void
   "game.restart": (payload: HostCommand) => void
   "dice.roll.request": (payload: RollRequest) => void
+  "duel.action": (payload: DuelActionRequest) => void
 }
 
 export interface ServerToClientEvents {

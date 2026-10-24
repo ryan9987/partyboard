@@ -8,6 +8,17 @@ No open cross-lane requests at this checkpoint.
 
 ## Resolved requests
 
+### 2026-10-24 — User-approved sword duel integration
+
+- Ryan requested occupied-space sword combat, phone motion, an arena, and loser displacement.
+  This supersedes the original mini-game scope restriction for this feature.
+- The integration pass changed the server game authority, shared protocol, phone controller,
+  host arena/characters, and affected tests. Other mini-games remain deferred.
+- `DUEL` and `duel.action` add validation, session authorization, duel IDs, deduplication,
+  authoritative hit timers, and shared action recovery.
+- `docs/SWORD_DUEL.md` records rules, timings, penalties, disconnects, and deterministic rehearsal.
+  Jack should review gesture thresholds on real phones. No messages were sent to Jack's agent.
+
 ### 2026-10-24 — Host reconnection contract
 
 - Requested by: Ryan

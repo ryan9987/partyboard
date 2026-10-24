@@ -6,6 +6,7 @@ import { useMemo, useRef } from "react"
 import * as THREE from "three"
 
 import { getCharacterOffset } from "./characterLayout"
+import { SwordModel } from "./SwordModel"
 
 export type HairStyle = "short" | "bun" | "spikes" | "cap"
 
@@ -59,6 +60,8 @@ const APPEARANCES: Record<PlayerColor, CharacterAppearance> = {
 }
 
 type CharacterModelProps = {
+  combat?: { action: "idle" | "swing" | "guard" | "hit"; actionAt: number }
+  facing?: number
   active: boolean
   appearance?: CharacterAppearance
   color: PlayerColor
@@ -68,6 +71,7 @@ type CharacterModelProps = {
 }
 
 type LimbProps = {
+  armed?: boolean
   color: string
   limbRef: React.RefObject<THREE.Group | null>
   position: readonly [number, number, number]
@@ -75,7 +79,7 @@ type LimbProps = {
   skinTone: string
 }
 
-function Arm({ color, limbRef, position, side, skinTone }: LimbProps) {
+function Arm({ color, limbRef, position, side, skinTone, armed }: LimbProps) {
   return (
     <group ref={limbRef} position={position}>
       <mesh castShadow position={[0, -0.17, 0]}>
@@ -86,7 +90,12 @@ function Arm({ color, limbRef, position, side, skinTone }: LimbProps) {
         <sphereGeometry args={[0.075, 12, 10]} />
         <meshStandardMaterial color={skinTone} roughness={0.72} />
       </mesh>
-      {side === "right" && (
+      {side === "right" && armed && (
+        <group position={[0, -0.38, 0.04]} rotation={[Math.PI / 2, 0, 0]}>
+          <SwordModel />
+        </group>
+      )}
+      {side === "right" && !armed && (
         <mesh castShadow position={[0, -0.1, -0.09]} rotation={[0.15, 0, 0]}>
           <boxGeometry args={[0.085, 0.25, 0.05]} />
           <meshStandardMaterial color="#f7fbff" roughness={0.5} />
@@ -195,6 +204,8 @@ function Hair({ appearance }: { appearance: CharacterAppearance }) {
 export function CharacterModel({
   active,
   appearance: appearanceOverride,
+  combat,
+  facing = 0,
   color,
   moving,
   playerIndex,
@@ -221,7 +232,7 @@ export function CharacterModel({
 
     const smoothing = 1 - Math.exp(-delta * 9)
     root.position.lerp(target, smoothing)
-    root.rotation.y = THREE.MathUtils.damp(root.rotation.y, 0, 8, delta)
+    root.rotation.y = THREE.MathUtils.damp(root.rotation.y, facing, 8, delta)
 
     const time = state.clock.elapsedTime
     const stride = moving ? Math.sin(time * 11) * 0.62 : Math.sin(time * 2.1) * 0.035
@@ -232,7 +243,21 @@ export function CharacterModel({
     if (rightArmRef.current) {
       rightArmRef.current.rotation.x =
         active && !moving ? -0.45 + Math.sin(time * 3) * 0.12 : -stride
+      if (combat) {
+        const age = (Date.now() - combat.actionAt) / 1000
+        const swinging = combat.action === "swing" && age < 0.85
+        const guarding = combat.action === "guard" && age < 0.7
+        rightArmRef.current.rotation.x = guarding
+          ? -1.3
+          : swinging
+            ? -1.8 + Math.sin(Math.min(1, age / 0.65) * Math.PI) * 2.7
+            : -0.4
+        rightArmRef.current.rotation.z = guarding ? -0.8 : swinging ? Math.sin(age * 7) * 0.65 : 0
+      } else rightArmRef.current.rotation.z = 0
     }
+    if (combat?.action === "hit" && Date.now() - combat.actionAt < 400)
+      body.rotation.z = Math.sin(time * 35) * 0.12
+    else body.rotation.z = 0
     if (leftLegRef.current) leftLegRef.current.rotation.x = -stride * 0.8
     if (rightLegRef.current) rightLegRef.current.rotation.x = stride * 0.8
 
@@ -337,6 +362,7 @@ export function CharacterModel({
           limbRef={rightArmRef}
           position={[0.255, 0.47, 0]}
           side="right"
+          armed={Boolean(combat)}
           skinTone={appearance.skinTone}
         />
 

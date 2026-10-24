@@ -597,11 +597,174 @@ a {
   }
 }
 
+.duel-overlay {
+  position: absolute;
+  z-index: 7;
+  inset: 82px 24px 24px;
+  pointer-events: none;
+  color: var(--ink);
+}
+.duel-overlay--intro {
+  display: grid;
+  place-items: center;
+}
+.duel-announcement {
+  width: min(430px, 100%);
+  padding: 24px 32px 32px;
+  text-align: center;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px #24392933;
+  animation: duel-arrive 350ms ease-out both;
+}
+.duel-announcement h1 {
+  margin: 12px 0;
+  font:
+    400 2.4rem Georgia,
+    serif;
+  letter-spacing: -0.04em;
+}
+.duel-announcement p {
+  font-size: 1rem;
+  font-weight: 650;
+}
+.duel-announcement p span {
+  padding: 0 12px;
+  color: var(--muted);
+  font:
+    italic 1rem Georgia,
+    serif;
+}
+.duel-announcement small {
+  color: var(--muted);
+}
+.crossed-swords {
+  position: relative;
+  width: 150px;
+  height: 145px;
+  margin: 0 auto 12px;
+}
+.crossed-swords svg {
+  position: absolute;
+  left: 35px;
+  width: 80px;
+  height: 145px;
+  transform-origin: 50% 70%;
+}
+.crossed-swords__left {
+  transform: rotate(-40deg);
+  animation: sword-cross-left 650ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.crossed-swords__right {
+  transform: rotate(40deg);
+  animation: sword-cross-right 650ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.duel-scoreboard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 630px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 0 6px 24px #24392922;
+}
+.duel-scoreboard h2 {
+  margin: 5px 0 0;
+  font:
+    400 1.5rem Georgia,
+    serif;
+}
+.duel-scoreboard__scores {
+  display: flex;
+  gap: 26px;
+  text-align: center;
+}
+.duel-scoreboard__scores span {
+  display: block;
+  font-size: 0.75rem;
+  max-width: 110px;
+  overflow-wrap: anywhere;
+}
+.duel-scoreboard__scores strong {
+  display: block;
+  font:
+    2rem Georgia,
+    serif;
+}
+.duel-timer {
+  padding: 10px;
+  border-left: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.duel-instructions {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 100%;
+  padding: 14px 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  text-align: center;
+  font-size: 0.85rem;
+}
+@keyframes duel-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sword-cross-left {
+  from {
+    transform: translateX(-60px) rotate(-90deg);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-40deg);
+    opacity: 1;
+  }
+}
+@keyframes sword-cross-right {
+  from {
+    transform: translateX(60px) rotate(90deg);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(40deg);
+    opacity: 1;
+  }
+}
+@media (max-width: 760px) {
+  .duel-overlay {
+    inset: 75px 16px 20px;
+  }
+  .duel-scoreboard {
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 14px;
+  }
+  .duel-announcement {
+    padding: 20px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }

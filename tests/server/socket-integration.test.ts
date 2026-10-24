@@ -37,6 +37,9 @@ async function listen() {
       turnEndMs: 10,
       rollTimeoutMs: 30_000,
       disconnectTimeoutMs: 50,
+      duelIntroMs: 10,
+      duelDurationMs: 50,
+      duelResultMs: 10,
     },
   })
   await new Promise<void>((resolve) => app!.httpServer.listen(0, "127.0.0.1", resolve))

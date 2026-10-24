@@ -4,6 +4,9 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- First mini-game implemented at Ryan's request: authoritative occupied-space sword duel,
+  crossed-swords transition, woodland arena, phone swing/guard gestures, and touch fallback.
+
 - Jack's server/controller/motion branch is integrated with Ryan's live 3D host.
 - The first real host/controller integration checkpoint and host-refresh recovery test pass.
 - Woodland visual pass implemented with local geometry/textures and instanced planting; no
@@ -54,6 +57,12 @@ Ryan or Ryan's agent owns this file.
 - Physical iPhone/Android motion and intended demo-network testing remain outstanding.
 
 ## Verification
+
+- Duel tests cover scoring, parries, clashes, deduplication, cooldowns, spectator rejection,
+  timeouts, forfeits, restart cancellation, and four-controller rotations.
+- Separate browser rehearsal verified joins, two moves onto space three, a successful guard,
+  two clean hits, a 2–0 result, three-space penalty, and normal board-turn resumption. Physical
+  phone sensitivity remains unverified pending iPhone/Android testing.
 
 - `pnpm check` passes.
 - Woodland pass: live six-space roll from tile 23, controller submission lock, overhead dice, and

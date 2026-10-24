@@ -5,6 +5,7 @@ import {
   roomJoinedEventSchema,
   playerReadyRequestSchema,
   rollRequestSchema,
+  duelActionRequestSchema,
   type GameState,
   type JoinRoomRequest,
 } from "@party-board/protocol"
@@ -33,6 +34,7 @@ export function createRollRequestId(): string {
 
 /** One shared request latch protects both touch and motion, including synchronous callbacks. */
 export class ControllerClient {
+  private lastDuelActionAt = 0
   private view: ControllerView = {
     connection: "connecting",
     state: null,
@@ -242,6 +244,35 @@ export class ControllerClient {
     }
     this.update({ pending: { requestId, turnNumber: this.view.state!.turnNumber }, error: null })
     this.emitRoll(requestId)
+    return true
+  }
+
+  canDuel(): boolean {
+    return (
+      this.view.connection === "connected" &&
+      !this.view.joining &&
+      this.view.state?.phase === "DUEL" &&
+      this.view.state.duel?.stage === "active" &&
+      this.view.state.duel.fighters.some((fighter) => fighter.playerId === this.view.playerId)
+    )
+  }
+
+  requestDuelAction(action: "swing" | "guard"): boolean {
+    if (
+      !this.canDuel() ||
+      !this.session?.existingSessionId ||
+      Date.now() - this.lastDuelActionAt < 900
+    )
+      return false
+    const payload = duelActionRequestSchema.parse({
+      roomCode: this.session.roomCode,
+      playerSessionId: this.session.existingSessionId,
+      requestId: this.newRequestId(),
+      duelId: this.view.state!.duel!.id,
+      action,
+    })
+    this.lastDuelActionAt = Date.now()
+    this.socket.emit("duel.action", payload)
     return true
   }
 

@@ -58,6 +58,9 @@ beforeEach(() => {
   messages = []
   server = new GameServer({
     dice: () => 6,
+    duelIntroMs: 100,
+    duelDurationMs: 100,
+    duelResultMs: 100,
     deliver: (connection, event, payload) => messages.push({ connection, event, payload }),
   })
 })
@@ -141,7 +144,8 @@ describe("authoritative room and turn loop", () => {
       expect(snapshot().phase).toBe("ROLLING")
       vi.advanceTimersByTime(900)
       expect(snapshot().phase).toBe("MOVING")
-      vi.advanceTimersByTime(1800 + 500)
+      // Include the short test-configured intro, drawn duel, result, and turn-end timer.
+      vi.advanceTimersByTime(1800 + 500 + 800)
       expect(snapshot().turnNumber).toBe(turn + 2)
       // Old retries remain harmless even when this player becomes active again.
       roll(roomCode, player, id)

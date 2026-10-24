@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react"
 import { buildControllerUrl, createRuntimeConfig } from "../app/runtimeConfig"
 import { BoardScene } from "./BoardScene"
 import { DemoPreflight } from "./DemoPreflight"
+import { DuelOverlay } from "./DuelOverlay"
 import { createFixtureState } from "./fixture"
 import { GameOverlay } from "./GameOverlay"
 import { LobbyOverlay } from "./LobbyOverlay"
@@ -168,7 +169,9 @@ export default function HostPage() {
         </div>
       </header>
 
-      {state.phase === "LOBBY" ? (
+      {state.phase === "DUEL" && state.duel ? (
+        <DuelOverlay state={state} />
+      ) : state.phase === "LOBBY" ? (
         <LobbyOverlay
           actionLabel={liveMode ? "Start game" : "Start host preview"}
           controllerUrl={controllerUrl}

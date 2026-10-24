@@ -1,5 +1,9 @@
 # Authoritative server
 
+Occupied-space sword duels are now part of the phase machine. All action authorization, cooldowns,
+hit/parry/clash decisions, results, penalties, and timeout/disconnect recovery run in `GameServer`.
+The wire extension and timings are documented in `docs/SWORD_DUEL.md`.
+
 Node.js / Socket.IO authority for in-memory rooms, private player sessions, dice, positions, phases, turn rotation, request deduplication, and reconnection. Room state is deliberately lost when the server stops.
 
 ## Development
