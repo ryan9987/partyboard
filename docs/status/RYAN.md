@@ -73,3 +73,8 @@ Ryan or Ryan's agent owns this file.
 - Reduced the 3D die to roughly half scale and moved it high beside the camera framing so it remains
   readable without covering the character or route. Browser-checked both lobby and active-game
   layouts with no console errors.
+- Tightened the turn camera around the active character, anchored the animated die directly above
+  that character throughout movement, and strengthened the active marker with a pulse and local
+  light.
+- Removed the accidental last-to-first decorative tube closure that drew long straight lines
+  through the open board, while preserving logical wraparound in the authoritative board model.

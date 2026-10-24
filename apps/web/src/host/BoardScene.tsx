@@ -5,6 +5,7 @@ import { useMemo, useRef } from "react"
 import * as THREE from "three"
 
 import { BoardTile } from "./BoardTile"
+import { getCharacterOffset } from "./characterLayout"
 import { CharacterModel } from "./CharacterModel"
 import { DiceView } from "./DiceView"
 import { WorldEnvironment } from "./WorldEnvironment"
@@ -16,12 +17,12 @@ type BoardSceneProps = {
 
 function CameraRig({ focus }: { focus: readonly [number, number, number] }) {
   const { camera } = useThree()
-  const lookTarget = useRef(new THREE.Vector3(focus[0] - 1.7, 0.45, focus[2] - 2.2))
+  const lookTarget = useRef(new THREE.Vector3(focus[0] - 1.15, 1.05, focus[2] - 0.8))
 
   useFrame((_, delta) => {
-    const smoothing = 1 - Math.exp(-delta * 3.2)
-    const desiredPosition = new THREE.Vector3(focus[0] + 3.7, 8.8, focus[2] + 12.8)
-    const desiredLook = new THREE.Vector3(focus[0] - 1.7, 0.45, focus[2] - 2.2)
+    const smoothing = 1 - Math.exp(-delta * 4)
+    const desiredPosition = new THREE.Vector3(focus[0] + 2.75, 6.1, focus[2] + 8.9)
+    const desiredLook = new THREE.Vector3(focus[0] - 1.15, 1.05, focus[2] - 0.8)
     camera.position.lerp(desiredPosition, smoothing)
     lookTarget.current.lerp(desiredLook, smoothing)
     camera.lookAt(lookTarget.current)
@@ -33,9 +34,20 @@ function CameraRig({ focus }: { focus: readonly [number, number, number] }) {
 function Scene({ state, movingPlayerId }: BoardSceneProps) {
   const tileMap = new Map(defaultBoard.tiles.map((tile) => [tile.id, tile]))
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
+  const activePlayerIndex = state.players.findIndex((player) => player.id === state.currentPlayerId)
   const focusTile =
     tileMap.get(activePlayer?.tileId ?? defaultBoard.startingTileId) ?? defaultBoard.tiles[0]!
-  const dicePosition = [focusTile.position[0] + 4.2, 4.8, focusTile.position[2] - 1.4] as const
+  const characterOffset = getCharacterOffset(activePlayerIndex)
+  const activeCharacterPosition = [
+    focusTile.position[0] + characterOffset[0],
+    focusTile.position[1],
+    focusTile.position[2] + characterOffset[2],
+  ] as const
+  const dicePosition = [
+    activeCharacterPosition[0],
+    activeCharacterPosition[1] + 3.05,
+    activeCharacterPosition[2],
+  ] as const
   const pathCurve = useMemo(
     () =>
       new THREE.CatmullRomCurve3(
@@ -65,7 +77,7 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
       <WorldEnvironment />
 
       <mesh receiveShadow scale={[1, 0.16, 1]}>
-        <tubeGeometry args={[pathCurve, 160, 0.62, 10, true]} />
+        <tubeGeometry args={[pathCurve, 160, 0.62, 10, false]} />
         <meshStandardMaterial color="#cbbd9f" roughness={0.88} />
       </mesh>
 

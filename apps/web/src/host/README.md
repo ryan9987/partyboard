@@ -11,6 +11,7 @@ Implemented components:
 - `BoardScene.tsx`: React Three Fiber scene
 - `BoardTile.tsx`: one visual board tile
 - `CharacterModel.tsx`: animated humanoid assembled from local Three.js geometry with customization-ready appearance data
+- `characterLayout.ts`: shared per-player offsets used by characters, camera framing, and dice placement
 - `DiceView.tsx`: visual die driven by a server result
 - `WorldEnvironment.tsx`: grass island, trees, rocks, flowers, clouds, and daylight environment
 - `hostState.ts`: pure projection of authoritative server events into display state
@@ -25,9 +26,11 @@ networking code. The current four presets are intentionally distinct and require
 files, keeping the hackathon demo deterministic and offline-friendly.
 
 The board uses layered route stones, denser trees and shrubs, small flowers and mushrooms, and a
-clearly labeled start gate. The die floats without a pedestal and includes six fully modeled pip
-faces, a rounded translucent edge treatment, camera-facing result poses, hover motion, and a light
-ring during rolls. It is intentionally small and elevated away from the playable route.
+clearly labeled start gate. Its decorative trail mesh is deliberately open, so the logical
+last-to-first wraparound never draws a shortcut across the world. The camera closely tracks the
+active character, whose pulsing floor marker and local light identify the current turn. The die
+floats directly above that character, follows them along the movement path, and includes six fully
+modeled pip faces, camera-facing result poses, hover motion, and a light ring during rolls.
 
 The host interface uses a compact broadcast-style layout with flat colors, restrained type, and
 solid controls. It avoids gradients, oversized cards, decorative dashboard copy, and other visual

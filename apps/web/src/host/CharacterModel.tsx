@@ -4,6 +4,8 @@ import { useFrame } from "@react-three/fiber"
 import { useMemo, useRef } from "react"
 import * as THREE from "three"
 
+import { getCharacterOffset } from "./characterLayout"
+
 export type HairStyle = "short" | "bun" | "spikes" | "cap"
 
 export type CharacterAppearance = {
@@ -54,15 +56,6 @@ const APPEARANCES: Record<PlayerColor, CharacterAppearance> = {
     accessoryColor: "#79e4ee",
   },
 }
-
-const CHARACTER_OFFSETS: Vec3[] = [
-  [-0.31, 0, -0.27],
-  [0.31, 0, -0.27],
-  [-0.31, 0, 0.27],
-  [0.31, 0, 0.27],
-]
-
-const DEFAULT_OFFSET: Vec3 = [0, 0, 0]
 
 type CharacterModelProps = {
   active: boolean
@@ -188,8 +181,9 @@ export function CharacterModel({
   const rightArmRef = useRef<THREE.Group>(null)
   const leftLegRef = useRef<THREE.Group>(null)
   const rightLegRef = useRef<THREE.Group>(null)
+  const activeRingRef = useRef<THREE.Mesh>(null)
   const appearance = appearanceOverride ?? APPEARANCES[color]
-  const offset = CHARACTER_OFFSETS[playerIndex % CHARACTER_OFFSETS.length] ?? DEFAULT_OFFSET
+  const offset = getCharacterOffset(playerIndex)
   const target = useMemo(
     () => new THREE.Vector3(position[0] + offset[0], position[1] + 0.86, position[2] + offset[2]),
     [offset, position],
@@ -216,15 +210,23 @@ export function CharacterModel({
     }
     if (leftLegRef.current) leftLegRef.current.rotation.x = -stride * 0.8
     if (rightLegRef.current) rightLegRef.current.rotation.x = stride * 0.8
+
+    if (activeRingRef.current) {
+      const pulse = 1 + Math.sin(time * 3.4) * 0.1
+      activeRingRef.current.scale.setScalar(pulse)
+    }
   })
 
   return (
     <group ref={rootRef} position={target} scale={1.02}>
       {active && (
-        <mesh position={[0, -0.61, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.36, 0.48, 32]} />
-          <meshBasicMaterial color={appearance.shirtColor} transparent opacity={0.88} />
-        </mesh>
+        <group position={[0, -0.61, 0]}>
+          <mesh ref={activeRingRef} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.36, 0.49, 40]} />
+            <meshBasicMaterial color={appearance.shirtColor} transparent opacity={0.94} />
+          </mesh>
+          <pointLight color={appearance.shirtColor} distance={3.2} intensity={4.5} />
+        </group>
       )}
 
       <group ref={bodyRef}>
