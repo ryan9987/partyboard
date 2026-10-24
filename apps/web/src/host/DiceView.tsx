@@ -1,4 +1,5 @@
 import { useFrame } from "@react-three/fiber"
+import { RoundedBox } from "@react-three/drei"
 import { useRef } from "react"
 import * as THREE from "three"
 
@@ -19,7 +20,7 @@ type DiceViewProps = {
 }
 
 export function DiceView({ value, rolling }: DiceViewProps) {
-  const dieRef = useRef<THREE.Mesh>(null)
+  const dieRef = useRef<THREE.Group>(null)
 
   useFrame((_, delta) => {
     const die = dieRef.current
@@ -39,12 +40,31 @@ export function DiceView({ value, rolling }: DiceViewProps) {
   })
 
   return (
-    <group position={[0, 1.25, 0]}>
-      <mesh castShadow ref={dieRef}>
-        <boxGeometry args={[1.25, 1.25, 1.25, 4, 4, 4]} />
-        <meshStandardMaterial color="#f8fbff" metalness={0.2} roughness={0.2} />
-      </mesh>
-      <pointLight color="#68e7f0" intensity={rolling ? 15 : 6} distance={7} />
+    <group position={[0, 1.38, 0]}>
+      <group ref={dieRef}>
+        <RoundedBox args={[1.25, 1.25, 1.25]} castShadow radius={0.14} smoothness={5}>
+          <meshStandardMaterial color="#fffdf7" metalness={0.04} roughness={0.32} />
+        </RoundedBox>
+        <mesh position={[0, 0, 0.625]} scale={[1, 1, 0.35]}>
+          <sphereGeometry args={[0.105, 14, 10]} />
+          <meshStandardMaterial color="#17223a" roughness={0.55} />
+        </mesh>
+        {[-0.25, 0.25].flatMap((x) =>
+          [-0.25, 0.25].map((y) => (
+            <mesh key={`back-${x}-${y}`} position={[x, y, -0.625]} scale={[1, 1, 0.35]}>
+              <sphereGeometry args={[0.095, 14, 10]} />
+              <meshStandardMaterial color="#17223a" roughness={0.55} />
+            </mesh>
+          )),
+        )}
+        {[-0.25, 0, 0.25].map((x) => (
+          <mesh key={`top-${x}`} position={[x, 0.625, x]} scale={[1, 0.35, 1]}>
+            <sphereGeometry args={[0.09, 14, 10]} />
+            <meshStandardMaterial color="#17223a" roughness={0.55} />
+          </mesh>
+        ))}
+      </group>
+      <pointLight color="#fff3c4" intensity={rolling ? 13 : 5} distance={7} />
     </group>
   )
 }
