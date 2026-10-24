@@ -1,6 +1,18 @@
 type Vector = { x: number | null; y: number | null; z: number | null } | null
 type Rotation = { alpha: number | null; beta: number | null; gamma: number | null } | null
 
+export function getMinigameMotionReading(
+  event: Parameters<typeof getDuelGesture>[0],
+  axis: number,
+  neutral: number | null,
+) {
+  const flick = getDuelGesture(event) === "swing"
+  const x = event.accelerationIncludingGravity?.x
+  if (flick || typeof x !== "number" || !Number.isFinite(x)) return { axis, neutral, flick }
+  const center = neutral ?? x
+  return { axis: Math.max(-1, Math.min(1, (x - center) / 4.5)), neutral: center, flick }
+}
+
 /** Deliberate wrist rotation/acceleration attacks; sideways gravity tilt guards. */
 export function getDuelGesture(event: {
   rotationRate: Rotation

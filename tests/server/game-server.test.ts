@@ -57,6 +57,7 @@ beforeEach(() => {
   vi.useFakeTimers()
   messages = []
   server = new GameServer({
+    roundGame: "potato",
     dice: () => 6,
     duelIntroMs: 100,
     duelDurationMs: 100,

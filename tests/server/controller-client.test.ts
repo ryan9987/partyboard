@@ -10,6 +10,7 @@ import type { GameSocket } from "../../apps/web/src/networking/socket"
 import { gameStateSchema, roomCreatedEventSchema } from "../../packages/protocol/src/index"
 
 class FakeSocket {
+  holdShop = false
   connected = false
   dropNextRoll = false
   sent: Array<{ event: string; payload: unknown }> = []
@@ -28,6 +29,7 @@ class FakeSocket {
   }
   emit(event: string, payload: unknown) {
     this.sent.push({ event, payload })
+    if (event === "shop.choice" && this.holdShop) return
     if (event === "dice.roll.request" && this.dropNextRoll) {
       this.dropNextRoll = false
       return
@@ -97,6 +99,29 @@ function controller(roomCode: string, id = randomUUID()) {
 function start(room: ReturnType<typeof host>) {
   server.handle("host", "game.start", { roomCode: room.roomCode, hostToken: room.hostToken })
 }
+
+it("blocks double-tap shop purchases while waiting for a server response", () => {
+  const room = host()
+  const { client, socket } = controller(room.roomCode)
+  client.join({ roomCode: room.roomCode, name: "Ryan", color: "coral" })
+  start(room)
+  for (let i = 0; i < 2; i++) {
+    expect(client.requestRoll()).toBe(true)
+    vi.advanceTimersByTime(1800)
+  }
+  expect(client.requestRoll()).toBe(true)
+  vi.advanceTimersByTime(1200)
+  expect(client.getSnapshot().state?.phase).toBe("SHOP")
+  socket.holdShop = true
+  expect(client.chooseShop("boots")).toBe(true)
+  expect(client.chooseShop("freeze")).toBe(false)
+  const requests = socket.sent.filter((entry) => entry.event === "shop.choice")
+  expect(requests).toHaveLength(1)
+  server.handle(socket.id, "shop.choice", requests[0]!.payload)
+  expect(client.getSnapshot().state?.players[0]?.inventory).toEqual(["boots"])
+  expect(client.getSnapshot().error).toBeNull()
+  expect(client.minigameInput(NaN)).toBe(false)
+})
 
 it("joins, saves a private session, marks ready, and shares one latch for touch and motion", () => {
   const room = host()

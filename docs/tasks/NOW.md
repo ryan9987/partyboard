@@ -1,5 +1,19 @@
 # Current task board
 
+## Phase 6: woodland mini-game collection
+
+- [x] Add Balance, Fishing, Dodge, Archery and Rhythm with server-owned scoring.
+- [x] Rotate the six round games without repeats inside each bag.
+- [x] Attach acorn, rod, bow and sticks to animated hands; show casts and arrow flights.
+- [x] Add clean matching host and phone game interfaces with touch alternatives.
+- [x] Test scoring, cooldowns, duplication, forfeits, tied prizes, restart and board resumption.
+- [x] Browser-inspect all art scenes and complete a live two-controller Fishing catch.
+- [x] Complete a four-controller six-game rotation and targeted Archery/Balance replays.
+- [x] Verify real controller layouts inside 320/390/430px frames; fix horizontal overflow.
+- [x] Harden clock alignment, motion/touch behavior, shop double taps and prop placement.
+- [ ] Tune gestures and verify small-screen layout on physical iPhone and Android.
+- [ ] Rehearse the six-game rotation on the actual venue network.
+
 Occupied-space sword duels and round-end Hot Potato are approved, along with the shop economy.
 
 ## Phase 0: joint foundation

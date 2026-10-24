@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { minigameStateSchema } from "./minigames"
 
 export const PLAYER_COLORS = ["coral", "cyan", "gold", "violet"] as const
 
@@ -12,6 +13,7 @@ export const gamePhaseSchema = z.enum([
   "DUEL",
   "SHOP",
   "POTATO",
+  "MINIGAME",
 ])
 
 export const playerColorSchema = z.enum(PLAYER_COLORS)
@@ -98,11 +100,26 @@ export const gameStateSchema = z
     duel: duelStateSchema.nullable().optional(),
     shop: shopStateSchema.nullable().optional(),
     potato: potatoStateSchema.nullable().optional(),
+    minigame: minigameStateSchema.nullable().optional(),
     roundNumber: z.number().int().positive().optional(),
     notice: z.string().max(180).optional(),
+    serverTime: z.number().int().positive().optional(),
   })
   .strict()
   .superRefine((state, context) => {
+    const game = state.minigame
+    if (
+      (state.phase === "MINIGAME") !== !!game ||
+      (game &&
+        (new Set(game.players.map((entry) => entry.playerId)).size !== game.players.length ||
+          game.players.some(
+            (entry) => !state.players.some((player) => player.id === entry.playerId),
+          ) ||
+          new Set(game.winnerIds).size !== game.winnerIds.length ||
+          game.winnerIds.some((id) => !game.players.some((entry) => entry.playerId === id)) ||
+          (game.stage !== "result" && game.winnerIds.length > 0)))
+    )
+      context.addIssue({ code: "custom", message: "Invalid mini-game state", path: ["minigame"] })
     if (
       state.phase === "SHOP" &&
       (!state.shop ||

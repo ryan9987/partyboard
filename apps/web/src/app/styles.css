@@ -821,3 +821,192 @@ a {
     animation-duration: 0.01ms !important;
   }
 }
+/* Compact field-journal HUD; the arena remains the main focus. */
+.minigame-hud {
+  position: absolute;
+  inset: 5.5rem 1.5rem 1.5rem;
+  pointer-events: none;
+  color: #294638;
+}
+.minigame-titlebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  max-width: 31rem;
+  margin: 0 auto;
+  padding: 0.9rem 1.2rem;
+  background: #faf6e9;
+  border: 1px solid #d5ccb7;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px #29463814;
+}
+.minigame-titlebar h1 {
+  font:
+    2rem Georgia,
+    serif;
+  margin: 0.15rem 0 0;
+}
+.minigame-titlebar p {
+  margin: 0;
+}
+.minigame-clock {
+  display: grid;
+  text-align: center;
+  min-width: 3.5rem;
+  border-left: 1px solid #d5ccb7;
+  padding-left: 1rem;
+}
+.minigame-clock strong {
+  font-size: 1.8rem;
+  font-variant-numeric: tabular-nums;
+}
+.minigame-clock small {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.minigame-brief {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  width: min(33rem, 88vw);
+  box-sizing: border-box;
+  text-align: center;
+  background: #faf6e9;
+  border: 1px solid #d5ccb7;
+  padding: 2rem;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px #29463824;
+}
+.minigame-brief h2 {
+  font:
+    1.8rem/1.35 Georgia,
+    serif;
+  margin: 0.7rem 0 1rem;
+}
+.minigame-brief p,
+.minigame-brief small {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.minigame-scores {
+  position: absolute;
+  bottom: 3.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  max-width: 95vw;
+}
+.minigame-score {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 9rem;
+  padding: 0.7rem 0.9rem;
+  background: #faf6e9;
+  border: 1px solid #d5ccb7;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+.minigame-score small {
+  display: block;
+  font-size: 0.65rem;
+  margin-top: 0.2rem;
+  color: #647462;
+}
+.minigame-score strong {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.15rem;
+}
+.minigame-score--out {
+  background: #e5e3d7;
+}
+.score-dot {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 1.8rem;
+  border-radius: 3px;
+}
+.score-dot--coral {
+  background: #ed7180;
+}
+.score-dot--cyan {
+  background: #40c1c8;
+}
+.score-dot--gold {
+  background: #e0b745;
+}
+.score-dot--violet {
+  background: #9476d4;
+}
+.minigame-hint {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 90vw;
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+  margin: 0;
+  background: #faf6e9;
+  border: 1px solid #d5ccb7;
+  border-radius: 8px;
+}
+@media (max-width: 750px) {
+  .minigame-score {
+    min-width: 0;
+    padding: 0.5rem;
+    gap: 0.4rem;
+  }
+  .minigame-score small {
+    font-size: 0.6rem;
+  }
+  .minigame-hud {
+    inset: 5rem 0.5rem 0.5rem;
+  }
+  .minigame-scores {
+    gap: 0.25rem;
+    width: 96%;
+  }
+  .minigame-score {
+    flex: 1;
+  }
+  .minigame-score strong {
+    font-size: 0.9rem;
+  }
+}
+.phone-rehearsal {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2rem;
+  min-height: 100vh;
+  padding: 1rem;
+  color: #294638;
+  background: #e5e9db;
+  overflow: auto;
+}
+.phone-rehearsal h1 {
+  font:
+    1.5rem Georgia,
+    serif;
+}
+.phone-rehearsal label {
+  display: grid;
+  gap: 0.5rem;
+}
+.phone-rehearsal select {
+  padding: 0.6rem;
+  background: #faf6e9;
+  color: #294638;
+  border: 1px solid #bfc4ac;
+}
+body:has(.phone-rehearsal) {
+  overflow: auto;
+}
