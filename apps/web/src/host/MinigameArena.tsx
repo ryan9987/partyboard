@@ -325,7 +325,8 @@ function DodgeHazard({
   const warning = useRef<THREE.Mesh>(null)
   useFrame(() => {
     if (!acorn.current || !warning.current) return
-    const elapsed = Math.max(0, Math.min(game.durationMs, clock() - game.startsAt))
+    const elapsed =
+      game.stage === "intro" ? 0 : Math.max(0, Math.min(game.durationMs, clock() - game.startsAt))
     const wave = Math.floor(elapsed / 1800)
     const phase = elapsed % 1800
     const laneX = x + hazardLane(wave, index) * 0.63
@@ -363,7 +364,8 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
   const bark = useMemo(() => createSurfaceTexture("bark"), [])
   useEffect(() => () => bark.dispose(), [bark])
   useFrame((_, delta) => {
-    const elapsed = Math.max(0, Math.min(game.durationMs, clock() - game.startsAt))
+    const elapsed =
+      game.stage === "intro" ? 0 : Math.max(0, Math.min(game.durationMs, clock() - game.startsAt))
     if (root.current) {
       const desired =
         game.kind === "dodge" && entry.alive

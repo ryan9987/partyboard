@@ -308,3 +308,101 @@ body:has(.controller-page),
 .lane-buttons {
   margin-bottom: 0.5rem;
 }
+.controller-identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.8rem;
+}
+.controller-identity > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.inventory-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.inventory-heading > span {
+  color: #6e7866;
+  font-size: 0.75rem;
+}
+.inventory-help,
+.shop-no-rush {
+  color: #647462;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.inventory-summary {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.inventory-summary > span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+}
+.inventory-summary svg {
+  width: 22px;
+  height: 22px;
+}
+.inventory-controller label {
+  margin-top: 16px;
+  font-size: 0.8rem;
+}
+.shop-choices button {
+  position: relative;
+  padding-left: 48px;
+}
+.shop-choices button > svg {
+  position: absolute;
+  top: 14px;
+  left: 10px;
+  width: 25px;
+  height: 25px;
+  color: #6c795b;
+}
+.shop-choices button > strong {
+  display: block;
+  font-size: 0.85rem;
+}
+.shop-choices button > small {
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.controller-page .player-balances {
+  margin: 1.5rem 0;
+}
+.controller-page .player-balances ul {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 18px;
+}
+.controller-page .player-balances li {
+  gap: 6px;
+}
+.controller-page .player-balances .coin-count {
+  gap: 3px;
+}
+.controller-page .player-balances .coin-count strong {
+  font-size: 0.85rem;
+}
+.controller-page .player-balances .coin-count svg {
+  width: 15px;
+  height: 15px;
+}
+.controller-page .powerup-notice {
+  margin: 1rem 0;
+  padding: 12px;
+}
+.waiting-for-host {
+  padding: 10px 12px;
+  border-left: 2px solid #809467;
+  color: #526548;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}

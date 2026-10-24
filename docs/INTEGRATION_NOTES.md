@@ -1,5 +1,14 @@
 # Integration notes
 
+## 2026-10-24 — Ryan-approved relaxed pacing and visible economy
+
+Ryan requested removing rushed shop/turn timers, clearer on-turn power-up use and effects,
+and a clean coin counter for every player. This explicitly requires coordinated server,
+controller, shared protocol, and host integration. Work is isolated on
+`feat/relaxed-pacing-and-player-coins`; Jack's unrelated files and status remain untouched.
+Shops and connected board turns become untimed. Instruction/result screens wait for an
+authenticated host Continue action; active competitive game clocks and disconnect recovery stay.
+
 ## 2026-10-24 — Full demo hardening and main integration
 
 Ryan requested the full gameplay/mobile/visual pass, fixes across all game lanes, more natural

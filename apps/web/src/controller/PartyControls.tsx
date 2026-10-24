@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"
 import type { ControllerClient } from "./controller-client"
 import { getDuelGesture } from "./duel-motion"
 import { useGameNow } from "../networking/gameClock"
+import { CoinCount } from "../app/CoinCount"
+import { ItemGlyph } from "../app/PowerupNotice"
 
 export function PartyControls({
   client,
@@ -19,6 +21,8 @@ export function PartyControls({
   const [targetId, setTargetId] = useState("")
   const now = useGameNow(state.serverTime)
   const canPass = client.canPass()
+  const { choosingItem, pendingItem } = client.getSnapshot()
+  const myTurn = state.phase === "AWAITING_ROLL" && state.currentPlayerId === me?.id
   useEffect(() => {
     if (!motionEnabled || !canPass) return
     const motion = (event: DeviceMotionEvent) => {
@@ -50,20 +54,22 @@ export function PartyControls({
                   : `${holder?.name ?? "Someone"} has it`}
         </h2>
         <p>Flick your wrist or tap to pass clockwise. Last player standing wins 8 coins.</p>
-        <button
-          className="controller-roll"
-          type="button"
-          disabled={!canPass}
-          onClick={() => client.passPotato()}
-        >
-          Pass acorn
-        </button>
+        {game.stage !== "result" && (
+          <button
+            className="controller-roll"
+            type="button"
+            disabled={!canPass}
+            onClick={() => client.passPotato()}
+          >
+            Pass acorn
+          </button>
+        )}
         <p role="status">
           {game.stage === "active"
             ? `${Math.max(0, Math.ceil((game.fuseAt - now) / 1000))} seconds until it pops`
             : game.stage === "intro"
               ? "Get ready…"
-              : "Returning to the trail…"}
+              : "Continue on the host when everyone is ready."}
         </p>
         <p>Your purse: {me.coins ?? 0} coins</p>
       </section>
@@ -80,9 +86,9 @@ export function PartyControls({
             : `${shopper?.name ?? "A player"} is shopping`}
         </h2>
         <p>
-          {Math.max(0, Math.ceil((state.shop.endsAt - now) / 1000))}s · {me.coins ?? 0} coins ·{" "}
-          {(me.inventory ?? []).length}/3 pack slots
+          <CoinCount coins={me.coins ?? 0} /> · {(me.inventory ?? []).length}/3 pack slots
         </p>
+        <p className="shop-no-rush">No time limit. Read the items, then buy one or keep walking.</p>
         {shopper?.id === me.id ? (
           <>
             <div className="shop-choices">
@@ -93,6 +99,7 @@ export function PartyControls({
                   disabled={(me.coins ?? 0) < item.price || (me.inventory?.length ?? 0) >= 3}
                   onClick={() => client.chooseShop(id as Item)}
                 >
+                  <ItemGlyph item={id as Item} />
                   <strong>
                     {item.name} · {item.price} coins
                   </strong>
@@ -105,25 +112,47 @@ export function PartyControls({
             </button>
           </>
         ) : (
-          <p>They'll rejoin the trail shortly.</p>
+          <p>The trail waits while they choose. No time limit.</p>
         )}
       </section>
     )
   }
   return (
     <section className="inventory-controller" aria-label="Your items">
-      <p>
-        <strong>{me.coins ?? 0} coins</strong> · {(me.inventory ?? []).length}/3 items
-      </p>
-      {state.notice && (
+      <div className="inventory-heading">
+        <strong>Your pack</strong>
+        <span>{(me.inventory ?? []).length}/3 items</span>
+      </div>
+      {state.notice && !state.itemEffect && (
         <p className="party-notice" role="status">
           {state.notice}
         </p>
       )}
       {(me.inventory ?? []).length > 0 && (
         <>
-          <p>Use an item before rolling.</p>
-          {(me.inventory ?? []).includes("freeze") && (
+          <p className="inventory-help">
+            {myTurn
+              ? "Use a power-up before your roll. No rush."
+              : "Your power-ups are ready for your next turn."}
+          </p>
+          <div className="inventory-summary">
+            {(me.inventory ?? []).map((item, index) => (
+              <span key={`${item}-${index}`}>
+                <ItemGlyph item={item} />
+                {SHOP_ITEMS[item].name}
+              </span>
+            ))}
+          </div>
+          {myTurn && (
+            <button
+              type="button"
+              disabled={!!pendingItem}
+              onClick={() => client.setChoosingItem(!choosingItem)}
+            >
+              {choosingItem ? "Back to roll" : "Use a power-up"}
+            </button>
+          )}
+          {choosingItem && (me.inventory ?? []).includes("freeze") && (
             <label>
               Freeze target
               <select value={targetId} onChange={(event) => setTargetId(event.target.value)}>
@@ -139,23 +168,32 @@ export function PartyControls({
               </select>
             </label>
           )}
-          <div className="shop-choices">
-            {(me.inventory ?? []).map((item, index) => (
-              <button
-                key={`${item}-${index}`}
-                disabled={
-                  !client.canRoll() ||
-                  (item === "freeze" && !targetId) ||
-                  (item === "boots" && me.boosted) ||
-                  (item === "shield" && me.shield)
-                }
-                onClick={() => client.useItem(item, item === "freeze" ? targetId : undefined)}
-              >
-                {SHOP_ITEMS[item].name}
-              </button>
-            ))}
-          </div>
+          {choosingItem && (
+            <div className="shop-choices">
+              {(me.inventory ?? []).map((item, index) => (
+                <button
+                  key={`${item}-${index}`}
+                  disabled={
+                    !client.canUseItem() ||
+                    (item === "freeze" && !targetId) ||
+                    (item === "boots" && me.boosted) ||
+                    (item === "shield" && me.shield)
+                  }
+                  onClick={() => client.useItem(item, item === "freeze" ? targetId : undefined)}
+                >
+                  <ItemGlyph item={item} />
+                  <strong>
+                    {pendingItem?.item === item ? "Activating…" : `Use ${SHOP_ITEMS[item].name}`}
+                  </strong>
+                  <small>{SHOP_ITEMS[item].description}</small>
+                </button>
+              ))}
+            </div>
+          )}
         </>
+      )}
+      {!(me.inventory ?? []).length && (
+        <p className="inventory-help">Your pack is empty. Pick up a power-up at a market.</p>
       )}
       <p>
         {[

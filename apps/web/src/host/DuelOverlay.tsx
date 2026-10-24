@@ -61,15 +61,17 @@ export function DuelOverlay({ state }: { state: GameState }) {
                 </div>
               ))}
             </div>
-            <span className="duel-timer">
-              {Math.max(0, Math.ceil((duel.stageEndsAt - now) / 1000))}s
-            </span>
+            {duel.stage === "active" && (
+              <span className="duel-timer">
+                {Math.max(0, Math.ceil((duel.stageEndsAt - now) / 1000))}s
+              </span>
+            )}
           </div>
           <div className="duel-instructions" role="status">
             {duel.stage === "result"
               ? loser
-                ? `${loser.name} moves back ${duel.penaltySpaces} spaces${duel.outcome === "forfeit" ? " · opponent disconnected" : ""}. Returning to the trail…`
-                : "Both players keep their space. Returning to the trail…"
+                ? `${loser.name} moves back ${duel.penaltySpaces} spaces${duel.outcome === "forfeit" ? " · opponent disconnected" : ""}.`
+                : "Both players keep their space."
               : duel.outcome === "block"
                 ? "Parried! Wait for an opening."
                 : duel.outcome === "clash"

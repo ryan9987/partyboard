@@ -57,7 +57,7 @@ export function MinigameControls({
     window.addEventListener("devicemotion", motion)
     return () => window.removeEventListener("devicemotion", motion)
   }, [active, client, motionEnabled, usingTouch, game.kind])
-  const elapsed = Math.max(0, now - game.startsAt)
+  const elapsed = game.stage === "intro" ? 0 : Math.max(0, now - game.startsAt)
   const beat = (elapsed % RHYTHM_BEAT_MS) / RHYTHM_BEAT_MS
   const meter =
     game.kind === "balance"

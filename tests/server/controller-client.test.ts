@@ -10,6 +10,7 @@ import type { GameSocket } from "../../apps/web/src/networking/socket"
 import { gameStateSchema, roomCreatedEventSchema } from "../../packages/protocol/src/index"
 
 class FakeSocket {
+  holdItem = false
   holdShop = false
   connected = false
   dropNextRoll = false
@@ -30,6 +31,7 @@ class FakeSocket {
   emit(event: string, payload: unknown) {
     this.sent.push({ event, payload })
     if (event === "shop.choice" && this.holdShop) return
+    if (event === "item.use" && this.holdItem) return
     if (event === "dice.roll.request" && this.dropNextRoll) {
       this.dropNextRoll = false
       return
@@ -61,6 +63,7 @@ beforeEach(() => {
   hostMessages = []
   storage = new Map()
   server = new GameServer({
+    manualStageAdvance: false,
     dice: () => 1,
     deliver: (id, event, payload) => {
       if (id === "host") hostMessages.push({ event, payload })
@@ -121,6 +124,68 @@ it("blocks double-tap shop purchases while waiting for a server response", () =>
   expect(client.getSnapshot().state?.players[0]?.inventory).toEqual(["boots"])
   expect(client.getSnapshot().error).toBeNull()
   expect(client.minigameInput(NaN)).toBe(false)
+})
+
+it("pauses roll and shake input while choosing/activating a power-up and prevents duplicate use", () => {
+  const room = host()
+  const { client, socket } = controller(room.roomCode)
+  client.join({ roomCode: room.roomCode, name: "Ryan", color: "coral" })
+  start(room)
+  for (let i = 0; i < 2; i++) {
+    client.requestRoll()
+    vi.advanceTimersByTime(1800)
+  }
+  client.requestRoll()
+  vi.advanceTimersByTime(1200)
+  client.chooseShop("boots")
+  vi.advanceTimersByTime(500)
+  expect(client.canRoll()).toBe(true)
+  client.setChoosingItem(true)
+  expect(client.requestRoll()).toBe(false)
+  expect(client.canUseItem()).toBe(true)
+  socket.holdItem = true
+  expect(client.useItem("boots")).toBe(true)
+  expect(client.useItem("boots")).toBe(false)
+  expect(client.requestRoll()).toBe(false)
+  client.setChoosingItem(false)
+  expect(client.getSnapshot().choosingItem).toBe(true)
+  const requests = socket.sent.filter((entry) => entry.event === "item.use")
+  expect(requests).toHaveLength(1)
+  server.handle(socket.id, "item.use", requests[0]!.payload)
+  expect(client.getSnapshot()).toMatchObject({ pendingItem: null, choosingItem: false })
+  expect(client.getSnapshot().state?.itemEffect?.item).toBe("boots")
+  expect(client.canRoll()).toBe(true)
+  client.requestRoll()
+  expect(client.useItem("boots")).toBe(false)
+})
+
+it("retries an undelivered item with the same ID on reconnect without getting stuck", () => {
+  const room = host()
+  const { client, socket } = controller(room.roomCode)
+  client.join({ roomCode: room.roomCode, name: "Ryan", color: "coral" })
+  start(room)
+  for (let i = 0; i < 2; i++) {
+    client.requestRoll()
+    vi.advanceTimersByTime(1800)
+  }
+  client.requestRoll()
+  vi.advanceTimersByTime(1200)
+  client.chooseShop("boots")
+  vi.advanceTimersByTime(500)
+  socket.holdItem = true
+  client.useItem("boots")
+  const original = client.getSnapshot().pendingItem!.requestId
+  socket.disconnect()
+  socket.holdItem = false
+  socket.connect()
+  expect(client.getSnapshot().pendingItem).toBeNull()
+  expect(client.getSnapshot().state?.players[0]?.boosted).toBe(true)
+  expect(client.canRoll()).toBe(true)
+  expect(
+    socket.sent
+      .filter((entry) => entry.event === "item.use")
+      .map((entry) => (entry.payload as { requestId: string }).requestId),
+  ).toEqual([original, original])
 })
 
 it("joins, saves a private session, marks ready, and shares one latch for touch and motion", () => {

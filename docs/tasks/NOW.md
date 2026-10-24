@@ -1,5 +1,14 @@
 # Current task board
 
+## Relaxed pacing and economy visibility
+
+- [x] Remove default shop and connected-player roll deadlines; keep disconnect recovery.
+- [x] Wait for explicit host Start/Continue on duel and mini-game instructions/results.
+- [x] Add deliberate on-turn item selection with shake suppression and authoritative effect notices.
+- [x] Keep every player's coin count visible on host and phone with a compact matching ledger.
+- [x] Cover untimed waits, rebased clocks, stale/unauthorized continues, restart and input latches.
+- [ ] Rehearse on physical phones and deploy the new build to partyboard.club after approval.
+
 ## Phase 6: woodland mini-game collection
 
 - [x] Add Balance, Fishing, Dodge, Archery and Rhythm with server-owned scoring.

@@ -70,7 +70,7 @@ export const shopStateSchema = z
     id: z.string().uuid(),
     playerId: z.string().min(1).max(64),
     tileId: z.string().min(1).max(64),
-    endsAt: z.number().int().positive(),
+    endsAt: z.number().int().positive().nullable(),
   })
   .strict()
 
@@ -103,10 +103,51 @@ export const gameStateSchema = z
     minigame: minigameStateSchema.nullable().optional(),
     roundNumber: z.number().int().positive().optional(),
     notice: z.string().max(180).optional(),
+    waitingForHost: z
+      .object({ id: z.string().uuid(), label: z.string().max(60) })
+      .strict()
+      .nullable()
+      .optional(),
+    itemEffect: z
+      .object({
+        id: z.string().uuid(),
+        playerId: z.string().min(1).max(64),
+        targetId: z.string().min(1).max(64),
+        item: itemSchema,
+        blocked: z.boolean(),
+        message: z.string().max(180),
+      })
+      .strict()
+      .nullable()
+      .optional(),
     serverTime: z.number().int().positive().optional(),
   })
   .strict()
   .superRefine((state, context) => {
+    const pausedStage =
+      state.phase === "DUEL"
+        ? state.duel?.stage
+        : state.phase === "POTATO"
+          ? state.potato?.stage
+          : state.phase === "MINIGAME"
+            ? state.minigame?.stage
+            : null
+    if (state.waitingForHost && pausedStage !== "intro" && pausedStage !== "result")
+      context.addIssue({
+        code: "custom",
+        message: "Only instructions and results can wait for the host",
+        path: ["waitingForHost"],
+      })
+    if (
+      state.itemEffect &&
+      (!state.players.some((player) => player.id === state.itemEffect!.playerId) ||
+        !state.players.some((player) => player.id === state.itemEffect!.targetId))
+    )
+      context.addIssue({
+        code: "custom",
+        message: "Power-up effect requires room players",
+        path: ["itemEffect"],
+      })
     const game = state.minigame
     if (
       (state.phase === "MINIGAME") !== !!game ||

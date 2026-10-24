@@ -34,6 +34,7 @@ async function listen(roundGame: MinigameKind | "potato" = "potato") {
     gameOptions: {
       roundGame,
       minigameIntroMs: 100,
+      manualStageAdvance: false,
       minigameDurationMs: 1500,
       minigameResultMs: 100,
       dice: () => 2,

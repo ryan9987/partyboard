@@ -4,6 +4,21 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Relaxed pacing on `feat/relaxed-pacing-and-player-coins`: connected turns and market visits
+  are untimed. Every duel/round-game intro and result waits for authenticated host Start/Continue.
+  Gameplay clocks and disconnect recovery remain. Mini-game time rebases on actual start.
+- Deliberate on-turn power-up selection disables motion/touch rolls while choosing or waiting
+  for confirmation. Server-authored actor/target/effect notices, reconnect retry with the same
+  request ID, and duplicate-use protection. Compact per-player coin ledgers on host and phones.
+- Verification: `pnpm check` passes, 92 Vitest + 10 motion tests. Includes ten-minute untimed
+  waits, all five rebased rounds, potato/duel stages, stale/unauthorized Continue, reconnect,
+  restart and item input latches. Browser four-player shop purchases/coin synchronization,
+  320/390px shop layouts, 430px controller, manual duel/Potato instruction/result transitions,
+  exact 8/2-coin rewards, and on-turn Boots selection/activation notices verified locally.
+  Fresh host/controller console error logs are empty. Preview proof is in the task's outputs folder.
+- This branch has not been pushed or deployed to partyboard.club. Physical-device and venue
+  network rehearsal remain necessary.
+
 - Demo hardening pass: full four-controller six-game rotation plus sword duels; targeted
   Archery (three arrows, 157 points) and Balance tilt replays; actual narrow iframe layouts
   at 320/390/430px. Shop purchases, Boots, Shield and targeted Frost exercised in browser.

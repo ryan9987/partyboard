@@ -24,9 +24,7 @@ export function PartyOverlay({ state }: { state: GameState }) {
           ))}
         </div>
         <p className="muted">Buy or keep walking on your phone.</p>
-        <p className="eyebrow">
-          Continuing in {Math.max(0, Math.ceil((state.shop.endsAt - now) / 1000))}s
-        </p>
+        <p className="eyebrow">Take your time · no shopping timer</p>
       </aside>
     )
   }
@@ -79,7 +77,7 @@ export function PartyOverlay({ state }: { state: GameState }) {
           </div>
           <div className="duel-instructions">
             {game.stage === "result"
-              ? "Coins awarded · back to the trail shortly"
+              ? "Coins awarded · continue on the host when ready"
               : `Pass clockwise with a flick or a tap · pops in ${Math.max(0, Math.ceil((game.fuseAt - now) / 1000))}s`}
           </div>
         </>

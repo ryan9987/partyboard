@@ -23,7 +23,9 @@ export function MinigameOverlay({ state }: { state: GameState }) {
           <h1>{info.name}</h1>
         </div>
         <div className="minigame-clock">
-          <strong>{game.stage === "result" ? "✓" : remaining}</strong>
+          <strong>
+            {game.stage === "result" ? "✓" : game.stage === "intro" ? "—" : remaining}
+          </strong>
           <small>
             {game.stage === "intro"
               ? "get ready"
@@ -48,7 +50,7 @@ export function MinigameOverlay({ state }: { state: GameState }) {
           </span>
           <h2>{winners || "Thanks for playing"}</h2>
           <p>Winners +8 coins · everyone else +2</p>
-          <small>Returning to the trail…</small>
+          <small>Continue on the host when everyone is ready.</small>
         </div>
       )}
       <div className="minigame-scores">

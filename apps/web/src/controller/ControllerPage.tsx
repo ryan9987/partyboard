@@ -11,6 +11,9 @@ import { ControllerClient } from "./controller-client"
 import { DuelControls } from "./DuelControls"
 import { PartyControls } from "./PartyControls"
 import { MinigameControls } from "./MinigameControls"
+import { PlayerBalances } from "../app/PlayerBalances"
+import { PowerupNotice } from "../app/PowerupNotice"
+import { CoinCount } from "../app/CoinCount"
 import "./controller.css"
 
 function initialRoom(): string {
@@ -89,6 +92,8 @@ function ConnectedController({ client }: { client: ControllerClient }) {
     else if (view.state?.phase === "SHOP") headline = "Wildwood Market"
     else if (view.state?.phase === "POTATO") headline = "Hot Potato"
     else if (view.state?.minigame) headline = MINIGAMES[view.state.minigame.kind].name
+    else if (view.pendingItem) headline = "Using your power-up…"
+    else if (view.choosingItem) headline = "Choose a power-up"
     else if (canRoll) headline = "Your turn!"
     else if (view.pending) headline = "Roll submitted"
     else if (active) headline = `${active.name}'s turn`
@@ -153,9 +158,12 @@ function ConnectedController({ client }: { client: ControllerClient }) {
         </form>
       ) : (
         <section aria-label="Your controller">
-          <p>
-            {me.name} · {me.color} · Room {view.state?.roomCode}
-          </p>
+          <div className="controller-identity">
+            <span>
+              {me.name} · Room {view.state?.roomCode}
+            </span>
+            <CoinCount coins={me.coins ?? 0} />
+          </div>
           {view.state?.phase === "LOBBY" ? (
             <p>Waiting for the host to start.</p>
           ) : !inActivity ? (
@@ -180,6 +188,12 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           motionEnabled={permission === "enabled"}
         />
       )}
+      {me && view.state && <PowerupNotice state={view.state} />}
+      {me && view.state?.waitingForHost && (
+        <p className="waiting-for-host" role="status">
+          No rush · the host will continue when everyone is ready.
+        </p>
+      )}
       {!me ? null : view.state?.phase === "MINIGAME" && view.state.minigame ? (
         <MinigameControls
           key={view.state.minigame.id}
@@ -196,6 +210,12 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           playerId={view.playerId}
           motionEnabled={permission === "enabled"}
         />
+      ) : view.choosingItem || view.pendingItem ? (
+        <p className="inventory-help" role="status">
+          {view.pendingItem
+            ? "Waiting for the game to confirm your power-up…"
+            : "Shake-to-roll is paused while you choose."}
+        </p>
       ) : (
         <button
           className="controller-roll"
@@ -209,6 +229,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           Roll
         </button>
       )}
+      {me && view.state && <PlayerBalances state={view.state} playerId={view.playerId} />}
       <section aria-label="Motion control">
         <button
           type="button"

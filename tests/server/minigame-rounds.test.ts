@@ -21,6 +21,7 @@ function setup(kind?: MinigameKind) {
   const players: Array<ReturnType<typeof roomJoinedEventSchema.parse>> = []
   const errors: string[] = []
   server = new GameServer({
+    manualStageAdvance: false,
     ...(kind ? { roundGame: kind } : {}),
     dice: () => 1,
     rollDurationMs: 1,

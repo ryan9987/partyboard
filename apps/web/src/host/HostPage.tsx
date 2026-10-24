@@ -13,6 +13,8 @@ import { GameOverlay } from "./GameOverlay"
 import { LobbyOverlay } from "./LobbyOverlay"
 import { useLiveHostGame } from "./useLiveHostGame"
 import { usePieceAnimation } from "./usePieceAnimation"
+import { PlayerBalances } from "../app/PlayerBalances"
+import { PowerupNotice } from "../app/PowerupNotice"
 
 const DICE_DURATION_MS = 900
 const MOVEMENT_DURATION_MS = 300
@@ -194,6 +196,26 @@ export default function HostPage() {
           onReset={reset}
           state={state}
         />
+      )}
+      <PlayerBalances state={state} host />
+      <PowerupNotice state={state} host />
+      {state.waitingForHost && (
+        <section className="host-continue" aria-label="Continue when ready">
+          <span>No rush. Continue when everyone is ready.</span>
+          <button
+            className="button button--primary"
+            type="button"
+            disabled={live.connectionState !== "connected"}
+            onClick={live.continueGame}
+          >
+            {state.waitingForHost.label}
+          </button>
+        </section>
+      )}
+      {state.phase !== "LOBBY" && live.error && (
+        <p className="host-game-error" role="alert">
+          {live.error}
+        </p>
       )}
     </main>
   )

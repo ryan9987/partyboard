@@ -88,7 +88,7 @@ export function DuelControls({
             {duel.stage === "intro"
               ? "Get ready…"
               : duel.stage === "result"
-                ? "Returning to the trail…"
+                ? "Continue on the host when ready."
                 : now < readyAt
                   ? "Recovering…"
                   : "Ready"}

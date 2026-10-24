@@ -59,11 +59,18 @@ export const rollRequestSchema = z
   })
   .strict()
 
+export const continueGameRequestSchema = hostCommandSchema
+  .extend({
+    continueId: z.string().uuid(),
+  })
+  .strict()
+export type ContinueGameRequest = z.infer<typeof continueGameRequestSchema>
+
 export const turnStartedEventSchema = z
   .object({
     playerId: idSchema,
     turnNumber: z.number().int().positive(),
-    timeoutAt: z.number().int().positive(),
+    timeoutAt: z.number().int().positive().nullable(),
   })
   .strict()
 

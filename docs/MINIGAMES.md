@@ -11,7 +11,8 @@ After everyone connected completes or skips a board turn, choose from a six-game
 Hot Potato opens each bag, then Balance, Fishing, Dodge, Archery and Rhythm are shuffled without
 repetition. A new bag starts after all six. Occupied-space sword duels remain separate.
 
-New games have a 3.5-second instructions screen, up to 20 seconds of play, and a 3.5-second result.
+Instructions and results are untimed: the host explicitly starts the game and returns to the trail.
+The playing clock (up to 20 seconds) starts fresh only after that click, even after a long pause.
 Winners receive 8 coins, other participants receive 2, exactly once. Tied high scores share the
 8-coin prize. No board positions change. Resume the player following the round's final mover.
 
@@ -40,6 +41,8 @@ Touch controls remain available without granting sensor permission. Keep phones 
 - Rhythm uses rope-laced drums, metal rims, animated sticks and beat-lit heads.
 - Compact ivory/forest-green HUD, countdown, per-player scores and matching clean controller cards.
 - No gradients, stock hero pictures or network asset downloads.
+- A separate compact coin ledger stays visible across all game phases, distinct from round scores.
+- Rule/result screens use host Start / Back to the trail controls; phones explain who continues.
 
 ## Protocol and recovery
 

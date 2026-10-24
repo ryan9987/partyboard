@@ -72,6 +72,13 @@ Host-only. Valid only during `LOBBY` with at least one player.
 
 Host-only. Returns every player to the starting tile while preserving the room and membership.
 
+### `game.continue`
+
+Host-only, connected/attached host required. Payload is `{ roomCode, hostToken, continueId }`.
+The UUID must equal the current `waitingForHost.id`; it consumes exactly one paused intro/result.
+Stale, duplicate and controller commands cannot advance another screen. See `PARTY_ECONOMY.md`
+for untimed board/shop behavior and additive `itemEffect` feedback.
+
 ### `dice.roll.request`
 
 ```ts
@@ -112,7 +119,7 @@ Signals that the lobby transitioned into the turn loop.
 type TurnStartedEvent = {
   playerId: string
   turnNumber: number
-  timeoutAt: number
+  timeoutAt: number | null // null means there is no connected-player roll deadline
 }
 ```
 

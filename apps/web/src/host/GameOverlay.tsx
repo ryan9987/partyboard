@@ -119,21 +119,24 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
               {player.name}
             </span>
             <span className="player-state">
-              <span className="coin-balance">
-                {player.coins ?? 0} coins{" "}
-                {player.frozen
-                  ? "· Frozen"
-                  : player.shield
-                    ? "· Shield"
-                    : player.boosted
-                      ? "· +2"
-                      : ""}
+              <span className="player-effect-label">
+                {[
+                  player.frozen ? "Frozen" : "",
+                  player.shield ? "Shield" : "",
+                  player.boosted ? "+2 ready" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </span>
               {player.tileId === "tile-0" ? "Start" : player.tileId.replace("tile-", "Space ")}
             </span>
           </div>
         ))}
       </div>
+
+      {state.phase === "AWAITING_ROLL" && (
+        <p className="muted">Use a power-up on your phone, then roll when ready. No time limit.</p>
+      )}
 
       <div className="button-row">
         <button

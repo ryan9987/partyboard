@@ -9,6 +9,7 @@ import {
   itemUseRequestSchema,
   potatoPassRequestSchema,
   minigameInputRequestSchema,
+  continueGameRequestSchema,
   MINIGAMES,
   type MinigameKind,
   SHOP_ITEMS,
@@ -65,6 +66,7 @@ type Room = {
   nextPassAt: number
   minigameRuntime: MinigameRound | null
   gameBag: Array<MinigameKind | "potato">
+  continueTask: (() => void) | null
 }
 type Binding = { room: Room; sessionId: string | null }
 
@@ -86,6 +88,8 @@ export type GameServerOptions = {
   minigameIntroMs?: number
   minigameDurationMs?: number
   minigameResultMs?: number
+  /** Automated/rehearsal runners can opt out; live games wait on rules and results. */
+  manualStageAdvance?: boolean
   roundGame?: MinigameKind | "potato" | ((round: number) => MinigameKind | "potato")
 }
 
@@ -127,12 +131,12 @@ export class GameServer {
       rollDurationMs: options.rollDurationMs ?? 900,
       millisecondsPerTile: options.millisecondsPerTile ?? 300,
       turnEndMs: options.turnEndMs ?? 500,
-      rollTimeoutMs: options.rollTimeoutMs ?? 30_000,
+      rollTimeoutMs: options.rollTimeoutMs ?? 0,
       disconnectTimeoutMs: options.disconnectTimeoutMs ?? 60_000,
       duelIntroMs: options.duelIntroMs ?? 2400,
       duelDurationMs: options.duelDurationMs ?? 25_000,
       duelResultMs: options.duelResultMs ?? 3200,
-      shopDurationMs: options.shopDurationMs ?? 8000,
+      shopDurationMs: options.shopDurationMs ?? 0,
       potatoIntroMs: options.potatoIntroMs ?? 2200,
       potatoFuseMs: options.potatoFuseMs ?? 5000,
       potatoResultMs: options.potatoResultMs ?? 3000,
@@ -140,7 +144,14 @@ export class GameServer {
       minigameDurationMs: options.minigameDurationMs ?? 20000,
       minigameResultMs: options.minigameResultMs ?? 3500,
     }
-    if (Object.values(this.timing).some((value) => !Number.isInteger(value) || value <= 0)) {
+    if (
+      Object.entries(this.timing).some(
+        ([key, value]) =>
+          !Number.isInteger(value) ||
+          value < 0 ||
+          (value === 0 && key !== "rollTimeoutMs" && key !== "shopDurationMs"),
+      )
+    ) {
       throw new RangeError("Server durations must be positive integer milliseconds")
     }
   }
@@ -183,6 +194,7 @@ export class GameServer {
             nextPassAt: 0,
             minigameRuntime: null,
             gameBag: [],
+            continueTask: null,
           }
           this.rooms.set(code, room)
           this.bindings.set(connectionId, { room, sessionId: null })
@@ -282,6 +294,25 @@ export class GameServer {
           this.snapshot(room)
           break
         }
+        case CLIENT_EVENTS.GAME_CONTINUE: {
+          const parsed = continueGameRequestSchema.safeParse(payload)
+          if (!parsed.success) throw new CommandError("INVALID_PAYLOAD", "Invalid continue request")
+          const room = this.room(parsed.data.roomCode)
+          const binding = this.bindings.get(connectionId)
+          if (
+            room.hostToken !== parsed.data.hostToken ||
+            binding?.room !== room ||
+            binding.sessionId !== null
+          )
+            throw new CommandError("UNAUTHORIZED", "Only the connected host can continue")
+          if (room.state.waitingForHost?.id !== parsed.data.continueId || !room.continueTask)
+            throw new CommandError("INVALID_PHASE", "That screen has already been continued")
+          const task = room.continueTask
+          room.continueTask = null
+          room.state.waitingForHost = null
+          task()
+          break
+        }
         case CLIENT_EVENTS.GAME_START:
         case CLIENT_EVENTS.GAME_RESTART: {
           const parsed = hostCommandSchema.safeParse(payload)
@@ -300,6 +331,9 @@ export class GameServer {
           room.connections.add(connectionId)
           this.bindings.set(connectionId, { room, sessionId: null })
           this.clearTimer(room)
+          room.continueTask = null
+          room.state.waitingForHost = null
+          room.state.itemEffect = null
           for (const player of room.state.players) {
             player.tileId = defaultBoard.startingTileId
             player.coins = 6
@@ -347,6 +381,7 @@ export class GameServer {
           room.acceptedRequests.add(key)
           this.clearTimer(room)
           room.state.phase = "ROLLING"
+          room.state.itemEffect = null
           room.state.lastRoll = value
           this.broadcast(room, "dice.rolled", {
             playerId: player.id,
@@ -372,7 +407,7 @@ export class GameServer {
             room.state.phase !== "SHOP" ||
             room.state.shop?.id !== parsed.data.visitId ||
             room.state.shop.playerId !== player.id ||
-            Date.now() >= room.state.shop.endsAt
+            (room.state.shop.endsAt !== null && Date.now() >= room.state.shop.endsAt)
           )
             throw new CommandError("INVALID_SHOP", "This shop visit has ended")
           if (parsed.data.item !== "skip") {
@@ -418,7 +453,7 @@ export class GameServer {
               )
             if (target.shield) {
               target.shield = false
-              room.state.notice = `${target.name}'s Leaf Shield blocked the frost!`
+              room.state.notice = `${player.name} used Frost Charm on ${target.name} · Leaf Shield blocked it!`
             } else {
               target.frozen = true
               room.state.notice = `${player.name} froze ${target.name}'s next board turn.`
@@ -436,6 +471,15 @@ export class GameServer {
           }
           inventory.splice(index, 1)
           player.inventory = inventory
+          room.state.itemEffect = {
+            id: randomUUID(),
+            playerId: player.id,
+            targetId: parsed.data.item === "freeze" ? parsed.data.targetId! : player.id,
+            item: parsed.data.item,
+            blocked:
+              parsed.data.item === "freeze" && !this.player(room, parsed.data.targetId!).frozen,
+            message: room.state.notice!,
+          }
           room.acceptedRequests.add(key)
           this.snapshot(room)
           break
@@ -586,6 +630,7 @@ export class GameServer {
   }
 
   private beginTurn(room: Room, playerId: string): void {
+    room.state.itemEffect = null
     room.state.duel = null
     room.duelRuntime = null
     room.state.currentPlayerId = playerId
@@ -605,13 +650,15 @@ export class GameServer {
   }
 
   private armRollDeadline(room: Room): void {
+    this.clearTimer(room)
     const playerId = room.state.currentPlayerId!
     this.broadcast(room, "turn.started", {
       playerId,
       turnNumber: room.state.turnNumber,
-      timeoutAt: Date.now() + this.timing.rollTimeoutMs,
+      timeoutAt: this.timing.rollTimeoutMs ? Date.now() + this.timing.rollTimeoutMs : null,
     })
-    this.schedule(room, this.timing.rollTimeoutMs, () => this.advance(room))
+    if (this.timing.rollTimeoutMs)
+      this.schedule(room, this.timing.rollTimeoutMs, () => this.advance(room))
   }
 
   private advance(room: Room, completeTurn = true): void {
@@ -694,10 +741,11 @@ export class GameServer {
           id: randomUUID(),
           playerId: player.id,
           tileId: toTileId,
-          endsAt: Date.now() + this.timing.shopDurationMs,
+          endsAt: this.timing.shopDurationMs ? Date.now() + this.timing.shopDurationMs : null,
         }
         this.snapshot(room)
-        this.schedule(room, this.timing.shopDurationMs, () => this.closeShop(room))
+        if (this.timing.shopDurationMs)
+          this.schedule(room, this.timing.shopDurationMs, () => this.closeShop(room))
       } else if (rest.length) this.movePath(room, player, rest)
       else this.resolveLanding(room, player)
     })
@@ -772,7 +820,7 @@ export class GameServer {
         }
         room.state.notice = `${MINIGAMES[kind].name} complete · winners +8 coins, everyone else +2.`
         this.snapshot(room)
-        this.schedule(room, this.timing.minigameResultMs, () => {
+        this.afterStage(room, "Back to the trail", this.timing.minigameResultMs, () => {
           room.state.minigame = null
           room.minigameRuntime = null
           this.resumeBoard(room)
@@ -782,7 +830,10 @@ export class GameServer {
         this.schedule(room, 100, tick)
       }
     }
-    this.schedule(room, this.timing.minigameIntroMs, tick)
+    this.afterStage(room, `Start ${MINIGAMES[kind].name}`, this.timing.minigameIntroMs, () => {
+      runtime.start(Date.now())
+      tick()
+    })
   }
 
   private resumeBoard(room: Room): void {
@@ -808,7 +859,7 @@ export class GameServer {
       revision: 0,
     }
     this.snapshot(room)
-    this.schedule(room, this.timing.potatoIntroMs, () => {
+    this.afterStage(room, "Start Hot Potato", this.timing.potatoIntroMs, () => {
       const game = room.state.potato!
       game.stage = "active"
       game.fuseAt = Date.now() + this.fuseDelay()
@@ -846,7 +897,7 @@ export class GameServer {
         ? `${this.player(room, game.winnerId).name} wins Hot Potato · +8 coins! Everyone else +2.`
         : "Hot Potato ended · +2 participation coins."
       this.snapshot(room)
-      this.schedule(room, this.timing.potatoResultMs, () => {
+      this.afterStage(room, "Back to the trail", this.timing.potatoResultMs, () => {
         room.state.potato = null
         this.resumeBoard(room)
       })
@@ -884,7 +935,7 @@ export class GameServer {
       ]),
     )
     this.snapshot(room)
-    this.schedule(room, this.timing.duelIntroMs, () => {
+    this.afterStage(room, "Start duel", this.timing.duelIntroMs, () => {
       const duel = room.state.duel!
       duel.stage = "active"
       duel.stageEndsAt = Date.now() + this.timing.duelDurationMs
@@ -960,7 +1011,20 @@ export class GameServer {
       loser.tileId = defaultBoard.tiles[Math.max(0, index - 3)]!.id
     }
     this.snapshot(room)
-    this.schedule(room, this.timing.duelResultMs, () => this.endBoardTurn(room))
+    this.afterStage(room, "Back to the trail", this.timing.duelResultMs, () =>
+      this.endBoardTurn(room),
+    )
+  }
+
+  private afterStage(room: Room, label: string, delay: number, task: () => void): void {
+    if (this.options.manualStageAdvance === false) {
+      this.schedule(room, delay, task)
+      return
+    }
+    this.clearTimer(room)
+    room.continueTask = task
+    room.state.waitingForHost = { id: randomUUID(), label }
+    this.snapshot(room)
   }
 
   private schedule(room: Room, delay: number, task: () => void): void {

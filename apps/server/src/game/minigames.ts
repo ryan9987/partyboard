@@ -125,6 +125,14 @@ export class MinigameRound {
     game.revision++
     return true
   }
+  /** Rebase the entire round after an untimed rules screen, never consume playing time. */
+  start(now: number): void {
+    if (this.state.stage !== "intro") return
+    this.state.startsAt = now
+    this.state.endsAt = now + this.state.durationMs
+    this.state.stage = "active"
+    this.lastTick = now
+  }
   tick(now: number): boolean {
     const game = this.state
     if (game.stage === "result") return true

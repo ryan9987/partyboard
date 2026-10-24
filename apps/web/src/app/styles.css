@@ -603,6 +603,217 @@ a {
   color: #947036;
   font-size: 0.65rem;
 }
+.coin-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+  color: #745724;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.coin-count strong {
+  font-size: 1rem;
+  font-weight: 650;
+}
+.player-balances {
+  border: 1px solid #d7d6bf;
+  border-radius: 10px;
+  padding: 12px 14px 6px;
+  background: #f8f4e8;
+  color: #294638;
+  font-size: 0.8rem;
+}
+.player-balances--host {
+  position: absolute;
+  z-index: 6;
+  top: 82px;
+  right: 24px;
+  width: 210px;
+  box-shadow: 0 4px 18px #29463814;
+}
+.player-balances__heading {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #dedbc9;
+  color: #727660;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.player-balances ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.player-balances li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 39px;
+  border-bottom: 1px solid #e7e3d3;
+}
+.player-balances li:last-child {
+  border-bottom: 0;
+}
+.player-balances__name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.player-balances__name small {
+  display: block;
+  font-size: 0.6rem;
+  color: #747a6c;
+  font-weight: 400;
+}
+.player-balances .is-current .player-balances__name {
+  font-weight: 700;
+}
+.balance-marker {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.balance-marker--coral {
+  background: #da7281;
+}
+.balance-marker--cyan {
+  background: #389da8;
+}
+.balance-marker--gold {
+  background: #b88d32;
+}
+.balance-marker--violet {
+  background: #8972ba;
+}
+.player-effect-label {
+  display: block;
+  margin-bottom: 3px;
+  color: #527859;
+}
+.powerup-notice {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 17px;
+  border: 1px solid #b7c7ad;
+  border-radius: 10px;
+  background: #f8f4e8;
+  color: #294638;
+  animation: duel-arrive 250ms ease-out both;
+}
+.powerup-notice--host {
+  position: absolute;
+  z-index: 9;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(430px, calc(100vw - 60px));
+  box-shadow: 0 5px 20px #29463818;
+  animation: none;
+}
+.powerup-notice small {
+  display: block;
+  font-size: 0.68rem;
+  color: #66775e;
+  font-weight: 650;
+}
+.powerup-notice p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+.item-glyph {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.item-glyph--freeze {
+  color: #427a91;
+}
+.item-glyph--boots {
+  color: #966b36;
+}
+.item-glyph--shield {
+  color: #557d51;
+}
+.host-continue {
+  position: absolute;
+  z-index: 10;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  border: 1px solid #d7d6bf;
+  border-radius: 10px;
+  background: #f8f4e8;
+  box-shadow: 0 4px 18px #29463814;
+  max-width: calc(100vw - 40px);
+}
+.host-continue > span {
+  max-width: 180px;
+  font-size: 0.75rem;
+  color: #697662;
+  line-height: 1.4;
+}
+.host-continue button {
+  flex-shrink: 0;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.host-game-error {
+  position: absolute;
+  z-index: 12;
+  bottom: 110px;
+  left: 24px;
+  padding: 12px;
+  background: #f8f4e8;
+  color: #923d32;
+}
+.host-shell:has(.host-continue) .duel-instructions {
+  bottom: 90px;
+}
+.host-shell:has(.host-continue) .minigame-scores {
+  bottom: 5rem;
+}
+@media (max-width: 760px) {
+  .player-balances--host {
+    top: 68px;
+    right: 16px;
+    width: 165px;
+    padding: 8px 10px 3px;
+  }
+  .player-balances--host li {
+    min-height: 30px;
+    font-size: 0.7rem;
+  }
+  .host-continue {
+    flex-direction: column;
+    gap: 8px;
+    bottom: 14px;
+    text-align: center;
+    width: min(320px, calc(100vw - 40px));
+  }
+  .host-continue > span {
+    max-width: none;
+  }
+  .host-continue button {
+    width: 100%;
+  }
+  .host-shell:has(.host-continue) .duel-instructions {
+    bottom: 125px;
+  }
+  .host-shell:has(.host-continue) .minigame-scores {
+    bottom: 7.5rem;
+  }
+}
 .market-stock {
   display: grid;
   gap: 14px;

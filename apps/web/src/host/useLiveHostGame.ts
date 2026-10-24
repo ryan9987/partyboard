@@ -3,6 +3,7 @@ import {
   gameErrorEventSchema,
   gameStateSchema,
   hostCommandSchema,
+  continueGameRequestSchema,
   playerMovingEventSchema,
   publicPlayerSchema,
   roomCreatedEventSchema,
@@ -33,6 +34,7 @@ type LiveHostGame = {
   movingPlayerId: string | null
   restart: () => void
   start: () => void
+  continueGame: () => void
   state: GameState | null
 }
 
@@ -76,6 +78,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
   const hostCredentialsRef = useRef(hostCredentials)
   const movingPlayerIdRef = useRef<string | null>(null)
   const roomRequestPendingRef = useRef(false)
+  const continuePendingRef = useRef<string | null>(null)
   const { animatePath, cancel } = usePieceAnimation()
 
   useEffect(() => {
@@ -83,6 +86,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
     roomRequestPendingRef.current = false
 
     const handleConnect = () => {
+      continuePendingRef.current = null
       setConnectionState("connected")
       setError(null)
       const credentials = hostCredentialsRef.current
@@ -123,6 +127,8 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
         return
       }
 
+      if (continuePendingRef.current !== result.data.waitingForHost?.id)
+        continuePendingRef.current = null
       setError(null)
       const movingId = movingPlayerIdRef.current
       if (
@@ -224,6 +230,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
       setState((current) => (current ? applyTurnStarted(current, result.data) : current))
     }
     const handleGameError = (payload: unknown) => {
+      continuePendingRef.current = null
       const result = gameErrorEventSchema.safeParse(payload)
       setError(result.success ? result.data.message : describeInvalidEvent("game.error"))
       if (
@@ -274,6 +281,20 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
     socket.emit("game.restart", hostCredentials)
   }, [cancel, hostCredentials, socket, state])
 
+  const continueGame = useCallback(() => {
+    if (!socket || !hostCredentials || !state?.waitingForHost || connectionState !== "connected")
+      return
+    if (continuePendingRef.current === state.waitingForHost.id) return
+    continuePendingRef.current = state.waitingForHost.id
+    socket.emit(
+      "game.continue",
+      continueGameRequestSchema.parse({
+        ...hostCredentials,
+        continueId: state.waitingForHost.id,
+      }),
+    )
+  }, [connectionState, hostCredentials, socket, state])
+
   return {
     busy: state
       ? ["ROLLING", "MOVING", "TURN_END", "DUEL", "SHOP", "POTATO", "MINIGAME"].includes(
@@ -284,6 +305,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
     error,
     movingPlayerId,
     restart,
+    continueGame,
     start,
     state,
   }

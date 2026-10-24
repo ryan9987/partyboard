@@ -7,6 +7,7 @@ import type {
   MinigameInputRequest,
   GameErrorEvent,
   HostCommand,
+  ContinueGameRequest,
   JoinRoomRequest,
   PlayerMovingEvent,
   PlayerReadyRequest,
@@ -26,6 +27,7 @@ export const CLIENT_EVENTS = {
   PLAYER_READY: "player.ready",
   GAME_START: "game.start",
   GAME_RESTART: "game.restart",
+  GAME_CONTINUE: "game.continue",
   DICE_ROLL_REQUEST: "dice.roll.request",
   DUEL_ACTION: "duel.action",
   SHOP_CHOICE: "shop.choice",
@@ -55,6 +57,7 @@ export interface ClientToServerEvents {
   "player.ready": (payload: PlayerReadyRequest) => void
   "game.start": (payload: HostCommand) => void
   "game.restart": (payload: HostCommand) => void
+  "game.continue": (payload: ContinueGameRequest) => void
   "dice.roll.request": (payload: RollRequest) => void
   "duel.action": (payload: DuelActionRequest) => void
   "shop.choice": (payload: ShopChoiceRequest) => void

@@ -23,6 +23,8 @@ export type ControllerView = {
   playerId: string | null
   joining: boolean
   pending: { requestId: string; turnNumber: number } | null
+  pendingItem: { requestId: string; turnNumber: number; item: Item; targetId?: string } | null
+  choosingItem: boolean
   error: string | null
 }
 export type SessionStorage = Pick<Storage, "getItem" | "setItem">
@@ -50,6 +52,8 @@ export class ControllerClient {
     playerId: null,
     joining: false,
     pending: null,
+    pendingItem: null,
+    choosingItem: false,
     error: null,
   }
   private session: JoinRoomRequest | null = null
@@ -113,7 +117,17 @@ export class ControllerClient {
       }
       const pending =
         this.view.pending?.turnNumber === parsed.data.turnNumber ? this.view.pending : null
-      this.update({ state: parsed.data, pending })
+      const sameTurn = parsed.data.turnNumber === this.view.state?.turnNumber
+      const itemConfirmed = parsed.data.itemEffect?.id !== this.view.state?.itemEffect?.id
+      const pendingItem =
+        sameTurn && parsed.data.phase === "AWAITING_ROLL" && !itemConfirmed
+          ? this.view.pendingItem
+          : null
+      const choosingItem =
+        sameTurn && parsed.data.phase === "AWAITING_ROLL" && !itemConfirmed
+          ? this.view.choosingItem
+          : false
+      this.update({ state: parsed.data, pending, pendingItem, choosingItem })
     }
     const joined = (payload: unknown) => {
       const parsed = roomJoinedEventSchema.safeParse(payload)
@@ -163,6 +177,12 @@ export class ControllerClient {
       ) {
         this.emitRoll(this.view.pending.requestId)
       }
+      if (
+        this.view.pendingItem &&
+        parsed.data.state.phase === "AWAITING_ROLL" &&
+        parsed.data.state.currentPlayerId === player.id
+      )
+        this.emitItem()
     }
     const error = (payload: unknown) => {
       const parsed = gameErrorEventSchema.safeParse(payload)
@@ -179,9 +199,17 @@ export class ControllerClient {
           }
         }
         this.session = null
-        this.update({ state: null, playerId: null, pending: null })
+        this.update({
+          state: null,
+          playerId: null,
+          pending: null,
+          pendingItem: null,
+          choosingItem: false,
+        })
       }
       if (parsed.data.requestId === this.pendingShop?.requestId) this.pendingShop = null
+      if (parsed.data.requestId === this.view.pendingItem?.requestId)
+        this.update({ pendingItem: null })
       this.update({ joining: false, error: parsed.data.message })
       // No retryable error contract exists yet. Keep submitted turns locked.
     }
@@ -238,6 +266,8 @@ export class ControllerClient {
       connection === "connected" &&
       !joining &&
       !pending &&
+      !this.view.pendingItem &&
+      !this.view.choosingItem &&
       !!playerId &&
       state?.phase === "AWAITING_ROLL" &&
       state.currentPlayerId === playerId
@@ -256,6 +286,24 @@ export class ControllerClient {
     this.update({ pending: { requestId, turnNumber: this.view.state!.turnNumber }, error: null })
     this.emitRoll(requestId)
     return true
+  }
+
+  canUseItem(): boolean {
+    const { state, playerId, connection, pending, pendingItem, joining } = this.view
+    return (
+      connection === "connected" &&
+      !joining &&
+      !pending &&
+      !pendingItem &&
+      !!playerId &&
+      state?.phase === "AWAITING_ROLL" &&
+      state.currentPlayerId === playerId
+    )
+  }
+
+  setChoosingItem(choosingItem: boolean): void {
+    if (this.view.pendingItem || (choosingItem && !this.canUseItem())) return
+    this.update({ choosingItem })
   }
 
   canDuel(): boolean {
@@ -296,25 +344,40 @@ export class ControllerClient {
     const { state, playerId, connection } = this.view
     if (
       connection !== "connected" ||
+      !this.canUseItem() ||
       state?.phase !== "AWAITING_ROLL" ||
       state.currentPlayerId !== playerId ||
       !this.session?.existingSessionId ||
-      Date.now() - this.lastItemInputAt < 350
+      Date.now() - this.lastItemInputAt < 350 ||
+      !state.players.find((player) => player.id === playerId)?.inventory?.includes(item)
     )
       return false
     this.lastItemInputAt = Date.now()
+    const requestId = this.newRequestId()
+    this.update({
+      pendingItem: {
+        requestId,
+        turnNumber: state.turnNumber,
+        item,
+        ...(targetId ? { targetId } : {}),
+      },
+      error: null,
+    })
+    this.emitItem()
+    return true
+  }
+
+  private emitItem(): void {
+    const pending = this.view.pendingItem
+    if (!pending || !this.session?.existingSessionId) return
     this.socket.emit(
       "item.use",
       itemUseRequestSchema.parse({
         roomCode: this.session.roomCode,
         playerSessionId: this.session.existingSessionId,
-        requestId: this.newRequestId(),
-        turnNumber: state.turnNumber,
-        item,
-        ...(targetId ? { targetId } : {}),
+        ...pending,
       }),
     )
-    return true
   }
 
   canPass(): boolean {
