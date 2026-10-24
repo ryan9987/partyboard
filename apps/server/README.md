@@ -26,6 +26,22 @@ For an independent backend check, the optional text host still supports real con
 
 For phones, replace localhost with the laptop's LAN address in the browser-facing URLs and include that web origin in `ALLOWED_ORIGINS`. Set root `VITE_CONTROLLER_URL` for the printed URL. `SOCKET_URL` can override the debug host's default local server address. Motion still requires a secure context on real devices; touch can be tested on local HTTP.
 
+## Temporary HTTPS phone demo
+
+Install the official [cloudflared tunnel client](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) on PATH, then run:
+
+```sh
+pnpm --filter @party-board/server demo
+```
+
+If the executable is elsewhere, set `CLOUDFLARED_BIN` to its absolute path. Optional `DEMO_PORT` defaults to 3001. The runner reserves that loopback port before opening the tunnel, builds the production web client with the generated HTTPS socket and QR URLs, serves only `apps/web/dist`, and waits for a successful public HTTPS response before printing the host link. Host pages, controller deep links, and Socket.IO share one public origin. No npm dependencies or shared protocol changes are added.
+
+Open the printed `/host` URL on the laptop and scan its QR code on each phone. Tap Enable motion from the phone when prompted, or use Roll. The temporary URL lasts only while this process, its cloudflared child, the laptop, and the network remain running; restarting creates a new URL and loses in-memory rooms. Ctrl+C stops the tunnel and server. Avoid rebuilding the web app or running another demo against the same build directory while this demo is in use. This is a test/demo setup, not permanent hosting.
+
+The static server rejects unknown routes, dotfiles, missing assets, methods other than GET/HEAD, and symlinks escaping the compiled build. It serves HTML without caching and generated assets with immutable caching. `WEB_DIST_DIR` optionally enables the same static handler in the regular server entry point for a future HTTPS reverse proxy deployment; paths are resolved from the command's working directory.
+
+The initial Linux demo used cloudflared 2026.10.3 downloaded from the official GitHub release with its published SHA-256 digest verified. The binary lives outside the repository and is not committed. No account token is needed for a Quick Tunnel. Physical iPhone/Android motion and the four-phone venue-network run remain manual acceptance checks.
+
 ## Turn and recovery behavior
 
 - Up to four players join the lobby with distinct colors. Names, colors, room codes, tokens, request IDs, unknown fields, and outgoing state/events are validated against shared schemas.

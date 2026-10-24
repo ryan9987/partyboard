@@ -6,6 +6,7 @@ Jack or Jack's agent owns this file.
 
 - Working on `feat/server-controller` in the separate `../partyboard-jack` worktree.
 - Merged Ryan's live-host branch through `f391a30` in merge commit `2974939`, preserving both lanes' dependency and integration notes changes.
+- Temporary HTTPS demo serving is implemented in Jack-owned server files, with one public origin for the built host, phone controller, QR URL, and Socket.IO.
 - The server, phone controller, and Ryan's 3D host now run together with VITE_SOCKET_URL configured. The five-minute polling task was disabled when the live integration arrived.
 
 ## Completed
@@ -23,7 +24,7 @@ Jack or Jack's agent owns this file.
 ## Verification
 
 - `pnpm install --frozen-lockfile` — passed.
-- `pnpm check` — passed: package type checking, lint, shared formatting checks, 32 Vitest tests, 10 motion tests, and production Vite build.
+- `pnpm check` — passed: package type checking, lint, shared formatting checks, 35 Vitest tests, 10 motion tests, and production Vite build.
 - Additional Prettier check of server, controller, motion, and server tests — passed.
 - Engine simulation and actual Socket.IO tests each complete five rotations with four controllers, correct positions/wraparound, and one result per turn despite duplicate requests.
 - Additional tests exercise private joins, malformed payloads, host/player authorization, invalid origins, restart during animation, lost-request retries, refresh, and disconnect recovery.
@@ -33,6 +34,15 @@ Jack or Jack's agent owns this file.
 - Controller refresh retained Jack's identity and room R6LK. Host refresh instead created a new empty room B7UT. A separate live host restart check kept room B7UT and its player identity, reset tile-3 to tile-0, and cleared lastRoll; automated server restart tests also pass.
 - The host showed skipped intermediate movement steps under the tested rendering load. Exact evidence and the snapshot/animation interaction are recorded for Ryan in the integration notes.
 - Non-blocking build warning: existing host chunk exceeds Vite's 500 kB advisory. React StrictMode's development effect cleanup can produce an initial closed-WebSocket warning; the subsequent connection succeeds.
+
+## HTTPS demo verification
+
+- Added compiled static serving with deep links, explicit asset MIME types, and build-directory containment. Three new tests cover routes/assets/HEAD, missing/dot/traversal/symlink paths, and same-origin Socket.IO polling.
+- Added `pnpm --filter @party-board/server demo`: reserves a loopback port, starts an account-free Cloudflare Quick Tunnel, builds for its generated public origin, starts the game/static server, checks public reachability, and keeps both services running until stopped.
+- No npm dependency, shared protocol, or Ryan-owned source changes were required. cloudflared 2026.10.3 was downloaded outside the repo and verified against its official release SHA-256 digest.
+- Public HTTPS returned HTTP 200; browser confirmed `isSecureContext === true`, the correct HTTPS QR link, controller join, and immediate touch-roll disable. Browser WSS Engine.IO handshake succeeded.
+- A separate public WSS client completed create/join/start, duplicate roll rejection, server dice/movement, and turn advancement. Physical phone motion remains untested.
+- Public demo is temporary and depends on the running process/laptop/network. Current URL is provided in the conversation, not committed as permanent configuration. Run instructions and shutdown behavior are in `apps/server/README.md`.
 
 ## Blockers and handoffs
 
