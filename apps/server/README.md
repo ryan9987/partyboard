@@ -13,9 +13,11 @@ Socket.IO 4.8.4 supplies the actual network transport, matching the browser clie
 
 `GameServer` is independently testable: deliver validated events using its `deliver(connectionId, event, payload)` callback; route raw client commands through `handle`; call `disconnect` for transport detach and `dispose` on shutdown. Its connection map only attaches transports to separately generated player/session IDs. `attachGameConnection` binds the exact shared event names to Socket.IO. `createGameApp` creates the HTTP and Socket.IO listeners and an asynchronous close operation.
 
-## Text host for the first acceptance checkpoint
+## Live host and optional text host
 
-Ryan's `/host` currently renders a fixture. To test real controllers before its live integration:
+Ryan's `/host` now connects to this server when `VITE_SOCKET_URL` is configured for Vite. It creates the real room, displays its controller QR URL, starts/restarts the game, and consumes authoritative dice/movement events. With no server URL, it retains the fixture preview.
+
+For an independent backend check, the optional text host still supports real controllers:
 
 1. Put `VITE_SOCKET_URL=http://localhost:3001` in `apps/web/.env.local` and run `pnpm dev`.
 2. In another terminal, run `pnpm --filter @party-board/server debug:host`.

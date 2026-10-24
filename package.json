@@ -11,8 +11,8 @@
     "test:watch": "vitest",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
-    "format": "prettier --write package.json tsconfig.base.json vitest.config.ts eslint.config.js \"apps/web/*.{json,ts,html}\" apps/web/src/main.tsx apps/web/src/app apps/web/src/host apps/web/src/networking packages/board packages/protocol",
-    "format:check": "prettier --check package.json tsconfig.base.json vitest.config.ts eslint.config.js \"apps/web/*.{json,ts,html}\" apps/web/src/main.tsx apps/web/src/app apps/web/src/host apps/web/src/networking packages/board packages/protocol",
+    "format": "prettier --write package.json tsconfig.base.json vitest.config.ts eslint.config.js \"apps/web/*.{json,ts,html}\" apps/web/src/main.tsx apps/web/src/app apps/web/src/host apps/web/src/networking packages/board packages/protocol tests",
+    "format:check": "prettier --check package.json tsconfig.base.json vitest.config.ts eslint.config.js \"apps/web/*.{json,ts,html}\" apps/web/src/main.tsx apps/web/src/app apps/web/src/host apps/web/src/networking packages/board packages/protocol tests",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build"
   },
   "devDependencies": {

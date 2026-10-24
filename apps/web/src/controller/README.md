@@ -12,4 +12,4 @@ Motion permission is requested directly from a button gesture. The detector runs
 
 Run `pnpm exec vitest run tests/server/controller-client.test.ts` for session/input tests, and `pnpm typecheck` for component and client types. Browser checks cover join, touch submission, permission denial, synthetic shake recognition, and refresh recovery at a 390 px viewport. Actual iPhone/Android sensor tuning remains pending.
 
-While Ryan's host uses its fixture, run the server's `debug:host` command to create/start a real room. See `apps/server/README.md`.
+Configure `VITE_SOCKET_URL` and open `/host` to create/start a real room in the 3D host, then join its QR URL here. The server's optional `debug:host` command can also create/start a real room independently of the 3D screen. See `apps/server/README.md`. Host refresh/reconnection still needs the agreed resume contract; refreshing a controller restores its existing session.

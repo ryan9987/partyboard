@@ -7,8 +7,8 @@ type BoardTileProps = {
 }
 
 export function BoardTile({ tile, active, start }: BoardTileProps) {
-  const color = start ? "#f3d56a" : active ? "#6fe8f0" : "#27365b"
-  const emissive = active ? "#21aebb" : start ? "#746521" : "#0b1124"
+  const color = start ? "#f5c952" : active ? "#6be4e8" : "#e8dfc8"
+  const emissive = active ? "#27aeb9" : start ? "#8d6f16" : "#000000"
 
   return (
     <mesh
@@ -20,9 +20,9 @@ export function BoardTile({ tile, active, start }: BoardTileProps) {
       <meshStandardMaterial
         color={color}
         emissive={emissive}
-        emissiveIntensity={active ? 0.75 : 0.25}
-        metalness={0.35}
-        roughness={0.35}
+        emissiveIntensity={active ? 0.42 : start ? 0.12 : 0}
+        metalness={0.05}
+        roughness={0.76}
       />
     </mesh>
   )

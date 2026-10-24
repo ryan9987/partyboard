@@ -1,12 +1,13 @@
 import { defaultBoard } from "@party-board/board"
 import type { GameState } from "@party-board/protocol"
 import { Canvas, useThree } from "@react-three/fiber"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import * as THREE from "three"
 
 import { BoardTile } from "./BoardTile"
+import { CharacterModel } from "./CharacterModel"
 import { DiceView } from "./DiceView"
-import { PlayerPiece } from "./PlayerPiece"
+import { WorldEnvironment } from "./WorldEnvironment"
 
 type BoardSceneProps = {
   state: GameState
@@ -17,7 +18,7 @@ function CameraRig() {
   const { camera } = useThree()
 
   useEffect(() => {
-    camera.lookAt(new THREE.Vector3(0, 0, 0))
+    camera.lookAt(new THREE.Vector3(-1.6, 0.35, 0))
   }, [camera])
 
   return null
@@ -26,31 +27,46 @@ function CameraRig() {
 function Scene({ state, movingPlayerId }: BoardSceneProps) {
   const tileMap = new Map(defaultBoard.tiles.map((tile) => [tile.id, tile]))
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
+  const pathCurve = useMemo(
+    () =>
+      new THREE.CatmullRomCurve3(
+        defaultBoard.tiles.map(
+          (tile) => new THREE.Vector3(tile.position[0], -0.16, tile.position[2]),
+        ),
+        true,
+        "centripetal",
+      ),
+    [],
+  )
 
   return (
     <>
       <CameraRig />
-      <fog attach="fog" args={["#070b17", 16, 30]} />
-      <ambientLight intensity={1.2} />
+      <fog attach="fog" args={["#94d9f0", 19, 36]} />
+      <hemisphereLight color="#dff6ff" groundColor="#4d7d42" intensity={2.2} />
+      <ambientLight intensity={0.7} />
       <directionalLight
         castShadow
-        color="#dce9ff"
-        intensity={3.2}
-        position={[4, 12, 8]}
+        color="#fff4d1"
+        intensity={3.8}
+        position={[-7, 14, 9]}
         shadow-mapSize-height={2048}
         shadow-mapSize-width={2048}
       />
-      <pointLight color="#785cff" intensity={20} position={[-7, 3, -3]} distance={14} />
-      <pointLight color="#31dce2" intensity={18} position={[7, 3, 3]} distance={14} />
+      <WorldEnvironment />
 
-      <mesh receiveShadow position={[0, -0.47, 0]}>
-        <cylinderGeometry args={[5.3, 5.8, 0.42, 48]} />
-        <meshStandardMaterial color="#101831" metalness={0.42} roughness={0.58} />
+      <mesh receiveShadow scale={[1, 0.16, 1]}>
+        <tubeGeometry args={[pathCurve, 160, 0.62, 10, true]} />
+        <meshStandardMaterial color="#cbbd9f" roughness={0.88} />
       </mesh>
 
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.7, 0]}>
-        <circleGeometry args={[26, 64]} />
-        <meshStandardMaterial color="#050814" roughness={0.95} />
+      <mesh receiveShadow position={[0, -0.08, 0]}>
+        <cylinderGeometry args={[3.15, 3.45, 0.34, 48]} />
+        <meshStandardMaterial color="#77bf67" roughness={0.92} />
+      </mesh>
+      <mesh receiveShadow position={[0, 0.12, 0]}>
+        <cylinderGeometry args={[1.45, 1.65, 0.32, 32]} />
+        <meshStandardMaterial color="#e1d2b5" roughness={0.8} />
       </mesh>
 
       {defaultBoard.tiles.map((tile) => (
@@ -67,7 +83,7 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
         if (!tile) return null
 
         return (
-          <PlayerPiece
+          <CharacterModel
             key={player.id}
             active={player.id === state.currentPlayerId}
             color={player.color}
@@ -87,11 +103,11 @@ export function BoardScene(props: BoardSceneProps) {
   return (
     <Canvas
       className="board-canvas"
-      camera={{ position: [0, 11.5, 14.5], fov: 38, near: 0.1, far: 60 }}
+      camera={{ position: [0, 9.6, 17], fov: 39, near: 0.1, far: 70 }}
       dpr={[1, 1.75]}
       shadows="basic"
     >
-      <color attach="background" args={["#070b17"]} />
+      <color attach="background" args={["#83d2ed"]} />
       <Scene {...props} />
     </Canvas>
   )
