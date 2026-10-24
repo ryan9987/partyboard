@@ -1,4 +1,4 @@
-import { defaultBoard } from "@party-board/board"
+import { defaultBoard, SHOP_TILE_IDS } from "@party-board/board"
 import { useFrame } from "@react-three/fiber"
 import { useMemo, useRef } from "react"
 import * as THREE from "three"
@@ -30,6 +30,15 @@ const START_LETTERS = [
 ] as const
 
 function Tree({ position, scale }: { position: readonly [number, number]; scale: number }) {
+  // Markets need a genuine clearing, including space for the close-up camera sightline.
+  if (
+    defaultBoard.tiles.some(
+      (tile) =>
+        SHOP_TILE_IDS.includes(tile.id) &&
+        Math.hypot(position[0] - tile.position[0] - 2.55, position[1] - tile.position[2]) < 3.6,
+    )
+  )
+    return null
   return <WoodlandTree position={position} scale={scale} />
 }
 
