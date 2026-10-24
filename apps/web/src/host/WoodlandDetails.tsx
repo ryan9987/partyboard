@@ -86,7 +86,7 @@ export function MeadowPlanting({ clearingRadius = 0 }: { clearingRadius?: number
     let flowerCount = 0
     while (count < 10000) {
       const x = (random() - 0.5) * 22
-      const z = 12 - random() * 65
+      const z = 12 - random() * (defaultBoard.tiles.length * 1.75 + 15)
       if (Math.hypot(x, z) < clearingRadius) continue
       if (
         defaultBoard.tiles.some(
@@ -274,11 +274,15 @@ export function WoodlandUnderstory() {
   }, [])
   return (
     <group>
-      <instancedMesh ref={leavesRef} args={[undefined, undefined, 896]} receiveShadow>
+      <instancedMesh
+        ref={leavesRef}
+        args={[undefined, undefined, defaultBoard.tiles.length * 28]}
+        receiveShadow
+      >
         <sphereGeometry args={[1, 7, 5]} />
         <meshStandardMaterial roughness={0.92} />
       </instancedMesh>
-      <instancedMesh ref={petalsRef} args={[undefined, undefined, 768]}>
+      <instancedMesh ref={petalsRef} args={[undefined, undefined, defaultBoard.tiles.length * 24]}>
         <sphereGeometry args={[1, 8, 5]} />
         <meshStandardMaterial roughness={0.82} />
       </instancedMesh>

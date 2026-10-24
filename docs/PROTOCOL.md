@@ -1,5 +1,8 @@
 # Protocol contract
 
+The round-game/economy extension in [PARTY_ECONOMY.md](./PARTY_ECONOMY.md) adds `SHOP`, `POTATO`,
+optional public economy state, and validated `shop.choice`, `item.use`, and `potato.pass` commands.
+
 The combat extension is documented in [SWORD_DUEL.md](./SWORD_DUEL.md): `DUEL`, validated snapshot
 combat state, and the authenticated `duel.action` command.
 

@@ -169,7 +169,10 @@ export function WorldEnvironment() {
         [0, 1, 2].map((index) => (
           <Tree
             key={`horizon-${side}-${index}`}
-            position={[side * (4.5 + (index % 2) * 2.5), -53 - index * 7]}
+            position={[
+              side * (4.5 + (index % 2) * 2.5),
+              defaultBoard.tiles.at(-1)!.position[2] - 7 - index * 7,
+            ]}
             scale={1.05 + index * 0.08}
           />
         )),

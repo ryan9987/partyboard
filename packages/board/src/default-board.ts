@@ -1,6 +1,8 @@
 import type { BoardDefinition, BoardTile, Vec3 } from "./board-definition"
 
-const TILE_COUNT = 32
+const TILE_COUNT = 48
+
+export const SHOP_TILE_IDS = [3, 11, 19, 27, 35, 43].map((index) => `tile-${index}`)
 
 function roundCoordinate(value: number): number {
   return Math.round(value * 1000) / 1000

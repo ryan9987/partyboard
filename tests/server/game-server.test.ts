@@ -61,6 +61,10 @@ beforeEach(() => {
     duelIntroMs: 100,
     duelDurationMs: 100,
     duelResultMs: 100,
+    shopDurationMs: 1,
+    potatoIntroMs: 1,
+    potatoFuseMs: 1,
+    potatoResultMs: 1,
     deliver: (connection, event, payload) => messages.push({ connection, event, payload }),
   })
 })

@@ -11,6 +11,8 @@ import { DiceView } from "./DiceView"
 import { DuelArena } from "./DuelArena"
 import { createSurfaceTexture } from "./sceneryMaterials"
 import { WorldEnvironment } from "./WorldEnvironment"
+import { TrailMarkets } from "./MarketStall"
+import { PotatoArena } from "./PotatoArena"
 
 type BoardSceneProps = {
   state: GameState
@@ -111,6 +113,7 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
       <ambientLight intensity={0.25} />
       <TrailSunlight focus={focusTile.position} />
       <WorldEnvironment />
+      <TrailMarkets />
 
       <mesh receiveShadow scale={[1, 0.16, 1]}>
         <tubeGeometry args={[pathCurve, 160, 0.62, 10, false]} />
@@ -161,7 +164,11 @@ export function BoardScene(props: BoardSceneProps) {
       shadows={{ type: THREE.PCFShadowMap }}
     >
       <color attach="background" args={["#aed7e4"]} />
-      {props.state.phase === "DUEL" && props.state.duel && props.state.duel.stage !== "intro" ? (
+      {props.state.phase === "POTATO" &&
+      props.state.potato &&
+      props.state.potato.stage !== "intro" ? (
+        <PotatoArena state={props.state} />
+      ) : props.state.phase === "DUEL" && props.state.duel && props.state.duel.stage !== "intro" ? (
         <DuelArena state={props.state} />
       ) : (
         <Scene {...props} />

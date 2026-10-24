@@ -81,3 +81,36 @@
 .duel-controller small {
   color: #cad4c6;
 }
+
+.party-controller,
+.inventory-controller {
+  margin: 1rem 0;
+  padding: 1.1rem;
+  border: 1px solid #6c8265;
+  border-radius: 12px;
+  background: #20382d;
+}
+.party-controller h2 {
+  font:
+    1.7rem Georgia,
+    serif;
+}
+.shop-choices {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.8rem 0;
+}
+.shop-choices button {
+  text-align: left;
+  background: #efe8d3;
+  color: #294638;
+}
+.shop-choices small {
+  display: block;
+  margin-top: 0.3rem;
+  line-height: 1.4;
+}
+.party-notice {
+  color: #e2cd8f;
+  font-size: 0.85rem;
+}

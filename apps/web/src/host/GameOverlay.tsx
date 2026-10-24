@@ -9,6 +9,8 @@ const COLOR_VALUES: Record<PlayerColor, string> = {
 
 const PHASE_LABELS: Record<GameState["phase"], string> = {
   DUEL: "A duel on the trail",
+  SHOP: "Visiting the market",
+  POTATO: "Hot Potato",
   LOBBY: "Gather your friends",
   AWAITING_ROLL: "Ready to roll",
   ROLLING: "Rolling…",
@@ -116,6 +118,16 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
               {player.name}
             </span>
             <span className="player-state">
+              <span className="coin-balance">
+                {player.coins ?? 0} coins{" "}
+                {player.frozen
+                  ? "· Frozen"
+                  : player.shield
+                    ? "· Shield"
+                    : player.boosted
+                      ? "· +2"
+                      : ""}
+              </span>
               {player.tileId === "tile-0" ? "Start" : player.tileId.replace("tile-", "Space ")}
             </span>
           </div>

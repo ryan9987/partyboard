@@ -5,8 +5,8 @@ export function getMovementPath(
   startingTileId: string,
   spaces: number,
 ): string[] {
-  if (!Number.isInteger(spaces) || spaces < 1 || spaces > 6) {
-    throw new RangeError("Movement spaces must be an integer from 1 through 6")
+  if (!Number.isInteger(spaces) || spaces < 1 || spaces > 8) {
+    throw new RangeError("Movement spaces must be an integer from 1 through 8 (including Boots)")
   }
 
   const tilesById = new Map(board.tiles.map((tile) => [tile.id, tile]))

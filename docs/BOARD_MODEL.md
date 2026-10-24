@@ -2,7 +2,10 @@
 
 ## First board
 
-The first board is a deterministic 32-tile winding expedition. Every tile has exactly one next tile. There are no branches or tile effects. The data graph wraps from the last tile to the start so the core turn loop can run indefinitely, but the host deliberately renders an open physical trail and hides distant spaces with fog.
+The board is a deterministic 48-tile winding expedition. Each tile has one next tile. Market stops
+at 3, 11, 19, 27, 35, and 43 are shared metadata; the server pauses a passing movement for a purchase.
+The data graph wraps from the last tile to Start, while the renderer shows an open, fogged trail.
+See `PARTY_ECONOMY.md` for Boots and shops.
 
 ```ts
 type Vec3 = readonly [number, number, number]

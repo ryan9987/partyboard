@@ -8,6 +8,14 @@ No open cross-lane requests at this checkpoint.
 
 ## Resolved requests
 
+### 2026-10-24 — User-approved round games and economy
+
+- Ryan requested round-end Hot Potato, coin rewards, pass-by shops, power-ups, and a longer map.
+- Integration touches shared protocol/board, server state machine, phone controller, and host world.
+- `docs/PARTY_ECONOMY.md` defines timings and edge cases. Additional round games remain future work;
+  the round scheduler currently runs Hot Potato, with randomized holder/fuses.
+- Ryan also requested merging all project work, including Jack's latest remote branch, into main.
+
 ### 2026-10-24 — User-approved sword duel integration
 
 - Ryan requested occupied-space sword combat, phone motion, an arena, and loser displacement.

@@ -4,6 +4,9 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Round-end Hot Potato, coin rewards, pass-by market stops, Frost Charm/Boots/Shield, and a 48-space
+  route implemented at Ryan's request. Rules and verification are in `docs/PARTY_ECONOMY.md`.
+
 - First mini-game implemented at Ryan's request: authoritative occupied-space sword duel,
   crossed-swords transition, woodland arena, phone swing/guard gestures, and touch fallback.
 

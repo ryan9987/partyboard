@@ -6,6 +6,10 @@ import {
   playerReadyRequestSchema,
   rollRequestSchema,
   duelActionRequestSchema,
+  shopChoiceRequestSchema,
+  itemUseRequestSchema,
+  potatoPassRequestSchema,
+  type Item,
   type GameState,
   type JoinRoomRequest,
 } from "@party-board/protocol"
@@ -34,6 +38,7 @@ export function createRollRequestId(): string {
 
 /** One shared request latch protects both touch and motion, including synchronous callbacks. */
 export class ControllerClient {
+  private lastPartyInputAt = 0
   private lastDuelActionAt = 0
   private view: ControllerView = {
     connection: "connecting",
@@ -255,6 +260,83 @@ export class ControllerClient {
       this.view.state.duel?.stage === "active" &&
       this.view.state.duel.fighters.some((fighter) => fighter.playerId === this.view.playerId)
     )
+  }
+
+  chooseShop(item: Item | "skip"): boolean {
+    const { state, playerId, connection } = this.view
+    if (
+      connection !== "connected" ||
+      state?.phase !== "SHOP" ||
+      state.shop?.playerId !== playerId ||
+      !this.session?.existingSessionId
+    )
+      return false
+    this.socket.emit(
+      "shop.choice",
+      shopChoiceRequestSchema.parse({
+        roomCode: this.session.roomCode,
+        playerSessionId: this.session.existingSessionId,
+        requestId: this.newRequestId(),
+        visitId: state.shop.id,
+        item,
+      }),
+    )
+    return true
+  }
+
+  useItem(item: Item, targetId?: string): boolean {
+    const { state, playerId, connection } = this.view
+    if (
+      connection !== "connected" ||
+      state?.phase !== "AWAITING_ROLL" ||
+      state.currentPlayerId !== playerId ||
+      !this.session?.existingSessionId
+    )
+      return false
+    this.socket.emit(
+      "item.use",
+      itemUseRequestSchema.parse({
+        roomCode: this.session.roomCode,
+        playerSessionId: this.session.existingSessionId,
+        requestId: this.newRequestId(),
+        turnNumber: state.turnNumber,
+        item,
+        ...(targetId ? { targetId } : {}),
+      }),
+    )
+    return true
+  }
+
+  canPass(): boolean {
+    const { state, playerId, connection } = this.view
+    return (
+      connection === "connected" &&
+      state?.phase === "POTATO" &&
+      state.potato?.stage === "active" &&
+      state.potato.holderId === playerId
+    )
+  }
+
+  passPotato(): boolean {
+    if (
+      !this.canPass() ||
+      !this.session?.existingSessionId ||
+      Date.now() - this.lastPartyInputAt < 400
+    )
+      return false
+    const game = this.view.state!.potato!
+    this.lastPartyInputAt = Date.now()
+    this.socket.emit(
+      "potato.pass",
+      potatoPassRequestSchema.parse({
+        roomCode: this.session.roomCode,
+        playerSessionId: this.session.existingSessionId,
+        requestId: this.newRequestId(),
+        gameId: game.id,
+        revision: game.revision,
+      }),
+    )
+    return true
   }
 
   requestDuelAction(action: "swing" | "guard"): boolean {

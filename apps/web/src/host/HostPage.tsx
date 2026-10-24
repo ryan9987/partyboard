@@ -6,6 +6,7 @@ import { buildControllerUrl, createRuntimeConfig } from "../app/runtimeConfig"
 import { BoardScene } from "./BoardScene"
 import { DemoPreflight } from "./DemoPreflight"
 import { DuelOverlay } from "./DuelOverlay"
+import { PartyOverlay } from "./PartyOverlay"
 import { createFixtureState } from "./fixture"
 import { GameOverlay } from "./GameOverlay"
 import { LobbyOverlay } from "./LobbyOverlay"
@@ -169,7 +170,9 @@ export default function HostPage() {
         </div>
       </header>
 
-      {state.phase === "DUEL" && state.duel ? (
+      {state.phase === "SHOP" || state.phase === "POTATO" ? (
+        <PartyOverlay state={state} />
+      ) : state.phase === "DUEL" && state.duel ? (
         <DuelOverlay state={state} />
       ) : state.phase === "LOBBY" ? (
         <LobbyOverlay

@@ -9,6 +9,7 @@ import {
 import { createGameSocket } from "../networking/socket"
 import { ControllerClient } from "./controller-client"
 import { DuelControls } from "./DuelControls"
+import { PartyControls } from "./PartyControls"
 import "./controller.css"
 
 function initialRoom(): string {
@@ -81,6 +82,8 @@ function ConnectedController({ client }: { client: ControllerClient }) {
     if (view.connection !== "connected") headline = "Reconnecting…"
     else if (view.state?.phase === "LOBBY") headline = "You're in!"
     else if (view.state?.phase === "DUEL") headline = "Sword duel"
+    else if (view.state?.phase === "SHOP") headline = "Wildwood Market"
+    else if (view.state?.phase === "POTATO") headline = "Hot Potato"
     else if (canRoll) headline = "Your turn!"
     else if (view.pending) headline = "Roll submitted"
     else if (active) headline = `${active.name}'s turn`
@@ -164,7 +167,16 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           )}
         </section>
       )}
-      {view.state?.phase === "DUEL" && view.state.duel ? (
+      {me && view.state && view.state.phase !== "DUEL" && (
+        <PartyControls
+          client={client}
+          state={view.state}
+          playerId={view.playerId}
+          motionEnabled={permission === "enabled"}
+        />
+      )}
+      {view.state?.phase === "SHOP" || view.state?.phase === "POTATO" ? null : view.state?.phase ===
+          "DUEL" && view.state.duel ? (
         <DuelControls
           client={client}
           state={view.state}

@@ -1,6 +1,6 @@
 # Current task board
 
-The occupied-space sword duel is the first user-approved mini-game. Other mini-games remain deferred.
+Occupied-space sword duels and round-end Hot Potato are approved, along with the shop economy.
 
 ## Phase 0: joint foundation
 
@@ -69,3 +69,14 @@ The occupied-space sword duel is the first user-approved mini-game. Other mini-g
 - [x] Move the loser back up to three spaces and resume the interrupted turn order.
 - [x] Test scoring, abuse rejection, timeout, restart, and four-controller rotations.
 - [ ] Tune physical-device gesture thresholds on iPhone and Android.
+
+## Phase 5: round games and shops
+
+- [x] Extend the route to 48 spaces with recurring markets.
+- [x] Pause movement at a passed market, then resume the same roll.
+- [x] Add coins, a three-item inventory, and authoritative purchases.
+- [x] Add Frost Charm, Trail Boots, and Leaf Shield with target/effect validation.
+- [x] Run Hot Potato after each full round and award coins exactly once.
+- [x] Add a woodland acorn arena, motion passing, and touch fallback.
+- [x] Verify rules, timers, disconnects, rewards, and browser screens.
+- [ ] Verify physical phone motion and venue-network pacing.

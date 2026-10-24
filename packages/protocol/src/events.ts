@@ -1,6 +1,9 @@
 import type {
   DiceRolledEvent,
   DuelActionRequest,
+  ShopChoiceRequest,
+  ItemUseRequest,
+  PotatoPassRequest,
   GameErrorEvent,
   HostCommand,
   JoinRoomRequest,
@@ -24,6 +27,9 @@ export const CLIENT_EVENTS = {
   GAME_RESTART: "game.restart",
   DICE_ROLL_REQUEST: "dice.roll.request",
   DUEL_ACTION: "duel.action",
+  SHOP_CHOICE: "shop.choice",
+  ITEM_USE: "item.use",
+  POTATO_PASS: "potato.pass",
 } as const
 
 export const SERVER_EVENTS = {
@@ -49,6 +55,9 @@ export interface ClientToServerEvents {
   "game.restart": (payload: HostCommand) => void
   "dice.roll.request": (payload: RollRequest) => void
   "duel.action": (payload: DuelActionRequest) => void
+  "shop.choice": (payload: ShopChoiceRequest) => void
+  "item.use": (payload: ItemUseRequest) => void
+  "potato.pass": (payload: PotatoPassRequest) => void
 }
 
 export interface ServerToClientEvents {

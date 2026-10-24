@@ -8,8 +8,9 @@ Maintain the core board loop and the user-approved occupied-space sword duel: fo
 
 ## Scope guardrails
 
-- Sword duels on occupied spaces are approved. Other mini-games remain deferred.
-- Do not implement power-ups, shops, currency, accounts, matchmaking, databases, or multiple boards without a new request.
+- Sword duels, round-end Hot Potato, coins, pass-by shops, Frost Charm, Trail Boots, Leaf Shield,
+  and the 48-space route are approved by Ryan. Other content needs a new request.
+- Do not implement accounts, matchmaking, databases, or additional boards without a new request.
 - Preserve the detailed woodland art direction and locally authored character assets.
 - The server is authoritative for game phase, turn order, dice values, and player positions.
 - A phone shake requests a roll; it never calculates the dice value.

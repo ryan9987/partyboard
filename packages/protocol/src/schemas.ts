@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { gameStateSchema, playerColorSchema } from "./state"
+import { gameStateSchema, playerColorSchema, itemSchema } from "./state"
 
 const roomCodeSchema = z
   .string()
@@ -81,7 +81,7 @@ export const playerMovingEventSchema = z
     playerId: idSchema,
     fromTileId: idSchema,
     toTileId: idSchema,
-    path: z.array(idSchema).min(1).max(6),
+    path: z.array(idSchema).min(1).max(8),
     millisecondsPerTile: z.number().int().positive(),
     turnNumber: z.number().int().positive(),
   })
@@ -117,6 +117,22 @@ export const duelActionRequestSchema = rollRequestSchema
   })
   .strict()
 export type DuelActionRequest = z.infer<typeof duelActionRequestSchema>
+export const shopChoiceRequestSchema = rollRequestSchema
+  .extend({ visitId: z.string().uuid(), item: z.enum(["freeze", "boots", "shield", "skip"]) })
+  .strict()
+export const itemUseRequestSchema = rollRequestSchema
+  .extend({
+    item: itemSchema,
+    targetId: idSchema.optional(),
+    turnNumber: z.number().int().positive(),
+  })
+  .strict()
+export const potatoPassRequestSchema = rollRequestSchema
+  .extend({ gameId: z.string().uuid(), revision: z.number().int().nonnegative() })
+  .strict()
+export type ShopChoiceRequest = z.infer<typeof shopChoiceRequestSchema>
+export type ItemUseRequest = z.infer<typeof itemUseRequestSchema>
+export type PotatoPassRequest = z.infer<typeof potatoPassRequestSchema>
 export type TurnStartedEvent = z.infer<typeof turnStartedEventSchema>
 export type DiceRolledEvent = z.infer<typeof diceRolledEventSchema>
 export type PlayerMovingEvent = z.infer<typeof playerMovingEventSchema>
