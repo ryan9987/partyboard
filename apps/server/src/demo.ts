@@ -1,6 +1,8 @@
 import { spawn, type ChildProcess } from "node:child_process"
 import { createServer, type Server as HttpServer } from "node:http"
 import { dirname, join, resolve } from "node:path"
+import { mkdtemp, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import { fileURLToPath } from "node:url"
 import { setTimeout as delay } from "node:timers/promises"
 
@@ -17,6 +19,7 @@ let tunnel: ChildProcess | undefined
 let build: ChildProcess | undefined
 let stopping = false
 let reservation: HttpServer | undefined
+let directory: string | undefined
 async function stop() {
   if (stopping) return
   stopping = true
@@ -24,6 +27,7 @@ async function stop() {
   tunnel?.kill("SIGTERM")
   await app?.close()
   if (reservation?.listening) await new Promise<void>((done) => reservation!.close(() => done()))
+  if (directory) await rm(directory, { recursive: true, force: true })
 }
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.once(signal, () => {
@@ -31,6 +35,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
   })
 
 try {
+  directory = await mkdtemp(join(tmpdir(), "partyboard-demo-"))
   // Reserve the port first so the tunnel cannot accidentally expose another local service.
   reservation = createServer((_request, response) =>
     response.writeHead(503, { "Retry-After": "5" }).end("Demo is starting"),
@@ -78,7 +83,7 @@ try {
   await new Promise<void>((done, reject) => {
     build = spawn(
       process.platform === "win32" ? "pnpm.cmd" : "pnpm",
-      ["--filter", "@party-board/web", "build"],
+      ["--filter", "@party-board/web", "build", "--outDir", directory!],
       {
         cwd: root,
         env: {
@@ -95,7 +100,7 @@ try {
     )
   })
   if (stopping) throw Error("Demo startup was cancelled")
-  const webHandler = await createStaticWebHandler(join(root, "apps/web/dist"))
+  const webHandler = await createStaticWebHandler(directory)
   app = createGameApp({ allowedOrigins: [origin], webHandler })
   await new Promise<void>((done) => reservation!.close(() => done()))
   await new Promise<void>((done, reject) => {

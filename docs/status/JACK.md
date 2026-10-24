@@ -78,3 +78,11 @@ Jack or Jack's agent owns this file.
 - Fast-forwarded Jack's branch to `origin/main` at `90a9eb3`, including the 48-space woodland board, sword duels, Hot Potato, markets/power-ups, and existing controller/hosting fixes. No merge conflicts or additional source edits were needed.
 - Frozen dependency installation, package type checking, lint, formatting, 59 Vitest tests plus 10 motion tests, and an isolated production web build pass.
 - The running HTTPS demo is intentionally still on its previous release. The new client was built outside the live asset directory; server state and rooms were not interrupted or mixed with the new protocol.
+
+## Latest-main HTTPS rehearsal
+
+- Continued from main integration by deploying its server and client together on a new HTTPS origin. The old shared `apps/web/dist/index.html` checksum stayed unchanged during staging.
+- The demo runner now builds into its own `mkdtemp` directory and removes that directory on shutdown. This prevents staging a second demo from replacing assets underneath the first server. No dependency or protocol changes were needed.
+- Verification: server type checking, lint, formatting, and a full real demo-runner build/start/public reachability check. The preceding integrated-main checks passed all 69 tests.
+- A public WSS rehearsal with two controller clients completed exactly two rolls, one market stop/purchase, Hot Potato, one successful pass, result/payouts (15 and 5 coins), and return to board turn 3. This random rehearsal did not trigger a duel; automated duel coverage remains passing.
+- Physical iPhone/Android sensitivity, four-phone venue testing, and release-proof recording/tag remain outstanding. A tutorial or practice screen was discussed as a possible next feature, not implemented without a request.
