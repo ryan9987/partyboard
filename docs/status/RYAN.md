@@ -16,8 +16,8 @@ Ryan or Ryan's agent owns this file.
   320/390px shop layouts, 430px controller, manual duel/Potato instruction/result transitions,
   exact 8/2-coin rewards, and on-turn Boots selection/activation notices verified locally.
   Fresh host/controller console error logs are empty. Preview proof is in the task's outputs folder.
-- This branch has not been pushed or deployed to partyboard.club. Physical-device and venue
-  network rehearsal remain necessary.
+- Ryan requested integrating this feature into main and pushing it to GitHub. The Render rollout
+  has not been verified; physical-device and venue network rehearsal remain necessary.
 
 - Demo hardening pass: full four-controller six-game rotation plus sword duels; targeted
   Archery (three arrows, 157 points) and Balance tilt replays; actual narrow iframe layouts
