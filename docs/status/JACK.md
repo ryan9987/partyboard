@@ -5,8 +5,8 @@ Jack or Jack's agent owns this file.
 ## Current
 
 - Working on `feat/server-controller` in the separate `../partyboard-jack` worktree.
-- Merged Ryan's host/board foundation commit `f6dcafd`.
-- First server/controller acceptance slice works through a text host and live phone-controller route. Ryan's 3D host still uses its fixture.
+- Merged Ryan's live-host branch through `f391a30` in merge commit `2974939`, preserving both lanes' dependency and integration notes changes.
+- The server, phone controller, and Ryan's 3D host now run together with VITE_SOCKET_URL configured. The five-minute polling task was disabled when the live integration arrived.
 
 ## Completed
 
@@ -18,22 +18,25 @@ Jack or Jack's agent owns this file.
 - `/controller` and `/controller/ROOM` join, lobby, waiting, active-turn, connection/error, and motion-permission UI.
 - Visible touch Roll fallback, shared synchronous touch/shake request latch, pending-roll retry with the same request ID after reconnect, and localStorage session recovery.
 - Dependency-free motion recognition, listener cleanup, permission handling, gravity fallback, and deterministic tests.
-- Jack explicitly authorized the shared lockfile, web motion dependency, controller route, and root dev/typecheck/test integration edits in this thread. Ryan's host, board, networking, protocol, and status were not edited.
+- Jack explicitly authorized the shared lockfile, web motion dependency, controller route, and root dev/typecheck/test integration edits in this thread. Ryan's host/board/networking/protocol source and status were preserved through the merge, with no additional local edits to his owned implementation.
 
 ## Verification
 
 - `pnpm install --frozen-lockfile` — passed.
-- `pnpm check` — passed: package type checking, lint, shared formatting checks, 28 Vitest tests, 10 motion tests, and production Vite build.
+- `pnpm check` — passed: package type checking, lint, shared formatting checks, 32 Vitest tests, 10 motion tests, and production Vite build.
 - Additional Prettier check of server, controller, motion, and server tests — passed.
 - Engine simulation and actual Socket.IO tests each complete five rotations with four controllers, correct positions/wraparound, and one result per turn despite duplicate requests.
 - Additional tests exercise private joins, malformed payloads, host/player authorization, invalid origins, restart during animation, lost-request retries, refresh, and disconnect recovery.
 - Browser at a 390 px viewport: join/ready, active turn, touch roll and immediate disable, permission denial with enabled touch fallback, synthetic shake submission, and refresh restoring the same room/player during a running game.
 - Text-host creation/show/quit and root dev process startup smoke-tested.
+- Combined live 3D browser run: three automated controller clients plus one rendered touch controller completed exactly 20 rolls, five per player, reaching turn 21. Server dice sums, server snapshots, and host positions matched (tiles 0, 4, 5, 13). This was a local browser test, not physical-phone demo-network proof.
+- Controller refresh retained Jack's identity and room R6LK. Host refresh instead created a new empty room B7UT. A separate live host restart check kept room B7UT and its player identity, reset tile-3 to tile-0, and cleared lastRoll; automated server restart tests also pass.
+- The host showed skipped intermediate movement steps under the tested rendering load. Exact evidence and the snapshot/animation interaction are recorded for Ryan in the integration notes.
 - Non-blocking build warning: existing host chunk exceeds Vite's 500 kB advisory. React StrictMode's development effect cleanup can produce an initial closed-WebSocket warning; the subsequent connection succeeds.
 
 ## Blockers and handoffs
 
-- Ryan must connect the 3D host to live events. Exact follow-up requests, including host reattachment and Vite environment-file location, are in `docs/INTEGRATION_NOTES.md`.
+- Live host integration is merged. Ryan-owned host recovery and animation fixes remain, with exact follow-up requests and Vite environment-file location in `docs/INTEGRATION_NOTES.md`. No new protocol event/field was invented to bypass the missing resume contract.
 - Browser configuration currently belongs in `apps/web/.env.local` or exported variables; server configuration belongs in root `.env`. Run instructions are in `apps/server/README.md` and `apps/web/src/controller/README.md`.
 - No physical iPhone/Android motion tuning or four-phone HTTPS/demo-network proof has been completed. The full milestone is not complete.
 - Rooms, session memberships, and accepted request IDs remain in memory for the room lifetime. No database or player replacement feature is implemented.
