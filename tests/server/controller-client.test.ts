@@ -250,3 +250,18 @@ it("retries an undelivered pending roll with its original ID after reconnecting"
   expect(client.getSnapshot().state?.phase).toBe("ROLLING")
   expect(client.canRoll()).toBe(false)
 })
+
+it("blocks rolls after stopping and restores the same player when restarted", () => {
+  const room = host()
+  const { client, socket } = controller(room.roomCode)
+  client.join({ roomCode: room.roomCode, name: "Jack", color: "coral" })
+  start(room)
+  const playerId = client.getSnapshot().playerId
+  client.stop()
+  expect(client.getSnapshot().connection).toBe("disconnected")
+  expect(client.requestRoll()).toBe(false)
+  expect(socket.sent.some((message) => message.event === "dice.roll.request")).toBe(false)
+  client.start()
+  expect(client.getSnapshot().playerId).toBe(playerId)
+  expect(client.canRoll()).toBe(true)
+})

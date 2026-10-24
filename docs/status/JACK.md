@@ -65,3 +65,10 @@ Jack or Jack's agent owns this file.
 - The reported Undo popup is the iPhone system editing gesture. Added an optional, keyboard-accessible disclosure beside motion controls with the exact system-settings path and the existing touch Roll alternative.
 - No gesture thresholds, roll submission logic, or shared protocol changed. The website does not claim to disable the operating-system setting. The player must turn off Shake to Undo on the phone to suppress it while shaking.
 - Verification: controller/web type checking, lint, formatting, and build; physical iPhone popup suppression requires the device setting and manual confirmation.
+
+## Controller lifecycle follow-up
+
+- Ryan's remote branch remains at `d98b65d`; no additional commits were available at this check.
+- Fixed `ControllerClient.stop()` leaving its view marked connected after socket listeners were removed. It now explicitly marks the client disconnected and clears joining, preventing a roll from being buffered while stopped.
+- One regression test failed before the one-line fix and passes afterward: stop blocks roll requests, then start reclaims the same player and permits the next valid roll.
+- Verification: package type checking, lint, formatting, 42 Vitest tests plus 10 motion tests, and production web build in an isolated output directory. The live server and room state are preserved; generated assets are copied before atomically replacing index.html, retaining older hashed assets for open clients.

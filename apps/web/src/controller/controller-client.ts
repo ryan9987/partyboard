@@ -194,6 +194,7 @@ export class ControllerClient {
   stop(): void {
     this.cleanups.splice(0).forEach((cleanup) => cleanup())
     this.socket.disconnect()
+    this.update({ connection: "disconnected", joining: false })
   }
 
   join(payload: unknown): void {
