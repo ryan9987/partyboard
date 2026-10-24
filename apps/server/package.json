@@ -1,0 +1,21 @@
+{
+  "name": "@party-board/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "start": "tsx --env-file-if-exists=../../.env src/main.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "debug:host": "tsx --env-file-if-exists=../../.env src/debug-host.ts"
+  },
+  "dependencies": {
+    "@party-board/board": "workspace:*",
+    "@party-board/protocol": "workspace:*",
+    "socket.io": "4.8.4"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15",
+    "socket.io-client": "4.8.4"
+  }
+}

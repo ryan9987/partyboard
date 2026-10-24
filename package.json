@@ -5,9 +5,9 @@
   "type": "module",
   "packageManager": "pnpm@10.30.3",
   "scripts": {
-    "dev": "pnpm --filter @party-board/web dev",
+    "dev": "pnpm -r --parallel --filter @party-board/web --filter @party-board/server dev",
     "build": "pnpm -r --if-present build",
-    "test": "vitest run",
+    "test": "vitest run && node --test packages/motion/test/motion.test.mjs",
     "test:watch": "vitest",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "eslint .",
