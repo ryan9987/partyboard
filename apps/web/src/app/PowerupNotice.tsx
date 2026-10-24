@@ -3,6 +3,7 @@ import { SHOP_ITEMS, type GameState, type Item } from "@party-board/protocol"
 export function ItemGlyph({ item }: { item: Item }) {
   return (
     <svg
+      className={`powerup-symbol powerup-symbol--${item}`}
       viewBox="0 0 32 32"
       width="30"
       height="30"
@@ -18,7 +19,7 @@ export function ItemGlyph({ item }: { item: Item }) {
       ) : item === "shield" ? (
         <>
           <path d="M16 3 27 8v9c0 6-8 11-11 13C13 28 5 23 5 17V8Z" />
-          <path d="M16 9v14M11 16h10" />
+          <path d="M11 21c-3-7 1-11 11-12 0 10-3 14-9 12M11 23l8-11M15 18l-1-4M16 17l4 1" />
         </>
       ) : (
         <>

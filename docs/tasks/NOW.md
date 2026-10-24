@@ -1,5 +1,15 @@
 # Current task board
 
+## Seamless rounds and controller focus (supersedes manual-stage default below)
+
+- [x] Default automatic 3–2–1, named winners and automatic board return; untimed shops/turns retained.
+- [x] Session-preserving auth recovery, explicit tab handoff and eight-second activity grace.
+- [x] Refresh-safe mini-game sequences without replenishing arrows/score/cooldowns.
+- [x] Close Archery camera, named large targets, clear reticles and scoring-aligned target radius.
+- [x] Consistent SVG/color power-up symbols, host standings and minimal owner-only phone controls.
+- [x] Dismiss join text-field focus; retain touch-only mode and truthful iOS Undo guidance.
+- [ ] Physically test Safari/Android reconnection and gestures on the actual demo network.
+
 ## Continuous animation and per-space travel rewards
 
 - [x] Replace tile-target jumps with a continuous, timed path and shared camera/die focus.

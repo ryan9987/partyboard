@@ -159,13 +159,7 @@ export default function HostPage() {
         ? "Scan to join from a phone. Start once at least one connected player is ready."
         : "Connecting to the authoritative game server and creating a room…"))
     : "Scan to join from a phone. Four fixture players are shown for Ryan's host preview."
-  const sceneKey =
-    state.minigame?.id ??
-    (state.duel && state.duel.stage !== "intro"
-      ? state.duel.id
-      : state.potato && state.potato.stage !== "intro"
-        ? state.potato.id
-        : "trail")
+  const sceneKey = state.minigame?.id ?? state.duel?.id ?? state.potato?.id ?? "trail"
 
   return (
     <main className="host-shell">

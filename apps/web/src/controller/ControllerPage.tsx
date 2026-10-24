@@ -11,7 +11,6 @@ import { ControllerClient } from "./controller-client"
 import { DuelControls } from "./DuelControls"
 import { PartyControls } from "./PartyControls"
 import { MinigameControls } from "./MinigameControls"
-import { PlayerBalances } from "../app/PlayerBalances"
 import { PowerupNotice } from "../app/PowerupNotice"
 import { CoinCount } from "../app/CoinCount"
 import "./controller.css"
@@ -82,6 +81,10 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   }, [client, permission, canRoll, view.state?.turnNumber])
 
   const me = view.state?.players.find((player) => player.id === view.playerId)
+  useEffect(() => {
+    if (view.playerId && document.activeElement instanceof HTMLElement)
+      document.activeElement.blur()
+  }, [view.playerId])
   const active = view.state?.players.find((player) => player.id === view.state?.currentPlayerId)
   const inActivity = ["DUEL", "SHOP", "POTATO", "MINIGAME"].includes(view.state?.phase ?? "")
   let headline = "Join the table"
@@ -109,6 +112,11 @@ function ConnectedController({ client }: { client: ControllerClient }) {
       {view.error && (
         <p role="alert" className="controller-error">
           {view.error}
+        </p>
+      )}
+      {me && view.connection !== "connected" && !view.error && (
+        <p className="controller-error" role="status">
+          Reconnecting · keep this screen open.
         </p>
       )}
       {!me ? (
@@ -164,13 +172,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
             </span>
             <CoinCount coins={me.coins ?? 0} />
           </div>
-          {view.state?.phase === "LOBBY" ? (
-            <p>Waiting for the host to start.</p>
-          ) : !inActivity ? (
-            <p>
-              Turn {view.state?.turnNumber} · Last roll: {view.state?.lastRoll ?? "—"}
-            </p>
-          ) : null}
+          {view.state?.phase === "LOBBY" ? <p>Waiting for the host to start.</p> : null}
           {canRoll && (
             <p>
               {permission === "enabled"
@@ -196,7 +198,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
       )}
       {!me ? null : view.state?.phase === "MINIGAME" && view.state.minigame ? (
         <MinigameControls
-          key={view.state.minigame.id}
+          key={`${view.state.minigame.id}:${permission === "enabled"}`}
           client={client}
           state={view.state}
           playerId={view.playerId}
@@ -216,7 +218,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
             ? "Waiting for the game to confirm your power-up…"
             : "Shake-to-roll is paused while you choose."}
         </p>
-      ) : (
+      ) : canRoll || view.pending ? (
         <button
           className="controller-roll"
           type="button"
@@ -228,37 +230,45 @@ function ConnectedController({ client }: { client: ControllerClient }) {
         >
           Roll
         </button>
-      )}
-      {me && view.state && <PlayerBalances state={view.state} playerId={view.playerId} />}
-      <section aria-label="Motion control">
-        <button
-          type="button"
-          disabled={requestingPermission || permission === "enabled"}
-          onClick={async () => {
-            setRequestingPermission(true)
-            const result = await requestMotionPermission()
-            setPermission(result)
-            setRequestingPermission(false)
-          }}
-        >
-          Enable motion
-        </button>
-        <p aria-live="polite">
-          {permission === "off"
-            ? view.state?.phase === "DUEL"
-              ? "Enable motion for swing and tilt, or use the Swing and Guard buttons."
-              : "Motion is optional. Every game has touch controls."
-            : `Motion ${permission}. Touch controls stay available in every game.`}
-        </p>
-        <details>
-          <summary>iPhone showing an Undo popup?</summary>
-          <p>
-            Open Settings → Accessibility → Touch and turn off Shake to Undo, then return here to
-            shake and roll. This is an iPhone setting; the game cannot turn it off. You can also use
-            the Roll button without changing your settings.
+      ) : null}
+      <details className="controller-settings">
+        <summary>
+          {permission === "enabled" ? "Motion on · controller settings" : "Enable motion / help"}
+        </summary>
+        <section aria-label="Motion control">
+          <button
+            type="button"
+            disabled={requestingPermission}
+            onClick={async () => {
+              if (permission === "enabled") {
+                setPermission("off")
+                return
+              }
+              setRequestingPermission(true)
+              const result = await requestMotionPermission()
+              setPermission(result)
+              setRequestingPermission(false)
+            }}
+          >
+            {permission === "enabled" ? "Use touch only" : "Enable motion"}
+          </button>
+          <p aria-live="polite">
+            {permission === "off"
+              ? view.state?.phase === "DUEL"
+                ? "Enable motion for swing and tilt, or use the Swing and Guard buttons."
+                : "Motion is optional. Every game has touch controls."
+              : `Motion ${permission}. Touch controls stay available in every game.`}
           </p>
-        </details>
-      </section>
+          <details>
+            <summary>iPhone showing an Undo popup?</summary>
+            <p>
+              Open Settings → Accessibility → Touch and turn off Shake to Undo, then return here to
+              shake and roll. This is an iPhone setting; the game cannot turn it off. You can also
+              use the Roll button without changing your settings.
+            </p>
+          </details>
+        </section>
+      </details>
     </main>
   )
 }

@@ -1,5 +1,6 @@
 import { MINIGAMES, type GameState } from "@party-board/protocol"
 import { useGameNow } from "../networking/gameClock"
+import { RoundCountdown } from "./RoundCountdown"
 
 export function MinigameOverlay({ state }: { state: GameState }) {
   const game = state.minigame!
@@ -37,7 +38,11 @@ export function MinigameOverlay({ state }: { state: GameState }) {
       </div>
       {game.stage === "intro" && (
         <div className="minigame-brief">
-          <span className="eyebrow">How to play</span>
+          <RoundCountdown
+            at={game.startsAt}
+            serverTime={state.serverTime}
+            paused={!!state.waitingForHost}
+          />
           <h2>{info.instruction}</h2>
           <p>Everyone plays · winner earns 8 coins · everyone else earns 2</p>
           <small>Motion or touch controls on your phone</small>
@@ -48,9 +53,13 @@ export function MinigameOverlay({ state }: { state: GameState }) {
           <span className="eyebrow">
             {game.winnerIds.length > 1 ? "A shared victory" : "Round winner"}
           </span>
-          <h2>{winners || "Thanks for playing"}</h2>
+          <h2>
+            {winners
+              ? `${winners} ${game.winnerIds.length > 1 ? "win" : "wins"}!`
+              : "Round complete"}
+          </h2>
           <p>Winners +8 coins · everyone else +2</p>
-          <small>Continue on the host when everyone is ready.</small>
+          <small>{state.waitingForHost ? "Waiting for the host" : "Returning to the trail…"}</small>
         </div>
       )}
       <div className="minigame-scores">

@@ -4,6 +4,25 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Seamless-round/controller-focus integration requested by Ryan; supersedes manual starts/results.
+  Default automatic 3–2–1 into all six round games and duels, named results and automatic trail
+  return. Connected turns/shops remain untimed. Optional authenticated manual operator mode retained.
+- Fixed command-level auth errors erasing saved phone sessions, competing-tab session handoff,
+  immediate disconnect forfeits, and refreshed mini-game input sequences. Eight-second activity
+  reconnect grace preserves arrows/score/cooldowns; expiry, restart and disposal are guarded.
+  Rooms remain in-memory and cannot survive process restarts/deploys; no database added.
+- Close frontal Archery camera, named large targets, clear reticles and matching visual/scoring
+  radius. Finish after all final arrow flights. Minimal owner-only phone controls, collapsed motion
+  help/touch-only switch, and matching blue snowflake/amber boot/green leaf-shield SVG symbols.
+- Browser rehearsal: two live round cycles automatically returned to turns 3 and 5; visible 3–2–1
+  intro and named shared winners; scored 53 points, refreshed the 390px phone, preserved two arrows
+  and fired another. Shop purchase/remaining travel works at 320px. Four-player Archery art checked.
+  Fresh host/controller browser error logs empty. Physical iOS/Android sensors remain untested.
+- Safari has no exposed native Shake to Undo switch; blur join input, retain tap/tilt alternatives
+  and truthful help. This does not promise to suppress the iOS system prompt without Settings.
+  Verification: `pnpm check` (125 Vitest + 10 motion tests), types, lint, format and production build.
+  Render rollout/hardware testing remains separate from the requested main push.
+
 - Smooth-travel/per-space-reward integration requested by Ryan, including main push. Continuous
   render-loop path sampling, rounded bends, exact timed arrivals, distance-based gait, blended
   limb poses/turns, shared camera/die focus and soft arena/wrap reveals. Instanced assets retained;

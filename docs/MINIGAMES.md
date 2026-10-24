@@ -11,8 +11,10 @@ After everyone connected completes or skips a board turn, choose from a six-game
 Hot Potato opens each bag, then Balance, Fishing, Dodge, Archery and Rhythm are shuffled without
 repetition. A new bag starts after all six. Occupied-space sword duels remain separate.
 
-Instructions and results are untimed: the host explicitly starts the game and returns to the trail.
-The playing clock (up to 20 seconds) starts fresh only after that click, even after a long pause.
+Instructions display an automatic, server-timed 3–2–1 countdown. The playing clock (up to 20
+seconds) then starts fresh. Named winners/rewards display for 3–3.5 seconds and the board resumes
+automatically, with no Start/Continue clicks. Optional `manualStageAdvance: true` remains available
+for an operator/rehearsal, but is not the production default. Shops and board turns stay untimed.
 Winners receive 8 coins, other participants receive 2, exactly once. Tied high scores share the
 8-coin prize. No board positions change. Resume the player following the round's final mover.
 
@@ -22,7 +24,7 @@ Winners receive 8 coins, other participants receive 2, exactly once. Tied high s
 | --- | --- | --- |
 | Balance | Counter-tilt / slider | Stay centered on a rolling log. Drift amplifies existing lean. Fall at 1.15 displacement; highest survival time wins. |
 | Fishing | Small flick to cast/reel; tilt to steady / button and slider | Cast lasts 0.8s, bite opens 1.8–3s after cast. Reel with axis under 0.55 magnitude for 40–100 catch points. Sustained extreme tilt breaks the line. Highest total wins. |
-| Dodge | Tilt / left-center-right buttons or slider | Three lanes per player. Ground marker warns before a falling acorn arrives every 1.8s. Collision evaluated after 1.45s. Highest survival time wins. |
+| Dodge | Tilt / left-center-right buttons | Three lanes per player. Ground marker warns before a falling acorn arrives every 1.8s. Collision evaluated after 1.45s. Highest survival time wins. |
 | Archery | Tilt to aim, tap release / slider and release | Three arrows, 900ms cooldown. Shared deterministic sway; 0–100 points per shot depending on horizontal accuracy. Highest total wins. |
 | Rhythm | Small wrist flick / Strike button | Beats every 750ms. Server receipt within 180ms of a beat earns up to 100 points; one attempt per beat. Highest total wins. |
 
@@ -35,14 +37,20 @@ Touch controls remain available without granting sensor permission. Keep phones 
 - Fishing rods, bows and drumsticks attach to animated wrist nodes; no independent floating props.
 - Fishing has raised wooden docks, a visible pond, rod-tip-to-float line, visible cast arc,
   dipping bobber, ripples and fish retrieval.
-- Archery has wooden target stands, concentric scoring faces, aim marker and a visible arrow flight.
+- Archery uses a close, frontal camera fitted to the number of players and viewport. Large named
+  targets, high-contrast reticles and retained arrow flights make aiming readable. Target face
+  radius is 1.02 world units: exactly the server's 0.6 hit threshold times the 1.7 aim scale.
+  Once all players finish their arrows (or are out), wait 650ms for the final flights, then score
+  immediately instead of waiting out the remaining clock.
 - Balance uses bark-textured floating logs with exposed end-grain rings and outstretched arms.
 - Dodge uses separated lane pads, warning rings and falling acorns.
 - Rhythm uses rope-laced drums, metal rims, animated sticks and beat-lit heads.
 - Compact ivory/forest-green HUD, countdown, per-player scores and matching clean controller cards.
 - No gradients, stock hero pictures or network asset downloads.
-- A separate compact coin ledger stays visible across all game phases, distinct from round scores.
-- Rule/result screens use host Start / Back to the trail controls; phones explain who continues.
+- The host retains the full coin ledger. The phone shows only its owner's compact balance,
+  current controls and necessary feedback; full standings/instructions stay on the shared screen.
+- Motion/help is an expandable footer, with an explicit touch-only option and visible touch inputs.
+- Intro scenes are already in the arena, so the countdown does not trigger another world change.
 
 ## Protocol and recovery
 
@@ -56,17 +64,27 @@ The bound session must own the connection. Per-game monotonic sequences discard 
 stale packets; periodic inputs are rate limited, actions have independent cooldowns. Snapshots
 are emitted at 10Hz. Stale held axes return to neutral after 700ms without an input.
 
-Disconnect forfeits the current mini-game without erasing the participant's earned score;
-forfeited players cannot win. Reconnect watches until the next board turn. Result participants
-still receive the participation payout. The host restart clears the room's game timer and bag.
-Every game is bounded, including when no one sends input. No new room timers run alongside the
-existing board/shop/duel timer.
+Brief disconnections get an eight-second grace before forfeiting the current mini-game. Rejoining
+cancels that player's grace timer and resets only the input sequence (refresh starts at zero),
+not arrows, action cooldown, score or survival state. A gameplay elimination remains final and
+clocks/fuses continue during recovery. After grace, forfeited players cannot win. Restart/dispose
+cancel grace timers; a callback is also bound to the original activity UUID, never a later game.
+Result participants still receive the participation payout. Every game remains bounded.
+
+A command-level UNAUTHORIZED error no longer deletes the saved session; the controller attempts
+a bounded reattachment. Opening the same controller session in another tab sends SESSION_REPLACED
+to the older tab, which stops input without deleting credentials or stealing the session back.
+Actual ROOM_NOT_FOUND/SESSION_NOT_FOUND clears obsolete credentials with an actionable error.
+Rooms are still in-memory: a process restart/deploy requires a new room. No durable storage added.
 
 Snapshots include optional `serverTime`; host and controller cues advance from this server anchor
 using the browser's monotonic timer. Device wall-clock differences no longer shift the beat,
 countdown, or animations. Scoring still uses server receipt time, never a client timestamp.
 Archery snapshots also retain up to three `{offset, at}` shots so arrows remain in the target;
 misses settle on the ground instead of hanging in midair. Test venue Wi-Fi latency before the demo.
+Safari cannot reliably disable the iOS Shake to Undo prompt. Joining dismisses input focus, but
+this is not a guaranteed suppression. Touch controls avoid shaking without any Settings change;
+the platform's supported setting is Accessibility → Touch → Shake to Undo.
 Physical iPhone/Android thresholds and latency tuning are still a required rehearsal, not proven
 by desktop tests. No audio playback is currently provided; Rhythm uses visual beat cues.
 

@@ -205,13 +205,9 @@ export function BoardScene(props: BoardSceneProps) {
       <Suspense fallback={null}>
         {props.state.phase === "MINIGAME" && props.state.minigame ? (
           <MinigameArena state={props.state} />
-        ) : props.state.phase === "POTATO" &&
-          props.state.potato &&
-          props.state.potato.stage !== "intro" ? (
+        ) : props.state.phase === "POTATO" && props.state.potato ? (
           <PotatoArena state={props.state} />
-        ) : props.state.phase === "DUEL" &&
-          props.state.duel &&
-          props.state.duel.stage !== "intro" ? (
+        ) : props.state.phase === "DUEL" && props.state.duel ? (
           <DuelArena state={props.state} />
         ) : (
           <Scene {...props} />

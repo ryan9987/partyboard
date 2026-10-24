@@ -53,7 +53,7 @@ export function PartyControls({
                   ? "Pass it!"
                   : `${holder?.name ?? "Someone"} has it`}
         </h2>
-        <p>Flick your wrist or tap to pass clockwise. Last player standing wins 8 coins.</p>
+        <p>{motionEnabled ? "Flick or tap to pass." : "Tap to pass. Watch the host screen."}</p>
         {game.stage !== "result" && (
           <button
             className="controller-roll"
@@ -69,9 +69,8 @@ export function PartyControls({
             ? `${Math.max(0, Math.ceil((game.fuseAt - now) / 1000))} seconds until it pops`
             : game.stage === "intro"
               ? "Get ready…"
-              : "Continue on the host when everyone is ready."}
+              : "Returning to the trail…"}
         </p>
-        <p>Your purse: {me.coins ?? 0} coins</p>
       </section>
     )
   }
@@ -117,6 +116,7 @@ export function PartyControls({
       </section>
     )
   }
+  if (!myTurn || !(me.inventory ?? []).length) return null
   return (
     <section className="inventory-controller" aria-label="Your items">
       <div className="inventory-heading">

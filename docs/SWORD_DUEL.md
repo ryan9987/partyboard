@@ -9,15 +9,16 @@ sword geometry, characters, and UI use local assets.
 - At the end of a move, landing on a connected player's space starts a duel. Start is safe.
 - For multiple occupants, the first connected opponent in room join order defends; others watch.
   Penalty movement never triggers another duel.
-- The crossed-swords introduction waits for the host's Start duel button; then a 25-second fight begins.
+- The crossed-swords introduction counts down 3–2–1 automatically; then a 25-second fight begins.
 - First to two clean hits wins. A swing winds up for 450 ms, allowing a reactive guard.
 - Guard covers 700 ms. Both actions share a server-enforced 900 ms recovery.
 - Swings with impact times within 180 ms clash. A guarded attack is blocked.
 - Timeout awards victory to the higher score; equal scores draw without moving anyone.
 - The winner keeps the space. The loser goes back three spaces, capped at Start.
-- Disconnecting during the introduction or fight forfeits it. Rejoining receives current state;
+- Disconnecting gives eight seconds to rejoin before forfeiting; the fight clock continues.
+  Rejoining receives current state;
   combat actions are never replayed after disconnect.
-- The result waits for the host's Back to the trail button, then play resumes after the original moving player's turn.
+- The named result displays for 3.2 seconds, then play automatically resumes after the original moving player's turn.
   Host restart cancels duel timers and resets positions.
 
 ## Protocol

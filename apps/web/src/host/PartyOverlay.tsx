@@ -1,5 +1,7 @@
-import { SHOP_ITEMS, type GameState } from "@party-board/protocol"
+import { SHOP_ITEMS, type GameState, type Item } from "@party-board/protocol"
 import { useGameNow } from "../networking/gameClock"
+import { RoundCountdown } from "./RoundCountdown"
+import { ItemGlyph } from "../app/PowerupNotice"
 
 export function PartyOverlay({ state }: { state: GameState }) {
   const now = useGameNow(state.serverTime)
@@ -12,8 +14,9 @@ export function PartyOverlay({ state }: { state: GameState }) {
           {player.name} is browsing · {player.coins ?? 0} coins
         </p>
         <div className="market-stock">
-          {Object.values(SHOP_ITEMS).map((item) => (
+          {Object.entries(SHOP_ITEMS).map(([id, item]) => (
             <div key={item.name}>
+              <ItemGlyph item={id as Item} />
               <strong>
                 {item.name}
                 <span>{item.price}</span>
@@ -43,6 +46,11 @@ export function PartyOverlay({ state }: { state: GameState }) {
           </div>
           <p className="eyebrow">Round {state.roundNumber ?? 1} complete · everyone plays</p>
           <h1>Hot Potato</h1>
+          <RoundCountdown
+            at={game.endsAt}
+            serverTime={state.serverTime}
+            paused={!!state.waitingForHost}
+          />
           <p>Don't get caught with the hot acorn.</p>
           <small>Flick or tap to pass · last standing earns 8 coins</small>
         </div>
@@ -76,7 +84,9 @@ export function PartyOverlay({ state }: { state: GameState }) {
           </div>
           <div className="duel-instructions">
             {game.stage === "result"
-              ? "Coins awarded · continue on the host when ready"
+              ? state.waitingForHost
+                ? "Coins awarded · waiting for the host"
+                : "Coins awarded · returning to the trail…"
               : `Pass clockwise with a flick or a tap · pops in ${Math.max(0, Math.ceil((game.fuseAt - now) / 1000))}s`}
           </div>
         </>

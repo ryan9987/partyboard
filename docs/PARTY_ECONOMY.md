@@ -8,11 +8,12 @@ has 48 spaces. Shops sit at spaces 3, 11, 19, 27, 35, and 43 so content appears 
 - A roll travels its exact server-generated path. Passing a market pauses at its tile with
   no deadline; buying or choosing Keep walking resumes the unused portion of that same roll.
 - Connected players have no roll deadline. A disconnected active player is still skipped after
-  60 seconds; rejoining before then cancels recovery. A disconnected shopper resumes the route.
-- Instructions and result screens for every round game and duel wait for the host's explicit
-  Start / Back to the trail button. These are untimed, including after host reconnection.
+  60 seconds; rejoining before then cancels recovery. A disconnected shopper gets eight seconds
+  to rejoin before the route resumes without a purchase.
+- Round games/duels automatically start after a server-timed three-second countdown. Named
+  results/rewards show for 3–3.5 seconds, then return to the board without host clicks.
 - Active competitive rounds retain their gameplay clocks (including the acorn fuse and combat
-  cooldowns). Timers no longer rush shopping, reading instructions, choosing items, or results.
+  cooldowns). Shopping, board turns and choosing power-ups remain untimed.
 - The host shows the stall and stock; only the current player's phone can purchase.
 - After every connected player completes or skips one board turn, everyone enters Hot Potato.
 - Mini-games do not wait for a lap. A longer route therefore does not delay the first shop or game.
@@ -41,7 +42,9 @@ Use items before rolling on your own turn: open Use a power-up, select an item (
 for Frost), then activate it. Back to roll cancels selection without spending anything.
 Shake-to-roll and touch Roll are disabled while choosing or awaiting item confirmation. A named
 effect announcement appears on the host and phones until the next roll. Every player's live
-coin balance remains visible on the host through shops, duels, and mini-games, and on controllers.
+coin balance remains visible on the host through shops, duels, and mini-games. Phones show only
+their owner's balance. Symbols are reusable code-native SVGs: blue snowflake, amber boot and green
+leaf shield, always accompanied by names/effect text rather than relying on color alone.
 
 A Frost Charm consumes itself even if a shield blocks
 it. Boots and shields cannot stack. One purchase per shop stop; unaffordable/full-pack purchases
@@ -53,10 +56,12 @@ The woodland version passes a glowing hot acorn clockwise among two to four play
 phone flick or Pass button sends it to the next surviving player. The fuse continues through
 passes; it does not reset. At roughly five seconds (randomized by under one second either way),
 the holder is out. A fresh fuse begins for survivors. The last survivor wins. Disconnected players
-are removed; rejoining spectators cannot reenter that game. Eliminations do not move board pieces.
+get an eight-second reconnect grace, but the fuse still runs and can eliminate them normally.
+After a gameplay elimination or grace expiry, rejoining cannot reenter that game.
+Eliminations do not move board pieces.
 
-The host starts the game after everyone has read the instructions and returns to the board after
-reviewing rewards. A four-player active game needs at most three fuses. Freeze skips count as board turns
+The host shows instructions/countdown and automatically returns after displaying the winner.
+A four-player active game needs at most three fuses. Freeze skips count as board turns
 for round progress. A one-player room keeps the board loop and shops, without a group mini-game.
 
 ## Wire and recovery
@@ -74,8 +79,9 @@ requests cannot advance the game. Active mini-game time is rebased when the host
 `itemEffect: { id, playerId, targetId, item, blocked, message }` is server-authored feedback, cleared
 on roll/restart/next turn. No inventory or coin mutation occurs on the client.
 
-Production defaults are untimed/manual. Automated legacy runners can explicitly set positive
-`shopDurationMs` / `rollTimeoutMs` and `manualStageAdvance: false`; tests also cover live defaults.
+Production defaults are untimed shops/connected turns and automatic round stages. An optional
+`manualStageAdvance: true` preserves authenticated operator Start/Continue behavior; positive
+`shopDurationMs` / `rollTimeoutMs` are only explicit rehearsal overrides. Tests cover both modes.
 
 No client supplies balances, prices, destinations, or rewards. Host/controller refresh reads the
 current authoritative stop/game. Restart cancels pending shop, movement, duel, and mini-game timers.

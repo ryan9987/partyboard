@@ -7,7 +7,7 @@ import {
   type MinigamePlayer,
   type MinigameState,
 } from "@party-board/protocol"
-import { Line } from "@react-three/drei"
+import { Html, Line } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useEffect, useMemo, useRef, type RefObject } from "react"
 import * as THREE from "three"
@@ -20,13 +20,31 @@ import { smoothStep } from "./trailMotion"
 
 const COLORS = { coral: "#ed7180", cyan: "#40c1c8", gold: "#e0b745", violet: "#9476d4" }
 
-export function ArenaEnvironment({ close = false }: { close?: boolean }) {
-  const { camera } = useThree()
+export function ArenaEnvironment({
+  close = false,
+  archeryPlayers = 0,
+}: {
+  close?: boolean
+  archeryPlayers?: number
+}) {
+  const { camera, size } = useThree()
   useEffect(() => {
+    if (archeryPlayers && camera instanceof THREE.PerspectiveCamera) {
+      const halfWidth = ((archeryPlayers - 1) * 2.85) / 2 + 1.5
+      const distance = Math.max(
+        5.5,
+        (halfWidth /
+          (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (size.width / size.height))) *
+          1.12,
+      )
+      camera.position.set(0, 2.6, -6 + distance)
+      camera.lookAt(0, 1.5, -6)
+      return
+    }
     if (close) camera.position.set(5.5, 5.5, 9.2)
     else camera.position.set(8.5, 7.5, 12.8)
     camera.lookAt(0, 0.7, -0.8)
-  }, [camera, close])
+  }, [camera, close, archeryPlayers, size.width, size.height])
   return (
     <>
       <fog attach="fog" args={["#aed7e4", 22, 43]} />
@@ -285,14 +303,22 @@ function ArcheryShot({
   )
 }
 
-function ArcheryTarget({ x }: { x: number }) {
+function ArcheryTarget({ x, name, color }: { x: number; name: string; color: string }) {
   return (
     <group position={[x, 1.5, -6]}>
+      <Html
+        center
+        position={[0, 0.8, 0.12]}
+        className="archery-target-label"
+        style={{ borderBottomColor: color }}
+      >
+        {name}
+      </Html>
       {[-1, 1].map((side) => (
         <mesh
           castShadow
           key={side}
-          position={[side * 0.4, -0.9, -0.08]}
+          position={[side * 0.5, -0.85, -0.08]}
           rotation={[0, 0, side * -0.18]}
         >
           <boxGeometry args={[0.08, 1.8, 0.09]} />
@@ -300,14 +326,14 @@ function ArcheryTarget({ x }: { x: number }) {
         </mesh>
       ))}
       <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.72, 0.72, 0.14, 48]} />
+        <cylinderGeometry args={[1.08, 1.08, 0.14, 64]} />
         <meshStandardMaterial color="#a18455" roughness={1} />
       </mesh>
       {[
-        { r: 0.67, c: "#ece1bd" },
-        { r: 0.52, c: "#506e6a" },
-        { r: 0.36, c: "#cb6752" },
-        { r: 0.18, c: "#e8bf58" },
+        { r: 1.02, c: "#ece1bd" },
+        { r: 0.78, c: "#506e6a" },
+        { r: 0.54, c: "#cb6752" },
+        { r: 0.27, c: "#e8bf58" },
       ].map(({ r, c }, i) => (
         <mesh key={r} position={[0, 0, 0.075 + i * 0.002]}>
           <circleGeometry args={[r, 48]} />
@@ -506,7 +532,7 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
       {fishing && <FishingLine grip={grip} player={entry} x={x} clock={clock} />}
       {archery && (
         <>
-          <ArcheryTarget x={x} />
+          <ArcheryTarget x={x} name={player.name} color={COLORS[player.color]} />
           {entry.shots?.length ? (
             entry.shots.map((shot, i) => (
               <ArcheryShot key={i} grip={grip} player={entry} x={x} clock={clock} shot={shot} />
@@ -514,19 +540,27 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
           ) : (
             <ArcheryShot grip={grip} player={entry} x={x} clock={clock} />
           )}
-          <group ref={crosshair} position={[x, 1.5, -5.87]}>
+          <group
+            ref={crosshair}
+            position={[x, 1.5, -5.87]}
+            visible={game.stage === "active" && entry.attempts < 3 && entry.alive}
+          >
+            <mesh>
+              <ringGeometry args={[0.095, 0.125, 32]} />
+              <meshBasicMaterial color="#fffdf0" depthTest={false} />
+            </mesh>
             <Line
               points={[
-                [-0.07, 0, 0],
-                [0.07, 0, 0],
+                [-0.16, 0, 0],
+                [0.16, 0, 0],
               ]}
               color="#243f37"
               lineWidth={2}
             />
             <Line
               points={[
-                [0, -0.07, 0],
-                [0, 0.07, 0],
+                [0, -0.16, 0],
+                [0, 0.16, 0],
               ]}
               color="#243f37"
               lineWidth={2}
@@ -580,7 +614,7 @@ export function MinigameArena({ state }: { state: GameState }) {
   const game = state.minigame!
   return (
     <>
-      <ArenaEnvironment />
+      <ArenaEnvironment archeryPlayers={game.kind === "archery" ? game.players.length : 0} />
       {["fishing", "balance"].includes(game.kind) && <Pond />}
       {game.players.map((player, index) => (
         <Contestant key={player.playerId} state={state} index={index} />

@@ -356,7 +356,7 @@ body:has(.controller-page),
 }
 .shop-choices button {
   position: relative;
-  padding-left: 48px;
+  padding-left: 64px;
 }
 .shop-choices button > svg {
   position: absolute;
@@ -405,4 +405,27 @@ body:has(.controller-page),
   color: #526548;
   font-size: 0.8rem;
   line-height: 1.5;
+}
+.controller-settings {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #bfc4ac;
+  color: #647462;
+  font-size: 0.85rem;
+}
+.controller-settings > summary {
+  cursor: pointer;
+  min-height: 44px;
+}
+.controller-settings section {
+  padding: 12px 0;
+}
+.controller-page .controller-roll {
+  min-height: 112px;
+}
+.controller-page--activity .minigame-controller,
+.controller-page--activity .party-controller {
+  border: 0;
+  padding: 1rem 0;
+  background: transparent;
 }

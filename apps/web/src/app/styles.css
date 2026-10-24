@@ -709,6 +709,84 @@ a {
   display: inline-flex;
   flex-shrink: 0;
 }
+.powerup-symbol {
+  flex-shrink: 0;
+  box-sizing: content-box;
+  padding: 6px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+}
+.powerup-symbol--freeze {
+  color: #286881 !important;
+  background: #e0f0f5;
+}
+.powerup-symbol--boots {
+  color: #885321 !important;
+  background: #f6e7d4;
+}
+.powerup-symbol--shield {
+  color: #3e693b !important;
+  background: #e3eddc;
+}
+.market-stock > div {
+  position: relative;
+  padding-left: 58px;
+  min-height: 44px;
+}
+.market-stock .powerup-symbol {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.round-countdown {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  margin: 12px 0;
+  font-variant-numeric: tabular-nums;
+}
+.minigame-hud--intro .minigame-scores {
+  display: none;
+}
+.round-countdown strong {
+  font:
+    600 4rem/1 Calibri,
+    "Segoe UI",
+    sans-serif;
+  animation: countdown-in 180ms ease-out;
+}
+.round-countdown span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.archery-target-label {
+  padding: 5px 12px;
+  border-radius: 4px;
+  border-bottom: 4px solid;
+  background: #faf6e9;
+  color: #294638;
+  font:
+    600 15px/1.2 Calibri,
+    "Segoe UI",
+    sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+}
+@keyframes countdown-in {
+  from {
+    opacity: 0.5;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .round-countdown strong {
+    animation: none;
+  }
+}
 .item-glyph--freeze {
   color: #427a91;
 }

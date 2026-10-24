@@ -30,7 +30,12 @@ export function MinigameControls({
   const now = useGameNow(state.serverTime)
   const [displayAxis, setDisplayAxis] = useState(0)
   const [usingTouch, setUsingTouch] = useState(!motionEnabled)
-  const active = game.stage === "active" && !!me?.alive
+  const connection = client.getSnapshot()
+  const active =
+    game.stage === "active" &&
+    !!me?.alive &&
+    connection.connection === "connected" &&
+    !connection.joining
   const info = MINIGAMES[game.kind]
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -67,25 +72,21 @@ export function MinigameControls({
         : displayAxis
   return (
     <section className="minigame-controller" aria-label={`${info.name} controller`}>
-      <div className="minigame-heading">
-        <span className="eyebrow">Round {state.roundNumber} · everyone plays</span>
-        <span>
-          {game.stage === "active"
-            ? `${Math.min(Math.ceil(game.durationMs / 1000), Math.max(0, Math.ceil((game.endsAt - now) / 1000)))}s`
-            : game.stage === "intro"
-              ? "Get ready"
-              : "Complete"}
-        </span>
-      </div>
       <h2>{info.name}</h2>
-      <p>{info.instruction}</p>
+      <p>
+        {game.stage === "intro"
+          ? "Get ready · watch the host screen"
+          : game.kind === "archery"
+            ? "Aim at your target on the host. Tap to release."
+            : info.instruction}
+      </p>
       {game.stage === "result" ? (
         <h3>
           {game.winnerIds.includes(playerId ?? "")
             ? "You win · +8 coins"
             : "+2 participation coins"}
         </h3>
-      ) : !me ? (
+      ) : game.stage === "intro" ? null : !me ? (
         <p>You're spectating this round.</p>
       ) : !me.alive ? (
         <h3>You're out. Cheer them on!</h3>
@@ -118,7 +119,7 @@ export function MinigameControls({
               : game.kind === "balance"
                 ? `Lean ${balanceLean(elapsed, index) > 0 ? "left" : "right"} to counter the log`
                 : game.kind === "archery"
-                  ? `${3 - me.attempts} arrows remaining`
+                  ? `${3 - me.attempts} ${me.attempts === 2 ? "arrow" : "arrows"} remaining`
                   : game.kind === "rhythm"
                     ? me.status === "hit"
                       ? "On the beat"
@@ -136,7 +137,7 @@ export function MinigameControls({
               {usingTouch ? "Using touch · switch to motion" : "Using motion · switch to touch"}
             </button>
           )}
-          {game.kind !== "rhythm" && (
+          {game.kind !== "rhythm" && game.kind !== "dodge" && (
             <label className="tilt-control">
               {game.kind === "archery" ? "Aim" : game.kind === "fishing" ? "Line tension" : "Tilt"}
               <input
@@ -191,25 +192,20 @@ export function MinigameControls({
                 : info.action}
             </button>
           )}
-          <button
-            className="recenter-button"
-            onClick={() => {
-              neutral.current = null
-              axis.current = 0
-              setDisplayAxis(0)
-            }}
-          >
-            Recenter phone
-          </button>
+          {motionEnabled && !usingTouch && (
+            <button
+              className="recenter-button"
+              onClick={() => {
+                neutral.current = null
+                axis.current = 0
+                setDisplayAxis(0)
+              }}
+            >
+              Recenter phone
+            </button>
+          )}
         </>
       )}
-      <div className="minigame-personal-score">
-        <span>Your score</span>
-        <strong>
-          {me?.score ?? 0} <small>{info.unit}</small>
-        </strong>
-      </div>
-      <small>Tilt gently. Keep hold of your phone. Touch controls always work.</small>
     </section>
   )
 }

@@ -1,5 +1,6 @@
 import type { GameState } from "@party-board/protocol"
 import { useGameNow } from "../networking/gameClock"
+import { RoundCountdown } from "./RoundCountdown"
 
 function SwordIcon({ className }: { className: string }) {
   return (
@@ -38,6 +39,11 @@ export function DuelOverlay({ state }: { state: GameState }) {
             {players[0]!.name} <span>vs</span> {players[1]!.name}
           </p>
           <small>First to two hits keeps the space</small>
+          <RoundCountdown
+            at={duel.stageEndsAt}
+            serverTime={state.serverTime}
+            paused={!!state.waitingForHost}
+          />
         </div>
       ) : (
         <>

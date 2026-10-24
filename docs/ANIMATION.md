@@ -1,7 +1,8 @@
 # Continuous travel and animation
 
 Ryan requested this pass together with per-space travel coins. It keeps Jack's instanced Blender
-scenery, camera-facing authoritative die, and the untimed/manual game pacing.
+scenery, camera-facing authoritative die, and untimed shops/connected board turns. The subsequent
+seamless-round pass replaces manual mini-game starts/results with automatic countdowns/results.
 
 ## Travel
 
