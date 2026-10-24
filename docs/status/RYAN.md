@@ -4,6 +4,12 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Integrating Jack's `feat/visual-overhaul` and latest server-lane verification notes at Ryan's
+  request, preserving relaxed pacing and visible economy. One documentation-only conflict was
+  resolved by retaining both of Jack's status sections. Full check passes: 100 Vitest + 10 motion
+  tests, typecheck, lint, formatting and production build. Fresh GLB scene loads without errors.
+  Main push authorized; Render rollout and physical-device performance are not yet verified.
+
 - Relaxed pacing on `feat/relaxed-pacing-and-player-coins`: connected turns and market visits
   are untimed. Every duel/round-game intro and result waits for authenticated host Start/Continue.
   Gameplay clocks and disconnect recovery remain. Mini-game time rebases on actual start.

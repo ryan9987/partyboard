@@ -1,14 +1,9 @@
 :root {
+  --font-body: Calibri, Carlito, "Segoe UI", Arial, sans-serif;
+  --font-display: "Times New Roman", Times, "Liberation Serif", serif;
   color: #f8fbff;
   background: #050814;
-  font-family:
-    Inter,
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  font-family: var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -65,7 +60,7 @@ a {
 
 .route-message__card h1 {
   margin: 8px 0 16px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: clamp(2rem, 8vw, 3rem);
   font-weight: 400;
   line-height: 1.1;
@@ -108,57 +103,28 @@ a {
 }
 
 .brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #294638;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.3rem;
+  color: #1f3328;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
   font-weight: 700;
-  letter-spacing: -0.035em;
-}
-
-.brand__mark {
-  display: block;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-}
-
-.fixture-badge {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #385245;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-transform: capitalize;
-}
-
-.connection-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #527a44;
-}
-
-.connection-dot--disconnected {
-  background: #ad5949;
-}
-.connection-dot--connecting,
-.connection-dot--preview {
-  background: #b38b45;
-}
-
-.phase-badge {
-  display: inline-block;
-  margin-top: 5px;
-  color: #60734f;
-  font-size: 0.76rem;
-  font-weight: 500;
   letter-spacing: 0;
-  white-space: nowrap;
+}
+
+.connection-notice {
+  padding: 6px 10px;
+  border: 1px solid #ad5949;
+  border-radius: 3px;
+  color: #7d3528;
+  background: var(--paper);
+  font-size: 0.9rem;
+}
+
+.phase-line {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-style: italic;
 }
 
 .preflight-control {
@@ -178,7 +144,7 @@ a {
   border: 1px solid #cbd2bc;
   border-radius: 7px;
   background: var(--paper);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
@@ -267,35 +233,30 @@ a {
 
 .preflight-footnote {
   margin: 2px 2px 0;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 
 .host-panel {
   position: absolute;
   z-index: 6;
-  top: 82px;
+  top: 76px;
   left: 24px;
   display: flex;
   width: min(300px, calc(100vw - 48px));
-  max-height: calc(100vh - 106px);
+  max-height: calc(100vh - 100px);
   flex-direction: column;
-  padding: 22px;
+  padding: 20px 22px;
   overflow: auto;
-  border: 1px solid #d7d6bf;
-  border-radius: 12px;
+  border: 1px solid #b9b39a;
+  border-radius: 4px;
   background: var(--paper);
-  box-shadow:
-    0 5px 0 rgb(68 76 44 / 8%),
-    0 8px 24px rgb(37 59 32 / 10%);
+  box-shadow: 0 2px 0 rgb(40 50 30 / 12%);
 }
 
 .eyebrow {
   margin: 0;
-  color: #778060;
-  font-size: 0.61rem;
-  font-weight: 650;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .host-panel h1,
@@ -306,14 +267,17 @@ a {
 }
 
 .host-panel h1 {
-  font-size: 2.45rem;
-  letter-spacing: 0.06em;
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 3.4rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   font-variant-numeric: tabular-nums;
 }
 
 .host-panel h2 {
   margin-top: 7px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.55rem;
   font-weight: 400;
   letter-spacing: -0.04em;
@@ -322,8 +286,8 @@ a {
 .muted {
   margin: 0;
   color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 .room-heading,
@@ -339,17 +303,13 @@ a {
 .summary-detail {
   display: block;
   color: var(--muted);
-  font-size: 0.68rem;
-  font-weight: 650;
+  font-size: 0.85rem;
 }
 
-.room-count {
-  padding: 4px 7px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
+.roster-count {
+  margin: 0 0 4px;
   color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .qr-card {
@@ -405,7 +365,7 @@ a {
 
 .player-state {
   color: #6c7667;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -420,21 +380,20 @@ a {
 
 .button {
   display: inline-flex;
-  min-height: 38px;
+  min-height: 42px;
   align-items: center;
   justify-content: center;
   padding: 0 18px;
-  border-radius: 8px;
+  border-radius: 3px;
   color: #fff;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 750;
+  font-size: 1rem;
+  font-weight: 700;
   text-decoration: none;
-  transition: 160ms ease;
 }
 
 .button:hover:not(:disabled) {
-  filter: brightness(1.08);
+  background-color: #284636;
 }
 
 .button:disabled {
@@ -449,13 +408,13 @@ a {
 }
 
 .button--secondary {
-  min-height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  color: #63705c;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #b9b39a;
+  color: #3f4c3a;
   background: transparent;
-  font-size: 0.7rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 400;
 }
 
 .turn-summary {
@@ -490,7 +449,7 @@ a {
   margin: 0 auto 5px;
 }
 .roll-summary .summary-label {
-  font-size: 0.58rem;
+  font-size: 0.8rem;
 }
 .turn-counter {
   display: grid;
@@ -498,25 +457,14 @@ a {
   min-width: 35px;
   padding-top: 1px;
   text-align: center;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.6rem;
   font-variant-numeric: tabular-nums;
 }
 .turn-counter small {
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 0.57rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.roster-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.roster-heading > span:last-child {
-  color: var(--muted);
-  font-size: 0.65rem;
 }
 .host-shell :focus-visible {
   outline: 3px solid #9d7637;
@@ -559,10 +507,6 @@ a {
     left: 16px;
   }
 
-  .fixture-badge {
-    display: none;
-  }
-
   .preflight-panel {
     position: fixed;
     top: 64px;
@@ -601,7 +545,7 @@ a {
   display: block;
   margin-bottom: 3px;
   color: #947036;
-  font-size: 0.65rem;
+  font-size: 0.8rem;
 }
 .coin-count {
   display: inline-flex;
@@ -849,7 +793,7 @@ a {
   padding: 8px 12px;
   background: var(--paper);
   border-radius: 8px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 .party-roster--out {
   opacity: 0.5;
@@ -950,7 +894,7 @@ a {
 }
 .duel-scoreboard__scores span {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   max-width: 110px;
   overflow-wrap: anywhere;
 }
@@ -1073,9 +1017,7 @@ a {
   font-variant-numeric: tabular-nums;
 }
 .minigame-clock small {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-size: 0.8rem;
 }
 .minigame-brief {
   position: absolute;
@@ -1124,7 +1066,7 @@ a {
 }
 .minigame-score small {
   display: block;
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   margin-top: 0.2rem;
   color: #647462;
 }
@@ -1176,7 +1118,7 @@ a {
     gap: 0.4rem;
   }
   .minigame-score small {
-    font-size: 0.6rem;
+    font-size: 0.8rem;
   }
   .minigame-hud {
     inset: 5rem 0.5rem 0.5rem;

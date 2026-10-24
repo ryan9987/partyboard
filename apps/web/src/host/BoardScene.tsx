@@ -1,10 +1,10 @@
 import { defaultBoard } from "@party-board/board"
 import type { GameState } from "@party-board/protocol"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { useEffect, useMemo, useRef } from "react"
+import { Suspense, useEffect, useMemo, useRef } from "react"
 import * as THREE from "three"
 
-import { BoardTile } from "./BoardTile"
+import { BoardTiles } from "./BoardTile"
 import { getCharacterOffset } from "./characterLayout"
 import { CharacterModel } from "./CharacterModel"
 import { DiceView } from "./DiceView"
@@ -78,13 +78,11 @@ function TrailSunlight({ focus }: { focus: readonly [number, number, number] }) 
 }
 
 function Scene({ state, movingPlayerId }: BoardSceneProps) {
-  const stoneTexture = useMemo(() => createSurfaceTexture("stone"), [])
-  useEffect(() => () => stoneTexture.dispose(), [stoneTexture])
   const pathTexture = useMemo(() => {
-    const texture = stoneTexture.clone()
+    const texture = createSurfaceTexture("stone")
     texture.repeat.set(80, 1)
     return texture
-  }, [stoneTexture])
+  }, [])
   useEffect(() => () => pathTexture.dispose(), [pathTexture])
   const tileMap = new Map(defaultBoard.tiles.map((tile) => [tile.id, tile]))
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
@@ -129,15 +127,11 @@ function Scene({ state, movingPlayerId }: BoardSceneProps) {
         <meshStandardMaterial map={pathTexture} roughness={0.95} />
       </mesh>
 
-      {defaultBoard.tiles.map((tile) => (
-        <BoardTile
-          key={tile.id}
-          tile={tile}
-          active={tile.id === activePlayer?.tileId}
-          start={tile.id === defaultBoard.startingTileId}
-          texture={stoneTexture}
-        />
-      ))}
+      <BoardTiles
+        activeTileId={activePlayer?.tileId}
+        startTileId={defaultBoard.startingTileId}
+        tiles={defaultBoard.tiles}
+      />
 
       {state.players.map((player, index) => {
         const tile = tileMap.get(player.tileId) ?? tileMap.get(defaultBoard.startingTileId)
@@ -173,17 +167,21 @@ export function BoardScene(props: BoardSceneProps) {
       shadows={{ type: THREE.PCFShadowMap }}
     >
       <color attach="background" args={["#aed7e4"]} />
-      {props.state.phase === "MINIGAME" && props.state.minigame ? (
-        <MinigameArena state={props.state} />
-      ) : props.state.phase === "POTATO" &&
-        props.state.potato &&
-        props.state.potato.stage !== "intro" ? (
-        <PotatoArena state={props.state} />
-      ) : props.state.phase === "DUEL" && props.state.duel && props.state.duel.stage !== "intro" ? (
-        <DuelArena state={props.state} />
-      ) : (
-        <Scene {...props} />
-      )}
+      <Suspense fallback={null}>
+        {props.state.phase === "MINIGAME" && props.state.minigame ? (
+          <MinigameArena state={props.state} />
+        ) : props.state.phase === "POTATO" &&
+          props.state.potato &&
+          props.state.potato.stage !== "intro" ? (
+          <PotatoArena state={props.state} />
+        ) : props.state.phase === "DUEL" &&
+          props.state.duel &&
+          props.state.duel.stage !== "intro" ? (
+          <DuelArena state={props.state} />
+        ) : (
+          <Scene {...props} />
+        )}
+      </Suspense>
     </Canvas>
   )
 }

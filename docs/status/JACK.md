@@ -91,3 +91,12 @@ Jack or Jack's agent owns this file.
 
 - Fast-forwarded to `origin/main` at `9e51c85`: additional round minigames, shared clock timing, phone controls, and market presentation updates. No conflicts or implementation changes were needed.
 - Frozen install, type checking, lint, formatting, 78 Vitest tests plus 10 motion tests, and the isolated production build pass. The live demo was not redeployed or reset by this pull.
+
+## Visual overhaul — `feat/visual-overhaul`
+
+- Fixed the host die showing a different face from the server roll (see `docs/INTEGRATION_NOTES.md`).
+- Regenerated static board props in Blender as one instanced, vertex-colored glb; replaced fonts
+  with Calibri/Times New Roman; removed decorative UI chrome. Controller CSS fonts updated too.
+- Verification: `pnpm check` passes (86 Vitest tests including 8 new dice tests, 10 motion tests,
+  production build). A fixture preview roll of 2 displayed 2 and moved two spaces. Rendering was
+  checked only in a software-GPU browser; real-device frame rate is not yet measured.

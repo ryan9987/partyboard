@@ -27,14 +27,8 @@ export function LobbyOverlay({
 }: LobbyOverlayProps) {
   return (
     <aside className="host-panel host-panel--lobby" aria-label="Game lobby">
-      <p className="eyebrow">Join game</p>
-      <div className="room-heading">
-        <div>
-          <span className="room-heading__label">Room code</span>
-          <h1>{state.roomCode}</h1>
-        </div>
-        <span className="room-count">{state.players.length}/4</span>
-      </div>
+      <span className="room-heading__label">Room</span>
+      <h1>{state.roomCode}</h1>
       <p className="muted">{description}</p>
 
       {controllerUrl && (
@@ -44,7 +38,7 @@ export function LobbyOverlay({
       )}
 
       <div className="player-list">
-        {state.players.length === 0 && <p className="muted">Waiting for players…</p>}
+        <p className="roster-count">{state.players.length} of 4 players</p>
         {state.players.map((player) => (
           <div className="player-row" key={player.id}>
             <span className="player-row__identity">

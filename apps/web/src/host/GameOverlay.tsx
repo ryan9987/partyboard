@@ -62,10 +62,7 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
   return (
     <aside className="host-panel host-panel--game" aria-label="Game status">
       <div className="game-heading">
-        <div>
-          <p className="eyebrow">The woodland board</p>
-          <h2>The Winding Trail</h2>
-        </div>
+        <h2>The Winding Trail</h2>
         <span className="turn-counter" aria-label={`Turn ${state.turnNumber}`}>
           <small>Turn</small>
           {state.turnNumber}
@@ -86,7 +83,7 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
             )}
             {activePlayer?.name ?? "Waiting"}
           </strong>
-          <span className="phase-badge" role="status">
+          <span className="phase-line" role="status">
             {PHASE_LABELS[state.phase]}
           </span>
         </div>
@@ -96,12 +93,6 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
         </div>
       </div>
 
-      <div className="roster-heading">
-        <span className="eyebrow">On the trail</span>
-        <span>
-          {state.players.length} {state.players.length === 1 ? "player" : "players"}
-        </span>
-      </div>
       <div className="player-list">
         {state.players.map((player) => (
           <div
