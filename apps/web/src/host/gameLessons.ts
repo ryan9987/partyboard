@@ -20,7 +20,7 @@ const LESSONS: Record<TutorialKind, Lesson> = {
     touchControls: "Cast line / Reel now! + line tension slider",
   },
   archery: {
-    motion: ["Tilt left or right to aim", "Aim at your target's center", "Tap Release arrow"],
+    motion: ["Tilt left or right to aim", "Aim at your target's center", "Flick once to release"],
     touch: ["Slide left or right to aim", "Aim at your target's center", "Tap Release arrow"],
     goal: "Three arrows. Highest total score wins.",
     touchControls: "Aim slider + Release arrow",

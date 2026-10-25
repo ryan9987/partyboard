@@ -1,4 +1,4 @@
-import type { GameState } from "@party-board/protocol"
+import { MAX_PLAYERS, type GameState } from "@party-board/protocol"
 import { QRCodeSVG } from "qrcode.react"
 import { PlayerPortrait } from "../app/PlayerPortrait"
 
@@ -9,6 +9,7 @@ type LobbyOverlayProps = {
   disabled: boolean
   state: GameState
   onStart: () => void
+  onDemo?: (() => void) | undefined
 }
 
 export function LobbyOverlay({
@@ -18,6 +19,7 @@ export function LobbyOverlay({
   disabled,
   state,
   onStart,
+  onDemo,
 }: LobbyOverlayProps) {
   return (
     <aside className="host-panel host-panel--lobby" aria-label="Game lobby">
@@ -48,13 +50,18 @@ export function LobbyOverlay({
       <div className="player-list">
         <p className="roster-count">
           <span>Your party</span>
-          <strong>{state.players.length} / 4</strong>
+          <strong>
+            {state.players.length} / {MAX_PLAYERS}
+          </strong>
         </p>
         {state.players.map((player) => (
           <div className="player-row" key={player.id}>
             <span className="player-row__identity">
               <PlayerPortrait color={player.color} />
-              {player.name}
+              <span>
+                {player.name}
+                {player.isBot && <small className="bot-label">Bot</small>}
+              </span>
             </span>
             <span className={`lobby-ready${player.ready ? " is-ready" : ""}`}>
               {!player.connected ? "Reconnecting" : player.ready ? "Ready" : "Joining"}
@@ -71,6 +78,28 @@ export function LobbyOverlay({
           </div>
         ))}
       </div>
+
+      {onDemo && (state.demoMode || state.players.filter((p) => !p.isBot).length < 4) && (
+        <div className="lobby-demo">
+          <div>
+            <strong>{state.demoMode ? "Demo party ready" : "Presenting on your own?"}</strong>
+            <small>
+              {state.demoMode
+                ? "Bots take their own turns. You play on your phone."
+                : "Join one phone, then add a few woodland friends."}
+            </small>
+          </div>
+          <button
+            type="button"
+            className="button button--secondary"
+            onClick={onDemo}
+            disabled={!state.players.some((p) => !p.isBot && p.connected)}
+            aria-pressed={!!state.demoMode}
+          >
+            {state.demoMode ? "Remove bots" : "Demo mode"}
+          </button>
+        </div>
+      )}
 
       <div className="button-row">
         <button

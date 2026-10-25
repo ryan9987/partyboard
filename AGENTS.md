@@ -4,7 +4,7 @@ These instructions apply to every contributor and coding agent working in this r
 
 ## Current objective
 
-Maintain the core board loop and the user-approved occupied-space sword duel: four phone controllers, server-authoritative rolls/combat, 3D movement, turn rotation, and recovery.
+Maintain the core board loop and the user-approved occupied-space sword duel: up to eight phone controllers, server-authoritative rolls/combat, 3D movement, turn rotation, and recovery.
 
 ## Scope guardrails
 
@@ -16,6 +16,8 @@ Maintain the core board loop and the user-approved occupied-space sword duel: fo
   first arrival wins. Travel pays one coin per completed forward turn, never per space.
 - Do not implement accounts, matchmaking, databases, or additional boards without a new request.
 - Preserve the detailed woodland art direction and locally authored character assets.
+- Ryan approved eight players, motion-first onboarding/play, and host-controlled demo bots
+  on October 25. Bots use genuine commands and scoring; preserve visible touch fallbacks.
 - The server is authoritative for game phase, turn order, dice values, and player positions.
 - A phone shake requests a roll; it never calculates the dice value.
 - Every motion action must retain a visible touch fallback.

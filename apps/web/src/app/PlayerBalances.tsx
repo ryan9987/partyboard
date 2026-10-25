@@ -19,7 +19,7 @@ export function PlayerBalances({
   if (!state.players.length) return null
   return (
     <aside
-      className={`player-balances${host ? " player-balances--host" : ""}`}
+      className={`player-balances${host ? " player-balances--host" : ""}${state.players.length > 4 ? " player-balances--large" : ""}`}
       aria-label="Player coins"
     >
       <div className="player-balances__heading">
@@ -52,6 +52,7 @@ export function PlayerBalances({
                 <span className="player-seat__name" title={player.name}>
                   {player.name}
                 </span>
+                {player.isBot && <small className="bot-label">Bot</small>}
                 {player.id === playerId && <small>you</small>}
                 {host ? (
                   <small className="player-seat__status">{hud.label}</small>

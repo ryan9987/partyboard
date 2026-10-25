@@ -13,6 +13,30 @@ This is the initial contract to implement in `packages/protocol`. Change it deli
 
 ## Shared state
 
+### October 25: eight players and presenter demo mode
+
+`MAX_PLAYERS` is 8 across room, Hot Potato, and mini-game schemas. `PLAYER_COLORS`
+includes coral, cyan, gold, violet, fern, peach, blue, rose; all have matching 3D outfits,
+portraits and HUD accents. The ninth join is rejected, and each seat retains a unique color.
+
+Host-only `room.demo` takes `{ roomCode, hostToken, enabled }`. It requires the authenticated
+host connection, the lobby phase, and at least one connected human. Enabling fills to four
+players with three or fewer gentle bots; repeating it is idempotent. Disabling removes only
+bot players and their private sessions. Larger human parties can still join up to eight seats.
+Public snapshots carry optional `demoMode` and player `isBot`; bot session tokens remain private.
+
+Bots issue the same validated commands as controllers. They auto-roll, browse/buy/leave shops,
+use defensive items or a short Compass roll, duel, pass and play every round game. Novice
+inputs provide approachable rivals, without changing dice sources, points, or winning rules.
+Bot turns pause while all human controllers are disconnected. Restart resets their runtime;
+finish/dispose cancels their scheduler. Host resume preserves the party.
+
+Controllers guide users through explicit motion permission. Shake rolls; tilt balances/aims;
+wrist flicks cast, reel, release arrows, pass, swing and strike. Touch fallbacks remain visible
+for accessibility, unsupported sensors and permission denial. Archery flick release preserves
+the last settled aim, requires a quiet wrist before the next flick, and respects three arrows
+and the server cooldown. Sensor permission is per page session; refresh asks to enable it again.
+
 ```ts
 type GamePhase = "LOBBY" | "AWAITING_ROLL" | "ROLLING" | "MOVING" | "TURN_END" | "FINISHED" | "DUEL"
 

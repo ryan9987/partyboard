@@ -42,7 +42,7 @@ export default function PhoneRehearsal() {
             ? "/lesson-preview"
             : overlays
               ? "/rehearsal"
-              : `/controller/${code}${/^[1-4]$/.test(slot) ? `?slot=${slot}` : ""}`
+              : `/controller/${code}${/^[1-8]$/.test(slot) ? `?slot=${slot}` : ""}`
         }
         style={{
           width,

@@ -1,4 +1,4 @@
-import type { GameState } from "@party-board/protocol"
+import { PLAYER_COLORS, type GameState } from "@party-board/protocol"
 
 export const fixtureGameState: GameState = {
   roomCode: "PLAY",
@@ -42,9 +42,20 @@ export const fixtureGameState: GameState = {
   ],
 }
 
-export function createFixtureState(): GameState {
+export function createFixtureState(count = 4): GameState {
+  const players = [
+    ...fixtureGameState.players,
+    ...PLAYER_COLORS.slice(4).map((color, i) => ({
+      id: `player-${i + 5}`,
+      name: ["Fern", "Rowan", "River", "Clover"][i]!,
+      color,
+      connected: true,
+      ready: true,
+      tileId: "tile-0",
+    })),
+  ].slice(0, count)
   return structuredClone({
     ...fixtureGameState,
-    players: fixtureGameState.players.map((player) => ({ ...player, coins: 6, inventory: [] })),
+    players: players.map((player) => ({ ...player, coins: 6, inventory: [] })),
   })
 }

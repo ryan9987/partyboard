@@ -805,3 +805,83 @@ body:has(.controller-page) {
   gap: 5px;
   margin-top: 14px;
 }
+
+.controller-page .motion-prompt {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 16px;
+  margin: 14px 0;
+  border: 1px solid #cbd7bc;
+  border-radius: 16px;
+  background: #eef1df;
+  text-align: center;
+}
+.motion-prompt svg {
+  width: 88px;
+  height: 72px;
+  color: #355d40;
+}
+.motion-prompt strong {
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+}
+.motion-prompt > span {
+  color: #62715b;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  max-width: 260px;
+}
+.motion-prompt__phone {
+  transform-origin: 48px 40px;
+  animation: controller-wrist 2.4s ease-in-out infinite;
+}
+@keyframes controller-wrist {
+  0%,
+  40%,
+  100% {
+    transform: rotate(0);
+  }
+  12% {
+    transform: rotate(-12deg);
+  }
+  26% {
+    transform: rotate(12deg);
+  }
+}
+.controller-page .touch-fallback {
+  margin: 14px 0;
+  border-top: 1px solid #cbd4bd;
+  padding-top: 12px;
+}
+.controller-page .touch-fallback > summary {
+  min-height: 32px;
+  color: #62715b;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.controller-page .touch-fallback button {
+  font-size: 0.95rem;
+  min-height: 48px;
+}
+.controller-page .motion-fallback-link {
+  min-height: 44px;
+  background: transparent;
+  border: 0;
+  text-decoration: underline;
+  font-size: 0.78rem;
+}
+.controller-page .controller-inputmode > div {
+  grid-template-columns: 1fr;
+}
+.controller-page .controller-inputmode > div button {
+  width: 100%;
+}
+.controller-page .controller-inputmode > div button[aria-pressed="true"] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-prompt__phone {
+    animation: none;
+  }
+}

@@ -7,6 +7,8 @@ export type ShakeDetectorOptions = {
 }
 
 export type ShakeDetector = { start(): void; stop(): void }
+/** Two deliberate low-force peaks; a single table bump must never roll. */
+export const ROLL_SHAKE_SETTINGS = { threshold: 11, requiredPeaks: 2, windowMs: 1000 } as const
 export type Acceleration = { x: number | null; y: number | null; z: number | null }
 
 function magnitude(sample: Acceleration | null): number | null {

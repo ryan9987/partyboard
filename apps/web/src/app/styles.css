@@ -1692,3 +1692,19 @@ a {
 body:has(.phone-rehearsal) {
   overflow: auto;
 }
+.balance-marker--fern,
+.score-dot--fern {
+  background: #658b56;
+}
+.balance-marker--peach,
+.score-dot--peach {
+  background: #d58d55;
+}
+.balance-marker--blue,
+.score-dot--blue {
+  background: #5886c4;
+}
+.balance-marker--rose,
+.score-dot--rose {
+  background: #bc689a;
+}

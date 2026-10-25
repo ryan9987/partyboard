@@ -54,7 +54,7 @@ export function MinigameOverlay({ state }: { state: GameState }) {
           />
           <small>
             Winner +{GAME_REWARDS.minigameWinner} coins · everyone else +
-            {GAME_REWARDS.minigameParticipation} · motion or touch
+            {GAME_REWARDS.minigameParticipation}
           </small>
         </div>
       )}

@@ -61,9 +61,47 @@ const APPEARANCES: Record<PlayerColor, CharacterAppearance> = {
     shoeColor: "#eef4ff",
     accessoryColor: "#79e4ee",
   },
+  fern: {
+    skinTone: "#a47150",
+    hairColor: "#30231a",
+    hairStyle: "bun",
+    shirtColor: "#658b56",
+    pantsColor: "#393b45",
+    shoeColor: "#f4ecda",
+    accessoryColor: "#e6c46c",
+  },
+  peach: {
+    skinTone: "#f1c2a2",
+    hairColor: "#9b5c34",
+    hairStyle: "short",
+    shirtColor: "#d58d55",
+    pantsColor: "#354c60",
+    shoeColor: "#faf3e1",
+    accessoryColor: "#7caca2",
+  },
+  blue: {
+    skinTone: "#694530",
+    hairColor: "#211916",
+    hairStyle: "cap",
+    shirtColor: "#5886c4",
+    pantsColor: "#37443b",
+    shoeColor: "#f0ecd9",
+    accessoryColor: "#ecd492",
+  },
+  rose: {
+    skinTone: "#cf9470",
+    hairColor: "#38262c",
+    hairStyle: "spikes",
+    shirtColor: "#bc689a",
+    pantsColor: "#363956",
+    shoeColor: "#f6e9e3",
+    accessoryColor: "#91c1a3",
+  },
 }
 
 type CharacterModelProps = {
+  compactTrail?: boolean
+  trailLift?: number
   clock?: () => number
   centered?: boolean
   pose?: "carry" | "fishing" | "archery" | "balance" | "fall" | "rhythm" | undefined
@@ -253,6 +291,8 @@ function Hair({ appearance }: { appearance: CharacterAppearance }) {
 }
 
 export function CharacterModel({
+  compactTrail = false,
+  trailLift,
   clock = Date.now,
   centered = false,
   pose,
@@ -299,10 +339,17 @@ export function CharacterModel({
   useEffect(() => () => fabric.dispose(), [fabric])
   useEffect(() => () => torso.dispose(), [torso])
   const appearance = appearanceOverride ?? APPEARANCES[color]
+  const scale = compactTrail ? 0.74 : 1.02
+  // Trail feet rest on the stone top, including its active-space lift.
+  const height = centered ? 0.99 : 0.2 + 0.612 * scale + (trailLift ?? (active ? 0.1 : 0))
   const target = useMemo(() => {
-    const offset = centered ? [0, 0, 0] : getCharacterOffset(playerIndex)
-    return new THREE.Vector3(position[0] + offset[0]!, position[1] + 0.99, position[2] + offset[2]!)
-  }, [centered, playerIndex, position])
+    const offset = centered ? [0, 0, 0] : getCharacterOffset(playerIndex, compactTrail)
+    return new THREE.Vector3(
+      position[0] + offset[0]!,
+      position[1] + height,
+      position[2] + offset[2]!,
+    )
+  }, [centered, compactTrail, height, playerIndex, position])
   // R3F must not reapply a new position prop on every tile/snapshot: that bypasses smoothing.
   const [initialPosition] = useState(() => target.clone())
   const sampleRef = useRef(createMotionSample())
@@ -324,10 +371,10 @@ export function CharacterModel({
     let speed = moving ? 4 : 0
     if (motion) {
       sampleTrailMotion(motion, performance.now(), sample)
-      const offset = centered ? NO_OFFSET : getCharacterOffset(playerIndex)
+      const offset = centered ? NO_OFFSET : getCharacterOffset(playerIndex, compactTrail)
       root.position.set(
         sample.position[0] + offset[0]!,
-        sample.position[1] + 0.99,
+        sample.position[1] + height,
         sample.position[2] + offset[2]!,
       )
       speed = Math.hypot(sample.velocity[0], sample.velocity[2])
@@ -337,14 +384,14 @@ export function CharacterModel({
         anim.gaitOffset = anim.gait
       }
       anim.gait = anim.gaitOffset + sample.distance * 4.6
-      root.scale.setScalar(1.02 * Math.max(0.001, sample.opacity))
+      root.scale.setScalar(scale * Math.max(0.001, sample.opacity))
     } else {
       if (root.position.distanceToSquared(target) > 64) root.position.copy(target)
       else root.position.lerp(target, 1 - Math.exp(-delta * 12))
       anim.motion = null
       if (moving) anim.gait += delta * 9
       else anim.heading = facing
-      root.scale.setScalar(THREE.MathUtils.damp(root.scale.x, 1.02, 12, delta))
+      root.scale.setScalar(THREE.MathUtils.damp(root.scale.x, scale, 12, delta))
     }
     anim.walk = THREE.MathUtils.damp(anim.walk, moving ? Math.min(1, speed / 4) : 0, 12, delta)
     root.rotation.y = dampAngle(root.rotation.y, anim.heading, 12, delta)
@@ -456,7 +503,7 @@ export function CharacterModel({
   })
 
   return (
-    <group ref={rootRef} position={initialPosition} scale={1.02}>
+    <group ref={rootRef} position={initialPosition} scale={scale}>
       {active && (
         <group position={[0, -0.61, 0]}>
           <mesh ref={activeRingRef} rotation={[-Math.PI / 2, 0, 0]}>

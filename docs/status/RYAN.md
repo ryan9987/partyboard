@@ -4,6 +4,41 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Eight-player motion-first presenter release: shared eight-seat/color contracts, matching
+  outfits/portraits, grounded compact trail lineup, adaptive arena cameras, unobstructed archery
+  targets, six duel spectators, and a two-row host ledger with separate coin/score values.
+- Host-only lobby Demo mode fills to four with identified novice bots. They play all activities,
+  shop/use items/roll automatically through validated commands, pause when phones disconnect,
+  survive host resume, and clean up on finish/restart/dispose. Actual dice/scoring are unchanged.
+- Motion onboarding and gesture prompts are primary. Rolls use two gentle peaks; Archery aims
+  by tilt and releases by a settled-wrist flick. Touch controls are explicitly available as
+  fallbacks. Phone stage changes reset scroll position. Existing iOS Undo guidance is retained.
+- Visual checks: lobby, centered start gate, board, market, all six activities, instructions,
+  and results; four/eight-player layouts at 1280×720. Fixed outer target tree occlusion,
+  cropped archers/spectators, coin/score overlap and eight-seat instruction/footer collisions.
+  Compact phone lessons checked for all games; touch layout checked at 320/390/430px.
+- Automated coverage includes five rotations over real sockets with four and eight controllers,
+  all five round games with eight participants, bot commands/security/lifecycle, actual visitor
+  wins through normal inputs, a complete demo match, three-arrow flick gating and two-peak rolls.
+- Final release gate: `pnpm check` (types, lint, formatting, 207 Vitest +11 motion tests, build).
+  Physical phone sensors, venue Wi-Fi and measured presentation-laptop FPS still need rehearsal;
+  desktop visual/automated checks are not physical-device certification. See PRESENTER_DEMO.md.
+- This release includes the previously local-only centered start-gate fix described below.
+
+- Start-gate alignment pass on `fix/center-start-gate`: share the actual Catmull–Rom trail
+  centerline, place the gate halfway through the first segment and rotate it perpendicular
+  to travel. Both post footings clear the path; no fixed world-Z offset or camera illusion.
+- Extend posts/lift the intact header 0.65 for character headroom without stretching lettering.
+  Reuse the detailed timber asset/material; one cloned static geometry with cleanup, no new
+  assets, dependencies, per-frame placement work or changes to traversal/server/controller.
+- Browser visual passes: fresh four-player lobby, ready-to-roll, multiple first-step crossings
+  and later-turn board camera. START remains readable, path passes through the opening and
+  characters fit underneath. Five regression tests cover center/tangent, both footings,
+  alternative approach directions, ground contact, headroom and unchanged header proportions.
+- Local visual fix only; this request did not ask for a main push or production deployment.
+- Full `pnpm check` passes: types, lint, formatting, 189 Vitest +10 motion tests and production
+  build. Fresh preview error log empty; existing large-3D-chunk warning remains unchanged.
+
 - CI follow-up: reproduced the failed release's exact `pnpm check` command and confirmed the
   GitHub annotation points to an unused `MinigameState` import left by Dodge removal. Removed
   that import only; lint and CI enforcement unchanged. Full `pnpm check` now passes, including

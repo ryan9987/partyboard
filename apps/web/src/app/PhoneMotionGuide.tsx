@@ -4,7 +4,7 @@ export type PhoneGuideKind = MinigameKind | "board"
 const STEPS: Record<PhoneGuideKind, readonly string[]> = {
   board: [
     "Hold in portrait, screen facing you.",
-    "Choose Touch or Motion above before you start.",
+    "Enable motion above before you start.",
     "Use small wrist movements. Touch controls also work.",
   ],
   fishing: [
@@ -20,7 +20,7 @@ const STEPS: Record<PhoneGuideKind, readonly string[]> = {
   archery: [
     "Hold upright in portrait, screen facing you.",
     "Tilt gently left or right to aim at your named target.",
-    "Tap Release arrow. You have three arrows.",
+    "Flick once to release. You have three arrows.",
   ],
   rhythm: [
     "Hold upright in portrait, screen facing you.",

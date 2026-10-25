@@ -153,14 +153,15 @@ export function DuelArena({ state }: { state: GameState }) {
       })}
       {state.players
         .filter((player) => !duel.fighters.some((fighter) => fighter.playerId === player.id))
-        .map((player, index) => (
+        .map((player, index, spectators) => (
           <CharacterModel
             key={player.id}
+            centered
             active={false}
             color={player.color}
             playerIndex={index}
             moving={false}
-            position={[-1.1 + index * 2.2, -0.46, -4.2]}
+            position={[(index - (spectators.length - 1) / 2) * 1.3, -0.46, -4.2]}
           />
         ))}
       <ClashFlash duel={duel} />

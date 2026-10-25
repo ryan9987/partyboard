@@ -36,6 +36,7 @@ type LiveHostGame = {
   motion: TrailMotion | null
   restart: () => void
   start: () => void
+  toggleDemo: () => void
   continueGame: () => void
   state: GameState | null
 }
@@ -280,6 +281,12 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
     socket.emit("game.start", hostCredentials)
   }, [hostCredentials, socket, state])
 
+  const toggleDemo = useCallback(() => {
+    if (!socket || !hostCredentials || state?.phase !== "LOBBY" || connectionState !== "connected")
+      return
+    socket.emit("room.demo", { ...hostCredentials, enabled: !state.demoMode })
+  }, [connectionState, hostCredentials, socket, state])
+
   const restart = useCallback(() => {
     if (!socket || !state || !hostCredentials) return
     cancel()
@@ -315,6 +322,7 @@ export function useLiveHostGame(enabled: boolean, serverUrl?: string): LiveHostG
     restart,
     continueGame,
     start,
+    toggleDemo,
     state,
   }
 }

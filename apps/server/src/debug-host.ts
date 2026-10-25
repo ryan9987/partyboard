@@ -37,7 +37,7 @@ socket.on("room.created", (payload) => {
     "",
   )
   console.log(`Room ${room.roomCode}: ${base}/${room.roomCode}`)
-  console.log("Join up to four phones, then type start. Other commands: restart, show, quit.")
+  console.log("Join up to eight phones, then type start. Other commands: restart, show, quit.")
 })
 socket.on("room.snapshot", (payload) => {
   const parsed = gameStateSchema.safeParse(payload)

@@ -1,5 +1,7 @@
 import { expect, it } from "vitest"
 import { getMinigameMotionReading } from "../apps/web/src/controller/duel-motion"
+import { canFlickAct } from "../apps/web/src/controller/minigame-gestures"
+import type { MinigamePlayer } from "../packages/protocol/src"
 import {
   canFishingAct,
   createFishingFlickDetector,
@@ -34,6 +36,30 @@ const still = {
   accelerationIncludingGravity: { x: 1, y: 9.7, z: 0 },
 }
 const flick = { ...still, rotationRate: { alpha: 0, beta: 125, gamma: 0 } }
+
+it("releases arrows by a gentle, settled wrist flick without changing aim or firing a fourth shot", () => {
+  const player: MinigamePlayer = {
+    playerId: "p",
+    score: 0,
+    alive: true,
+    axis: 0.2,
+    position: 0,
+    actionAt: 1000,
+    attempts: 1,
+    status: "hit",
+  }
+  const detect = createFishingFlickDetector()
+  expect(getMinigameMotionReading(flick, 0.2, 1, true).axis).toBe(0.2)
+  expect(detect(flick, 0)).toBe(true)
+  expect(canFlickAct("archery", player, 1899)).toBe(false)
+  expect(canFlickAct("archery", player, 1900)).toBe(true)
+  expect(detect(flick, 900)).toBe(false)
+  detect(still, 1000)
+  detect(still, 1200)
+  expect(detect(flick, 1300)).toBe(true)
+  expect(canFlickAct("archery", { ...player, attempts: 3 }, 5000)).toBe(false)
+  expect(canFlickAct("archery", { ...player, alive: false }, 5000)).toBe(false)
+})
 
 it("accepts a gentle Fishing wrist flick without changing the sword/rhythm threshold or tilt", () => {
   expect(getMinigameMotionReading(flick, 0.1, 1, true)).toEqual({

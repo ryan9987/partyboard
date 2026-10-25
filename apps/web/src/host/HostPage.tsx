@@ -237,6 +237,7 @@ export default function HostPage() {
           description={lobbyDescription}
           disabled={!canStart}
           onStart={start}
+          onDemo={liveMode ? live.toggleDemo : undefined}
           state={state}
         />
       ) : (

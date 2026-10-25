@@ -1,9 +1,13 @@
 import { randomInt, randomUUID } from "node:crypto"
 import { MinigameRound } from "./minigames"
+import { noviceInput, type DemoBot } from "./demo-bots"
 
 import { defaultBoard, getMovementPath, SHOP_TILE_IDS } from "@party-board/board"
 import {
   CLIENT_EVENTS,
+  MAX_PLAYERS,
+  PLAYER_COLORS,
+  demoModeRequestSchema,
   duelActionRequestSchema,
   shopChoiceRequestSchema,
   itemUseRequestSchema,
@@ -72,6 +76,8 @@ type Room = {
   minigameRuntime: MinigameRound | null
   gameBag: Array<MinigameKind | "potato">
   continueTask: (() => void) | null
+  bots: Map<string, DemoBot>
+  botTimer: ReturnType<typeof setTimeout> | null
 }
 type Binding = { room: Room; sessionId: string | null }
 
@@ -207,6 +213,8 @@ export class GameServer {
             minigameRuntime: null,
             gameBag: [],
             continueTask: null,
+            bots: new Map(),
+            botTimer: null,
           }
           this.rooms.set(code, room)
           this.bindings.set(connectionId, { room, sessionId: null })
@@ -260,8 +268,8 @@ export class GameServer {
           } else {
             if (room.state.phase !== "LOBBY")
               throw new CommandError("GAME_IN_PROGRESS", "The game has already started")
-            if (room.state.players.length >= 4)
-              throw new CommandError("ROOM_FULL", "All four controller slots are taken")
+            if (room.state.players.length >= MAX_PLAYERS)
+              throw new CommandError("ROOM_FULL", "All eight controller slots are taken")
             if (room.state.players.some((player) => player.color === color))
               throw new CommandError("COLOR_TAKEN", "Choose another color")
             sessionId = randomUUID()
@@ -305,6 +313,26 @@ export class GameServer {
           ) {
             this.armRollDeadline(room)
           }
+          this.snapshot(room)
+          if (room.bots.size && room.state.phase !== "LOBBY") this.scheduleBots(room)
+          break
+        }
+        case CLIENT_EVENTS.DEMO_MODE: {
+          const parsed = demoModeRequestSchema.safeParse(payload)
+          if (!parsed.success) throw new CommandError("INVALID_PAYLOAD", "Invalid demo request")
+          const room = this.room(parsed.data.roomCode)
+          const binding = this.bindings.get(connectionId)
+          if (
+            room.hostToken !== parsed.data.hostToken ||
+            binding?.room !== room ||
+            binding.sessionId !== null
+          )
+            throw new CommandError("UNAUTHORIZED", "Only the connected host can set demo mode")
+          if (room.state.phase !== "LOBBY")
+            throw new CommandError("INVALID_PHASE", "Choose demo mode before starting")
+          if (!room.state.players.some((player) => !player.isBot && player.connected))
+            throw new CommandError("NO_PLAYERS", "Join one phone before adding demo players")
+          this.setDemoMode(room, parsed.data.enabled)
           this.snapshot(room)
           break
         }
@@ -354,6 +382,11 @@ export class GameServer {
           room.connections.add(connectionId)
           this.bindings.set(connectionId, { room, sessionId: null })
           this.clearTimer(room)
+          this.stopBots(room)
+          for (const bot of room.bots.values()) {
+            bot.phaseKey = ""
+            bot.sequence = 0
+          }
           room.continueTask = null
           for (const session of room.sessions.values()) {
             if (session.recoveryTimer) clearTimeout(session.recoveryTimer)
@@ -389,6 +422,7 @@ export class GameServer {
           room.remainingPath = null
           this.beginTurn(room, first.id)
           this.broadcast(room, "game.started", room.state)
+          this.scheduleBots(room)
           break
         }
         case CLIENT_EVENTS.DICE_ROLL_REQUEST: {
@@ -641,6 +675,7 @@ export class GameServer {
     const session = room.sessions.get(sessionId)!
     session.connectionId = null
     this.player(room, session.playerId).connected = false
+    if (!room.state.players.some((p) => !p.isBot && p.connected)) this.stopBots(room)
     const activityId =
       room.state.shop?.id ?? room.state.minigame?.id ?? room.state.potato?.id ?? room.state.duel?.id
     const forfeit = () => {
@@ -680,6 +715,7 @@ export class GameServer {
   dispose(): void {
     for (const room of this.rooms.values()) {
       this.clearTimer(room)
+      this.stopBots(room)
       for (const session of room.sessions.values())
         if (session.recoveryTimer) clearTimeout(session.recoveryTimer)
     }
@@ -692,6 +728,146 @@ export class GameServer {
     const room = this.rooms.get(code)
     if (!room) throw new CommandError("ROOM_NOT_FOUND", "This room no longer exists")
     return room
+  }
+
+  private setDemoMode(room: Room, enabled: boolean): void {
+    this.stopBots(room)
+    if (!enabled) {
+      for (const bot of room.bots.values()) {
+        this.bindings.delete(bot.connectionId)
+        room.sessions.delete(bot.sessionId)
+      }
+      room.state.players = room.state.players.filter((player) => !player.isBot)
+      room.bots.clear()
+    } else {
+      const names = ["Hazel", "Moss", "Pip"]
+      while (room.state.players.length < 4) {
+        const color = PLAYER_COLORS.find(
+          (candidate) => !room.state.players.some((p) => p.color === candidate),
+        )!
+        const id = randomUUID()
+        const sessionId = randomUUID()
+        const connectionId = `bot:${id}`
+        room.state.players.push({
+          id,
+          name: names[room.bots.size] ?? "Fern",
+          color,
+          isBot: true,
+          connected: true,
+          ready: true,
+          tileId: defaultBoard.startingTileId,
+          coins: GAME_REWARDS.startingCoins,
+          inventory: [],
+        })
+        room.sessions.set(sessionId, { playerId: id, connectionId })
+        this.bindings.set(connectionId, { room, sessionId })
+        room.bots.set(id, { sessionId, connectionId, phaseKey: "", nextActionAt: 0, sequence: 0 })
+      }
+    }
+    room.state.demoMode = enabled
+  }
+
+  private stopBots(room: Room): void {
+    if (room.botTimer !== null) clearTimeout(room.botTimer)
+    room.botTimer = null
+  }
+
+  private scheduleBots(room: Room): void {
+    this.stopBots(room)
+    if (!room.bots.size || ["LOBBY", "FINISHED"].includes(room.state.phase)) return
+    room.botTimer = setTimeout(() => {
+      room.botTimer = null
+      // Don't play out the presentation while its only phone is reconnecting.
+      if (room.state.players.some((p) => !p.isBot && p.connected)) this.tickBots(room)
+      this.scheduleBots(room)
+    }, 200)
+  }
+
+  private tickBots(room: Room): void {
+    const now = Date.now()
+    let index = 0
+    for (const [id, bot] of room.bots) {
+      index++
+      const state = room.state
+      const game = state.minigame
+      const key = `${state.phase}:${state.turnNumber}:${game?.id ?? state.potato?.revision ?? state.duel?.id ?? state.shop?.id ?? ""}:${game?.stage ?? state.duel?.stage ?? state.potato?.stage ?? ""}`
+      if (bot.phaseKey !== key) {
+        bot.phaseKey = key
+        bot.nextActionAt =
+          now +
+          (state.phase === "POTATO"
+            ? 2200 + index * 400
+            : state.phase === "DUEL"
+              ? 3200
+              : 650 + index * 150)
+        if (game?.stage === "intro") bot.sequence = 0
+      }
+      if (now < bot.nextActionAt) continue
+      const player = this.player(room, id)
+      const base = {
+        roomCode: state.roomCode,
+        playerSessionId: bot.sessionId,
+        requestId: randomUUID(),
+      }
+      const send = (event: string, payload: object) =>
+        this.handle(bot.connectionId, event, { ...base, ...payload })
+      bot.nextActionAt = now + 1200
+      if (state.phase === "AWAITING_ROLL" && state.currentPlayerId === id) {
+        const item = player.inventory?.find(
+          (entry) => entry === "compass" || (entry === "shield" && !player.shield),
+        )
+        if (item && player.itemUsedTurn !== state.turnNumber) {
+          send(CLIENT_EVENTS.ITEM_USE, {
+            item,
+            turnNumber: state.turnNumber,
+            ...(item === "compass" ? { dieValue: 1 } : {}),
+          })
+        } else send(CLIENT_EVENTS.DICE_ROLL_REQUEST, {})
+      } else if (state.phase === "SHOP" && state.shop?.playerId === id) {
+        const item =
+          (player.inventory?.length ?? 0) >= 3
+            ? "skip"
+            : (player.coins ?? 0) >= SHOP_ITEMS.compass.price
+              ? "compass"
+              : (player.coins ?? 0) >= SHOP_ITEMS.shield.price &&
+                  !player.shield &&
+                  !player.inventory?.includes("shield")
+                ? "shield"
+                : "skip"
+        send(CLIENT_EVENTS.SHOP_CHOICE, { visitId: state.shop.id, item })
+      } else if (
+        state.duel?.stage === "active" &&
+        state.duel.fighters.some((p) => p.playerId === id)
+      ) {
+        send(CLIENT_EVENTS.DUEL_ACTION, { duelId: state.duel.id, action: "swing" })
+        bot.nextActionAt = now + 3600
+      } else if (
+        state.potato?.stage === "active" &&
+        state.potato.holderId === id &&
+        now < state.potato.fuseAt
+      ) {
+        send(CLIENT_EVENTS.POTATO_PASS, {
+          gameId: state.potato.id,
+          revision: state.potato.revision,
+        })
+      } else if (
+        game?.stage === "active" &&
+        game.players.some((p) => p.playerId === id && p.alive)
+      ) {
+        send(CLIENT_EVENTS.MINIGAME_INPUT, {
+          gameId: game.id,
+          sequence: ++bot.sequence,
+          ...noviceInput(game, index, now),
+        })
+        bot.nextActionAt =
+          now +
+          (game.kind === "balance" || game.kind === "rhythm"
+            ? 200
+            : game.kind === "fishing"
+              ? 1600
+              : 2300)
+      }
+    }
   }
 
   private player(room: Room, playerId: string): PublicPlayer {
@@ -860,6 +1036,7 @@ export class GameServer {
     player.coins = Math.min(999, (player.coins ?? 0) + GAME_REWARDS.completedTurn)
     if (player.tileId === defaultBoard.finishTileId) {
       this.clearTimer(room)
+      this.stopBots(room)
       for (const session of room.sessions.values()) {
         if (session.recoveryTimer) clearTimeout(session.recoveryTimer)
         delete session.recoveryTimer

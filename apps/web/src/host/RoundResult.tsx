@@ -22,7 +22,10 @@ export function RoundResult({
   children?: ReactNode
 }) {
   return (
-    <div className="round-result" role="status">
+    <div
+      className={`round-result${players.length > 2 ? " round-result--shared" : ""}`}
+      role="status"
+    >
       <svg className="victory-emblem" viewBox="0 0 64 64" aria-hidden="true" fill="none">
         <path
           d="M20 13h24v13c0 10-6 16-12 16S20 36 20 26Z"
@@ -55,9 +58,14 @@ export function RoundResult({
       </div>
       <h2>
         {players.length
-          ? `${players.map((player) => player.name).join(" & ")} ${players.length > 1 ? "win" : "wins"}!`
+          ? players.length > 2
+            ? `${players.length} share the win!`
+            : `${players.map((player) => player.name).join(" & ")} ${players.length > 1 ? "win" : "wins"}!`
           : title}
       </h2>
+      {players.length > 2 && (
+        <p className="round-result__names">{players.map((player) => player.name).join(" · ")}</p>
+      )}
       <p className="round-result__reward">{detail}</p>
       <small>
         {returnLabel ?? (waiting ? "Waiting for the host" : "Back to the trail in a moment")}

@@ -1,8 +1,18 @@
 # Party Board
 
-Party Board is the working repository for a four-player browser board game controlled by phones. The laptop shows a shared 3D board; each phone joins the room and acts as a private controller.
+Partyboard is a woodland board game for up to **eight players**, controlled by phone motion.
+The laptop shows the shared 3D world; phones shake to roll, tilt to balance/aim, and flick
+to cast, reel, release arrows, pass, swing and strike. Touch fallbacks remain accessible.
 
-The first milestone is intentionally narrow:
+Race to the end of the 48-space trail, shop for power-ups, duel over occupied spaces, and
+compete in Hot Potato, Balance, Fishing, Archery and Rhythm. Dice, results, coins and turns
+are server-authoritative. Dodge is retired.
+
+Presenting alone? Join one phone, click **Demo mode** in the host lobby, then **Start game**.
+Three gentle bots handle their own turns and activities. See the
+[presenter's guide](docs/PRESENTER_DEMO.md) for setup and physical-phone checks.
+
+The original first milestone (historical) was intentionally narrow:
 
 1. A host creates a room and displays a QR code.
 2. Four phones join with a name and color.
@@ -49,7 +59,9 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:5173/host`. Start the fixture preview and use **Preview roll** to exercise the dice, movement, and four-player turn rotation without depending on the unfinished server.
+Open `http://localhost:5173/host` and join using its QR code. The live server runs on port 3001.
+Use the configured HTTPS deployment for phone sensor permission. `/rehearsal` and
+`/phone-preview` are development-only visual tools; the former can preview four/eight players.
 
 Run the same verification used by CI:
 
@@ -59,7 +71,9 @@ pnpm check
 
 ## Repository status
 
-Ryan's host/board foundation is implemented on `feat/host-board`. Jack-owned server, controller, and motion areas remain documentation-only until Jack's branch is integrated.
+Ryan and Jack's host, server, controller and motion work is integrated. Main includes the
+eight-player motion-first demo flow. Run `pnpm check` before pushing, and rehearse on the
+actual presentation phone/network; automated desktop checks do not certify physical sensors.
 
 ## Named owners
 

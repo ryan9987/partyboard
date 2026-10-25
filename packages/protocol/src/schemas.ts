@@ -59,6 +59,9 @@ export const rollRequestSchema = z
   })
   .strict()
 
+export const demoModeRequestSchema = hostCommandSchema.extend({ enabled: z.boolean() }).strict()
+export type DemoModeRequest = z.infer<typeof demoModeRequestSchema>
+
 export const continueGameRequestSchema = hostCommandSchema
   .extend({
     continueId: z.string().uuid(),

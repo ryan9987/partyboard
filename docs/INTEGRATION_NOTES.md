@@ -1,5 +1,16 @@
 # Integration notes
 
+### 2026-10-25 — Ryan-authorized eight-player motion demo
+
+- Ryan explicitly requested support beyond four players, motion-first controllers, and a
+  one-phone presenter mode with gentle lobby bots, including implementation and a main push.
+- This authorizes the required cross-lane server, controller, motion, and test edits. The
+  shared limit is eight; demo mode fills to four seats with identified bots. Bots use the
+  same validated commands, dice, scoring, and victory rules as humans. Gentle bot input
+  provides approachable opponents, not fabricated results or guaranteed wins.
+- Motion is the primary setup/play path; visible touch fallbacks remain for accessibility,
+  sensor denial and devices without usable sensors. No dependencies are added.
+
 ### 2026-10-25 — Instruction review follow-through and requested main release
 
 - Ryan requested applying the review improvements and pushing the complete pending work to main.

@@ -113,7 +113,7 @@ describe("authoritative room and turn loop", () => {
     )
   })
 
-  it("joins four players privately, normalizes input, rejects full rooms and taken colors", () => {
+  it("joins eight players privately, normalizes input, rejects full rooms and taken colors", () => {
     const created = create()
     server.handle("phone-0", "room.join", {
       roomCode: created.roomCode.toLowerCase(),
@@ -130,13 +130,13 @@ describe("authoritative room and turn loop", () => {
       color: "coral",
     })
     expect(gameErrorEventSchema.parse(last("other", "game.error")).code).toBe("COLOR_TAKEN")
-    for (let index = 1; index < 4; index++) join(created.roomCode, index)
-    server.handle("fifth", "room.join", {
+    for (let index = 1; index < 8; index++) join(created.roomCode, index)
+    server.handle("ninth", "room.join", {
       roomCode: created.roomCode,
-      name: "Fifth",
+      name: "Ninth",
       color: "coral",
     })
-    expect(gameErrorEventSchema.parse(last("fifth", "game.error")).code).toBe("ROOM_FULL")
+    expect(gameErrorEventSchema.parse(last("ninth", "game.error")).code).toBe("ROOM_FULL")
     const publicMessages = messages.filter((message) => message.event === "room.snapshot")
     expect(JSON.stringify(publicMessages)).not.toContain(joined.playerSessionId)
     expect(JSON.stringify(publicMessages)).not.toContain(created.hostToken)

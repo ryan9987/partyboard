@@ -9,6 +9,7 @@ import {
   roomJoinedEventSchema,
   type ServerToClientEvents,
   type MinigameKind,
+  PLAYER_COLORS,
 } from "../../packages/protocol/src/index"
 
 const sockets: GameSocket[] = []
@@ -145,66 +146,73 @@ it("rejects WebSocket handshakes from an unconfigured browser origin", async () 
   expect(socket.connected).toBe(false)
 })
 
-it("completes five four-controller rotations over actual sockets without duplicate rolls", async () => {
-  const url = await listen()
-  const host = client(url)
-  await connected(host)
-  const created = next(host, "room.created")
-  host.emit("room.create", {})
-  const room = roomCreatedEventSchema.parse(await created)
-  const players: Array<{ socket: GameSocket; playerId: string; playerSessionId: string }> = []
-  for (const [index, color] of (["coral", "cyan", "gold", "violet"] as const).entries()) {
-    const phone = client(url)
-    await connected(phone)
-    const joined = next(phone, "room.joined")
-    phone.emit("room.join", { roomCode: room.roomCode, name: `Player ${index}`, color })
-    const player = roomJoinedEventSchema.parse(await joined)
-    players.push({
-      socket: phone,
-      playerId: player.playerId,
-      playerSessionId: player.playerSessionId,
-    })
-  }
-  let rolls = 0
-  let latestState: ReturnType<typeof gameStateSchema.parse> | null = null
-  host.on("dice.rolled", () => {
-    rolls++
-  })
-  host.on("room.snapshot", (payload) => {
-    latestState = gameStateSchema.parse(payload)
-  })
-  const started = next(host, "game.started")
-  host.emit("game.start", { roomCode: room.roomCode, hostToken: room.hostToken })
-  await started
-  for (let turn = 0; turn < 20; turn++) {
-    const player = players[turn % 4]!
-    const ended = next(host, "turn.ended")
-    const newTurnSnapshot = new Promise<void>((resolve) => {
-      const handler = (payload: unknown) => {
-        const state = gameStateSchema.parse(payload)
-        if (state.phase === "AWAITING_ROLL" && state.turnNumber === turn + 2) {
-          host.off("room.snapshot", handler)
-          resolve()
-        }
-      }
-      host.on("room.snapshot", handler)
-    })
-    const request = {
-      roomCode: room.roomCode,
-      playerSessionId: player.playerSessionId,
-      requestId: crypto.randomUUID(),
+it.each([4, 8])(
+  "completes five %i-controller rotations over actual sockets without duplicate rolls",
+  async (count) => {
+    const url = await listen()
+    const host = client(url)
+    await connected(host)
+    const created = next(host, "room.created")
+    host.emit("room.create", {})
+    const room = roomCreatedEventSchema.parse(await created)
+    const players: Array<{ socket: GameSocket; playerId: string; playerSessionId: string }> = []
+    for (const [index, color] of PLAYER_COLORS.slice(0, count).entries()) {
+      const phone = client(url)
+      await connected(phone)
+      const joined = next(phone, "room.joined")
+      phone.emit("room.join", { roomCode: room.roomCode, name: `Player ${index}`, color })
+      const player = roomJoinedEventSchema.parse(await joined)
+      players.push({
+        socket: phone,
+        playerId: player.playerId,
+        playerSessionId: player.playerSessionId,
+      })
     }
-    player.socket.emit("dice.roll.request", request)
-    player.socket.emit("dice.roll.request", request)
-    await ended
-    await newTurnSnapshot
-  }
-  expect(rolls).toBe(20)
-  expect(latestState).toMatchObject({ turnNumber: 21, currentPlayerId: players[0]!.playerId })
-  expect(gameStateSchema.parse(latestState).players.map((player) => player.tileId)).toEqual(
-    Array(4).fill("tile-10"),
-  )
-})
+    let rolls = 0
+    let latestState: ReturnType<typeof gameStateSchema.parse> | null = null
+    host.on("dice.rolled", () => {
+      rolls++
+    })
+    host.on("room.snapshot", (payload) => {
+      latestState = gameStateSchema.parse(payload)
+    })
+    const started = next(host, "game.started")
+    host.emit("game.start", { roomCode: room.roomCode, hostToken: room.hostToken })
+    await started
+    for (let turn = 0; turn < count * 5; turn++) {
+      const player = players[turn % count]!
+      const ended = next(host, "turn.ended")
+      const newTurnSnapshot = new Promise<void>((resolve) => {
+        const handler = (payload: unknown) => {
+          const state = gameStateSchema.parse(payload)
+          if (state.phase === "AWAITING_ROLL" && state.turnNumber === turn + 2) {
+            host.off("room.snapshot", handler)
+            resolve()
+          }
+        }
+        host.on("room.snapshot", handler)
+      })
+      const request = {
+        roomCode: room.roomCode,
+        playerSessionId: player.playerSessionId,
+        requestId: crypto.randomUUID(),
+      }
+      player.socket.emit("dice.roll.request", request)
+      player.socket.emit("dice.roll.request", request)
+      await ended
+      await newTurnSnapshot
+    }
+    expect(rolls).toBe(count * 5)
+    expect(latestState).toMatchObject({
+      turnNumber: count * 5 + 1,
+      currentPlayerId: players[0]!.playerId,
+    })
+    expect(gameStateSchema.parse(latestState).players.map((player) => player.tileId)).toEqual(
+      Array(count).fill("tile-10"),
+    )
+  },
+  15000,
+)
 
 it.each(["archery", "fishing"] as const)(
   "carries %s inputs and refresh recovery over real sockets, returning coin rewards to the board",

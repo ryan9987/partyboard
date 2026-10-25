@@ -4,6 +4,7 @@ import type { ControllerClient } from "./controller-client"
 import { getDuelGesture } from "./duel-motion"
 import { useGameClock, useGameNow } from "../networking/gameClock"
 import { GameTutorial } from "../host/GameTutorial"
+import { MotionPrompt } from "./MotionPrompt"
 
 export function DuelControls({
   client,
@@ -52,6 +53,16 @@ export function DuelControls({
   const action = (kind: "swing" | "guard") => {
     if (client.requestDuelAction(kind)) setReadyAt(clock() + 900)
   }
+  const buttons = (
+    <div className="duel-controller__buttons">
+      <button type="button" disabled={disabled} onClick={() => action("swing")}>
+        Swing sword
+      </button>
+      <button type="button" disabled={disabled} onClick={() => action("guard")}>
+        Guard
+      </button>
+    </div>
+  )
   return (
     <section className="duel-controller" aria-label="Sword duel controller">
       <p className="duel-kicker">Woodland duel · first to two hits</p>
@@ -86,14 +97,19 @@ export function DuelControls({
                   ? "Swing gently to attack. Tilt sideways to guard. Wait for Ready between actions."
                   : "Tap Swing sword to attack, or Guard to block. Wait for Ready between actions."}
               </p>
-              <div className="duel-controller__buttons">
-                <button type="button" disabled={disabled} onClick={() => action("swing")}>
-                  Swing sword
-                </button>
-                <button type="button" disabled={disabled} onClick={() => action("guard")}>
-                  Guard
-                </button>
-              </div>
+              {motionEnabled ? (
+                <>
+                  <MotionPrompt title="Swing to attack">
+                    Tilt sideways to guard. Land two hits.
+                  </MotionPrompt>
+                  <details className="touch-fallback">
+                    <summary>Touch fallback</summary>
+                    {buttons}
+                  </details>
+                </>
+              ) : (
+                buttons
+              )}
               <p role="status">{now < readyAt ? "Recovering…" : "Ready"}</p>
               <small>
                 {motionEnabled

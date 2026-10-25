@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 
 import {
   createShakeDetector,
+  ROLL_SHAKE_SETTINGS,
   requestMotionPermission,
   type MotionPermissionStatus,
 } from "@party-board/motion"
@@ -17,6 +18,7 @@ import { PhoneMotionGuide } from "../app/PhoneMotionGuide"
 import { playerEffectLabels } from "../app/playerEffects"
 import { PlayerPortrait } from "../app/PlayerPortrait"
 import "./controller.css"
+import { MotionPrompt } from "./MotionPrompt"
 
 function initialRoom(): string {
   const suffix = window.location.pathname.split("/")[2]
@@ -28,7 +30,7 @@ export default function ControllerPage() {
   const [client] = useState(() => {
     try {
       const slot = new URLSearchParams(window.location.search).get("slot")
-      const prefix = import.meta.env.DEV && slot && /^[1-4]$/.test(slot) ? `rehearsal:${slot}:` : ""
+      const prefix = import.meta.env.DEV && slot && /^[1-8]$/.test(slot) ? `rehearsal:${slot}:` : ""
       const storage = {
         getItem: (key: string) => window.localStorage.getItem(prefix + key),
         setItem: (key: string, value: string) => window.localStorage.setItem(prefix + key, value),
@@ -60,8 +62,17 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   const [color, setColor] = useState<(typeof PLAYER_COLORS)[number]>("coral")
   const [permission, setPermission] = useState<MotionPermissionStatus | "off">("off")
   const [requestingPermission, setRequestingPermission] = useState(false)
+  const [touchFallback, setTouchFallback] = useState(false)
   const detector = useRef<ReturnType<typeof createShakeDetector> | null>(null)
   const canRoll = client.canRoll()
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" })
+  }, [
+    view.state?.phase,
+    view.state?.minigame?.stage,
+    view.state?.duel?.stage,
+    view.state?.potato?.stage,
+  ])
 
   useEffect(() => {
     client.start()
@@ -70,6 +81,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   useEffect(() => {
     if (permission !== "enabled" || !canRoll) return
     const current = createShakeDetector({
+      ...ROLL_SHAKE_SETTINGS,
       onShake: () => {
         current.stop()
         client.requestRoll()
@@ -99,11 +111,14 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   const enableMotion = async () => {
     if (permission === "enabled") {
       setPermission("off")
+      setTouchFallback(true)
       return
     }
     setRequestingPermission(true)
     try {
-      setPermission(await requestMotionPermission())
+      const result = await requestMotionPermission()
+      setPermission(result)
+      setTouchFallback(result !== "enabled")
     } finally {
       setRequestingPermission(false)
     }
@@ -212,35 +227,34 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           {canRoll && (
             <p>
               {permission === "enabled"
-                ? "Shake your phone or tap Roll."
-                : "Tap Roll to move your piece."}
+                ? "Hold securely. Two small shakes roll the die."
+                : touchFallback
+                  ? "Tap Roll to move your piece."
+                  : "Enable motion to shake and roll."}
             </p>
           )}
         </section>
       )}
-      {me && setup && (
+      {me && !finished && (setup || (permission !== "enabled" && !touchFallback)) && (
         <section className="controller-inputmode" aria-label="Choose your controls">
           <span>
-            {inActivity ? "Controls" : "Play your way"}
-            {!inActivity && <small>Both work in every game</small>}
+            {permission === "enabled" ? "Motion ready" : "Your phone is the controller"}
+            {!inActivity && <small>Shake · tilt · flick</small>}
           </span>
           <div>
             <button
               type="button"
-              aria-pressed={permission !== "enabled"}
-              onClick={() => setPermission("off")}
-            >
-              Touch
-            </button>
-            <button
-              type="button"
               aria-pressed={permission === "enabled"}
-              disabled={requestingPermission}
+              disabled={requestingPermission || permission === "enabled"}
               onClick={() => {
                 if (permission !== "enabled") void enableMotion()
               }}
             >
-              {requestingPermission ? "Enabling…" : "Motion"}
+              {requestingPermission
+                ? "Enabling…"
+                : permission === "enabled"
+                  ? "Motion enabled ✓"
+                  : "Enable motion"}
             </button>
           </div>
           <small>
@@ -249,11 +263,18 @@ function ConnectedController({ client }: { client: ControllerClient }) {
                 ? "Motion on · small wrist movements"
                 : "Motion on. Keep a firm grip and use small wrist movements."
               : permission === "off"
-                ? inActivity
-                  ? "Touch on · buttons and sliders"
-                  : "Tap buttons or move the sliders. No phone motion required."
-                : `Motion ${permission}. Touch controls are ready.`}
+                ? "Allow your phone's motion sensors to roll, aim and play."
+                : `Motion ${permission}. Use the touch fallback on this device.`}
           </small>
+          {permission !== "enabled" && (
+            <button
+              type="button"
+              className="motion-fallback-link"
+              onClick={() => setTouchFallback(true)}
+            >
+              Use touch fallback
+            </button>
+          )}
         </section>
       )}
       {me && finished && (
@@ -302,17 +323,38 @@ function ConnectedController({ client }: { client: ControllerClient }) {
             : "Shake-to-roll is paused while you choose."}
         </p>
       ) : canRoll || view.pending ? (
-        <button
-          className="controller-roll"
-          type="button"
-          disabled={!canRoll}
-          onClick={() => {
-            detector.current?.stop()
-            client.requestRoll()
-          }}
-        >
-          Roll
-        </button>
+        permission === "enabled" ? (
+          <>
+            <MotionPrompt title={view.pending ? "Rolling…" : "Shake to roll"}>
+              Two small shakes. Watch your character on the big screen.
+            </MotionPrompt>
+            <details className="touch-fallback">
+              <summary>Touch fallback</summary>
+              <button
+                type="button"
+                disabled={!canRoll}
+                onClick={() => {
+                  detector.current?.stop()
+                  client.requestRoll()
+                }}
+              >
+                Roll
+              </button>
+            </details>
+          </>
+        ) : touchFallback ? (
+          <button
+            className="controller-roll"
+            type="button"
+            disabled={!canRoll}
+            onClick={() => {
+              detector.current?.stop()
+              client.requestRoll()
+            }}
+          >
+            Roll
+          </button>
+        ) : null
       ) : null}
       {me && view.state?.phase === "AWAITING_ROLL" && (
         <PartyControls
@@ -334,8 +376,8 @@ function ConnectedController({ client }: { client: ControllerClient }) {
             {permission === "off"
               ? view.state?.phase === "DUEL"
                 ? "Enable motion for swing and tilt, or use the Swing and Guard buttons."
-                : "Motion is optional. Every game has touch controls."
-              : `Motion ${permission}. Touch controls stay available in every game.`}
+                : "Enable motion to shake, tilt and flick. Use touch fallback if sensors aren't available."
+              : `Motion ${permission}. Touch fallbacks stay available in every game.`}
           </p>
           <details>
             <summary>iPhone showing an Undo popup?</summary>

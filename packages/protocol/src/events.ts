@@ -1,5 +1,6 @@
 import type {
   DiceRolledEvent,
+  DemoModeRequest,
   DuelActionRequest,
   ShopChoiceRequest,
   ItemUseRequest,
@@ -28,6 +29,7 @@ export const CLIENT_EVENTS = {
   GAME_START: "game.start",
   GAME_RESTART: "game.restart",
   GAME_CONTINUE: "game.continue",
+  DEMO_MODE: "room.demo",
   DICE_ROLL_REQUEST: "dice.roll.request",
   DUEL_ACTION: "duel.action",
   SHOP_CHOICE: "shop.choice",
@@ -58,6 +60,7 @@ export interface ClientToServerEvents {
   "game.start": (payload: HostCommand) => void
   "game.restart": (payload: HostCommand) => void
   "game.continue": (payload: ContinueGameRequest) => void
+  "room.demo": (payload: DemoModeRequest) => void
   "dice.roll.request": (payload: RollRequest) => void
   "duel.action": (payload: DuelActionRequest) => void
   "shop.choice": (payload: ShopChoiceRequest) => void

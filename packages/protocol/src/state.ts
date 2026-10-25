@@ -1,7 +1,8 @@
 import { z } from "zod"
 import { minigameStateSchema } from "./minigames"
 
-export const PLAYER_COLORS = ["coral", "cyan", "gold", "violet"] as const
+import { MAX_PLAYERS, PLAYER_COLORS } from "./players"
+export { MAX_PLAYERS, PLAYER_COLORS, PLAYER_TINTS } from "./players"
 
 export const gamePhaseSchema = z.enum([
   "LOBBY",
@@ -46,6 +47,7 @@ export const publicPlayerSchema = z
     color: playerColorSchema,
     connected: z.boolean(),
     ready: z.boolean(),
+    isBot: z.boolean().optional(),
     tileId: z.string().min(1).max(64),
     coins: z.number().int().min(0).max(999).optional(),
     inventory: z.array(itemSchema).max(3).optional(),
@@ -96,8 +98,8 @@ export const potatoStateSchema = z
   .object({
     id: z.string().uuid(),
     stage: z.enum(["intro", "active", "result"]),
-    participantIds: z.array(z.string().min(1).max(64)).min(2).max(4),
-    aliveIds: z.array(z.string().min(1).max(64)).max(4),
+    participantIds: z.array(z.string().min(1).max(64)).min(2).max(MAX_PLAYERS),
+    aliveIds: z.array(z.string().min(1).max(64)).max(MAX_PLAYERS),
     holderId: z.string().min(1).max(64).nullable(),
     winnerId: z.string().min(1).max(64).nullable(),
     eliminatedId: z.string().min(1).max(64).nullable(),
@@ -111,7 +113,8 @@ export const gameStateSchema = z
   .object({
     roomCode: z.string().regex(/^[A-Z0-9]{4}$/),
     phase: gamePhaseSchema,
-    players: z.array(publicPlayerSchema).max(4),
+    players: z.array(publicPlayerSchema).max(MAX_PLAYERS),
+    demoMode: z.boolean().optional(),
     currentPlayerId: z.string().min(1).max(64).nullable(),
     turnNumber: z.number().int().nonnegative(),
     lastRoll: z.number().int().min(1).max(6).nullable(),

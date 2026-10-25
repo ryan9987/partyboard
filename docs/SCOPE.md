@@ -5,6 +5,8 @@ round-game/shop economy; see `SWORD_DUEL.md` and `PARTY_ECONOMY.md` for the curr
 On October 25 Ryan approved first-to-finish at space 47, retired Dodge, replaced per-space
 coins with one completed-turn coin, and reduced round prizes to 4/1. Those supersede the
 original indefinite-loop/deferred-win-condition descriptions below. See `BOARD_MODEL.md`.
+Ryan also approved eight players, motion-first play and one-phone demo bots on October 25;
+see `PRESENTER_DEMO.md` and the updated `PROTOCOL.md`. These supersede the original four-seat limit.
 
 ## Goal
 

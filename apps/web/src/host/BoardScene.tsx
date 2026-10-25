@@ -15,6 +15,7 @@ import { TrailMarkets } from "./MarketStall"
 import { PotatoArena } from "./PotatoArena"
 import { MinigameArena } from "./MinigameArena"
 import { createMotionSample, sampleTrailMotion, type TrailMotion } from "./trailMotion"
+import { createBoardPath } from "./boardPath"
 
 const tileMap = new Map(defaultBoard.tiles.map((tile) => [tile.id, tile]))
 
@@ -120,7 +121,8 @@ function Scene({ state, movingPlayerId, motion, wrapFade }: BoardSceneProps) {
         wrapFade.current.style.setProperty("opacity", opacity)
     }
   }, -2)
-  const characterOffset = getCharacterOffset(activePlayerIndex)
+  const compactTrail = state.players.length > 4
+  const characterOffset = getCharacterOffset(activePlayerIndex, compactTrail)
   const activeCharacterPosition = [
     focusTile.position[0] + characterOffset[0],
     focusTile.position[1],
@@ -131,17 +133,7 @@ function Scene({ state, movingPlayerId, motion, wrapFade }: BoardSceneProps) {
     activeCharacterPosition[1] + 3.05,
     activeCharacterPosition[2],
   ] as const
-  const pathCurve = useMemo(
-    () =>
-      new THREE.CatmullRomCurve3(
-        defaultBoard.tiles.map(
-          (tile) => new THREE.Vector3(tile.position[0], -0.16, tile.position[2]),
-        ),
-        false,
-        "centripetal",
-      ),
-    [],
-  )
+  const pathCurve = useMemo(() => createBoardPath(defaultBoard.tiles), [])
 
   return (
     <>
@@ -171,6 +163,8 @@ function Scene({ state, movingPlayerId, motion, wrapFade }: BoardSceneProps) {
         return (
           <CharacterModel
             key={player.id}
+            compactTrail={compactTrail}
+            trailLift={player.tileId === activePlayer?.tileId ? 0.1 : 0}
             active={player.id === state.currentPlayerId}
             color={player.color}
             moving={player.id === movingPlayerId}

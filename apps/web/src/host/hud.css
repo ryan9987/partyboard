@@ -388,7 +388,7 @@
   color: var(--muted);
 }
 
-/* Joining: a small invitation, a legible room code and four actual seats. */
+/* Joining: a small invitation, a legible room code and eight actual seats. */
 .host-shell .host-panel--lobby {
   width: 380px;
   max-height: calc(100dvh - 110px);
@@ -893,6 +893,23 @@
 .round-result__portraits:empty {
   display: none;
 }
+.host-shell .round-result--shared {
+  width: min(620px, 90vw);
+  padding: 18px 24px;
+}
+.round-result--shared .round-result__portraits .player-portrait {
+  width: 48px;
+  height: 48px;
+}
+.round-result--shared .victory-emblem {
+  width: 40px;
+  height: 40px;
+}
+.round-result__names {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
 .round-result__portraits .player-portrait {
   width: 68px;
   height: 68px;
@@ -1257,5 +1274,206 @@
   .host-shell .qr-card svg {
     width: 100px;
     height: 100px;
+  }
+}
+
+/* Eight seats stay legible without an eight-card strip covering the world. */
+.host-shell .player-balances--large {
+  width: min(940px, calc(100% - 48px));
+}
+.host-shell .player-balances--large ul {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+.host-shell .player-balances--large .player-seat {
+  width: auto;
+  min-width: 0;
+  min-height: 68px;
+  padding: 8px 10px;
+  gap: 7px;
+  border-radius: 12px;
+}
+.host-shell .player-balances--large .player-portrait {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+.host-shell .player-balances--large .player-balances__name {
+  font-size: 0.76rem;
+}
+.host-shell .player-balances--large .player-seat__score {
+  bottom: 7px;
+}
+.host-shell .player-balances--large .player-seat__score strong {
+  font-size: 1rem;
+  line-height: 1;
+}
+.host-shell .player-balances--large .player-seat__score small {
+  font-size: 0.48rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+.host-shell .player-balances--large .player-seat--scored > .coin-count {
+  top: 7px;
+}
+.host-shell:has(.player-balances--large) .minigame-hud,
+.host-shell:has(.player-balances--large) .duel-overlay {
+  bottom: 182px;
+}
+.host-shell:has(.player-balances--large) .market-panel {
+  max-height: calc(100dvh - 285px);
+}
+.host-shell:has(.player-balances--large) .game-tutorial > svg {
+  max-height: 55px;
+  margin-block: 5px 8px;
+}
+.host-shell:has(.player-balances--large) .minigame-brief--instructions,
+.host-shell:has(.player-balances--large) .duel-announcement--tutorial {
+  padding: 12px 22px;
+}
+.host-shell:has(.player-balances--large) .tutorial-control-labels {
+  margin-bottom: 10px;
+}
+.host-shell .archery-target-label {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.host-shell .player-seat--fern {
+  --seat-color: #658b56;
+}
+.host-shell .player-seat--peach {
+  --seat-color: #d58d55;
+}
+.host-shell .player-seat--blue {
+  --seat-color: #5886c4;
+}
+.host-shell .player-seat--rose {
+  --seat-color: #bc689a;
+}
+.host-shell .host-panel--lobby {
+  width: 428px;
+}
+.host-shell .host-panel--lobby .player-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.host-shell .host-panel--lobby .roster-count {
+  grid-column: 1 / -1;
+}
+.host-shell .host-panel--lobby .player-row {
+  gap: 5px;
+  min-width: 0;
+}
+.host-shell .host-panel--lobby .player-row__identity {
+  min-width: 0;
+  gap: 5px;
+  font-size: 0.78rem;
+}
+.host-shell .player-row__identity > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.host-shell .host-panel--lobby .player-row .player-portrait {
+  width: 27px;
+  height: 27px;
+  flex-shrink: 0;
+}
+.host-shell .lobby-ready {
+  font-size: 0.62rem;
+}
+.host-shell .lobby-ready.is-ready {
+  padding: 4px 5px;
+}
+.host-shell .player-row--empty small {
+  display: none;
+}
+.bot-label {
+  display: inline-block;
+  margin-left: 5px;
+  color: #697760;
+  font-size: 0.6rem;
+  font-weight: 400;
+}
+.host-shell .player-balances__name > .bot-label {
+  display: inline;
+  margin: 2px 0 0;
+}
+.lobby-demo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  margin: 8px 0 14px;
+  padding-top: 12px;
+}
+.lobby-demo strong {
+  font-size: 0.75rem;
+}
+.lobby-demo small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+.host-shell .lobby-demo .button {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  padding: 8px 10px;
+  min-height: 42px;
+}
+@media (max-width: 760px) {
+  .host-shell .host-panel--lobby {
+    width: min(428px, calc(100% - 24px));
+  }
+  .host-shell .player-balances--large {
+    width: auto;
+  }
+  .host-shell .player-balances--large ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .host-shell:has(.player-balances--large) .minigame-hud,
+  .host-shell:has(.player-balances--large) .duel-overlay {
+    bottom: 304px;
+  }
+  .host-shell .player-balances--large .player-portrait {
+    display: none;
+  }
+  .host-shell .player-balances--large .player-seat {
+    min-height: 62px;
+    padding: 6px;
+  }
+  .host-shell .player-balances--large .player-balances__name {
+    padding-right: 0;
+    font-size: 0.65rem;
+  }
+  .host-shell .player-balances--large .player-seat > .coin-count {
+    top: auto;
+    bottom: 6px;
+    right: 6px;
+    transform: none;
+  }
+  .host-shell .player-balances--large .player-seat__status {
+    margin-top: 3px;
+    padding-right: 20px;
+  }
+  .host-shell .player-balances--large .player-seat__score {
+    display: block;
+    bottom: 7px;
+    right: 10px;
+  }
+  .host-shell .player-balances--large .player-seat--scored > .coin-count {
+    top: 7px;
+    bottom: auto;
+  }
+  .host-shell .player-balances--large .player-seat--scored .player-balances__name {
+    padding-right: 46px;
   }
 }

@@ -105,7 +105,12 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
       </div>
       {state.phase === "AWAITING_ROLL" && (
         <p className="turn-prompt">
-          Shake or tap to roll<span>Use a power-up first, if you like. No rush.</span>
+          {activePlayer?.isBot ? "Taking their turn…" : "Shake your phone to roll"}
+          <span>
+            {activePlayer?.isBot
+              ? "Watch the trail. Your turn is coming up."
+              : "Use a power-up first, if you like. No rush."}
+          </span>
         </p>
       )}
       {state.notice && !state.itemEffect && (

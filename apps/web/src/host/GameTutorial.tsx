@@ -68,9 +68,7 @@ export function GameTutorial({
             stroke="#355445"
             strokeWidth="2"
           />
-          {(touch || kind === "archery") && (
-            <circle className="tutorial-tap" cx="75" cy="87" r="9" fill="#a36a30" />
-          )}
+          {touch && <circle className="tutorial-tap" cx="75" cy="87" r="9" fill="#a36a30" />}
         </g>
         <path d="M126 75q16-20 33 0m-6-8 6 8-9 1" fill="none" stroke="#a36a30" strokeWidth="2.5" />
         <path d="M192 28v115" stroke="#d5ccb7" />

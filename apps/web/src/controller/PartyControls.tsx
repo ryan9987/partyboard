@@ -7,6 +7,7 @@ import { CoinCount } from "../app/CoinCount"
 import { ItemGlyph } from "../app/PowerupNotice"
 import { defaultBoard, getMovementPath } from "@party-board/board"
 import { GameTutorial } from "../host/GameTutorial"
+import { MotionPrompt } from "./MotionPrompt"
 
 export function PartyControls({
   client,
@@ -44,6 +45,16 @@ export function PartyControls({
     const holder = state.players.find((player) => player.id === game.holderId)
     const winner = state.players.find((player) => player.id === game.winnerId)
     const alive = game.aliveIds.includes(me.id)
+    const passButton = (
+      <button
+        className="controller-roll"
+        type="button"
+        disabled={!canPass}
+        onClick={() => client.passPotato()}
+      >
+        Pass acorn
+      </button>
+    )
     return (
       <section className="party-controller" aria-label="Hot Potato controller">
         <p className="duel-kicker">Round {state.roundNumber ?? 1} · Hot Potato</p>
@@ -63,18 +74,30 @@ export function PartyControls({
         {game.stage === "intro" ? (
           <GameTutorial kind="potato" mode={motionEnabled ? "motion" : "touch"} />
         ) : game.stage === "active" ? (
-          <p>{motionEnabled ? "Flick or tap to pass." : "Tap to pass. Watch the host screen."}</p>
+          <p>
+            {motionEnabled
+              ? "Flick once when the acorn is in your hand."
+              : "Tap to pass. Watch the host screen."}
+          </p>
         ) : null}
-        {game.stage === "active" && (
-          <button
-            className="controller-roll"
-            type="button"
-            disabled={!canPass}
-            onClick={() => client.passPotato()}
-          >
-            Pass acorn
-          </button>
-        )}
+        {game.stage === "active" &&
+          (motionEnabled ? (
+            <>
+              <MotionPrompt
+                title={canPass ? "Flick to pass!" : alive ? "Watch the acorn" : "Cheer them on"}
+              >
+                {canPass
+                  ? "One small wrist flick sends it clockwise."
+                  : "Keep your eyes on the big screen."}
+              </MotionPrompt>
+              <details className="touch-fallback">
+                <summary>Touch fallback</summary>
+                {passButton}
+              </details>
+            </>
+          ) : (
+            passButton
+          ))}
         <p role="status">
           {game.stage === "active"
             ? `${Math.max(0, Math.ceil((game.fuseAt - now) / 1000))} seconds until it pops`

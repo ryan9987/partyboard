@@ -64,7 +64,7 @@ export function PotatoArena({ state }: { state: GameState }) {
         const angle = Math.PI + (index / game.participantIds.length) * Math.PI * 2
         const position: [number, number, number] = alive
           ? [Math.cos(angle) * 2.1, -0.31, Math.sin(angle) * 2.1]
-          : [-1.3 + index * 0.8, -0.46, -4.5]
+          : [(index - (game.participantIds.length - 1) / 2) * 0.8, -0.46, -4.5]
         return (
           <CharacterModel
             key={id}

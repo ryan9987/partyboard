@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { MAX_PLAYERS } from "./players"
 
 export const minigameKindSchema = z.enum(["balance", "fishing", "archery", "rhythm"])
 export type MinigameKind = z.infer<typeof minigameKindSchema>
@@ -17,7 +18,7 @@ export const MINIGAMES = {
   },
   archery: {
     name: "Archery",
-    instruction: "Tilt or slide to aim, then tap Release arrow. Three arrows; highest total wins.",
+    instruction: "Tilt to aim, then flick to release. Three arrows; highest total wins.",
     action: "Release arrow",
     unit: "points",
   },
@@ -56,8 +57,8 @@ export const minigameStateSchema = z
     startsAt: z.number().int().positive(),
     endsAt: z.number().int().positive(),
     durationMs: z.number().int().positive(),
-    players: z.array(minigamePlayerSchema).min(2).max(4),
-    winnerIds: z.array(z.string().min(1).max(64)).max(4),
+    players: z.array(minigamePlayerSchema).min(2).max(MAX_PLAYERS),
+    winnerIds: z.array(z.string().min(1).max(64)).max(MAX_PLAYERS),
     revision: z.number().int().nonnegative(),
   })
   .strict()

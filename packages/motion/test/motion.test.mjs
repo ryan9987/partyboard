@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { ShakeRecognizer, createShakeDetector } from "../src/shake-detector.ts"
+import { ShakeRecognizer, createShakeDetector, ROLL_SHAKE_SETTINGS } from "../src/shake-detector.ts"
 import { requestMotionPermission } from "../src/permission.ts"
 
 const sample = (x) => ({ x, y: 0, z: 0 })
@@ -26,6 +26,19 @@ test("sustained acceleration is only one peak", () => {
   const f = fixture()
   for (let t = 0; t < 600; t += 10) f.recognizer.sample(sample(20), t)
   assert.equal(f.count(), 0)
+})
+
+test("the board's two gentle shakes roll once, not on a single bump or held movement", () => {
+  const f = fixture(ROLL_SHAKE_SETTINGS)
+  f.recognizer.sample(sample(11.5), 0)
+  f.recognizer.sample(sample(12), 100)
+  assert.equal(f.count(), 0)
+  f.recognizer.sample(sample(0), 200)
+  f.recognizer.sample(sample(11.5), 300)
+  assert.equal(f.count(), 1)
+  f.peak(500)
+  f.peak(600)
+  assert.equal(f.count(), 1)
 })
 
 test("walking-sized motion and isolated table bumps do not trigger", () => {

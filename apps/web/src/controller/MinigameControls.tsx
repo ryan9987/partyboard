@@ -12,6 +12,8 @@ import { getMinigameMotionReading } from "./duel-motion"
 import { useGameClock, useGameNow } from "../networking/gameClock"
 import { canFishingAct, createFishingFlickDetector } from "./fishing-motion"
 import { GameTutorial } from "../host/GameTutorial"
+import { MotionPrompt } from "./MotionPrompt"
+import { canFlickAct } from "./minigame-gestures"
 
 export function MinigameControls({
   client,
@@ -55,17 +57,23 @@ export function MinigameControls({
     if ((!active && game.stage !== "intro") || !motionEnabled || usingTouch) return
     const motion = (event: DeviceMotionEvent) => {
       const fishing = game.kind === "fishing"
+      const archery = game.kind === "archery"
       const time = performance.now()
-      const reading = getMinigameMotionReading(event, axis.current, neutral.current, fishing)
-      if (fishing && reading.flick) tiltHoldUntil.current = time + 250
-      if (!fishing || time >= tiltHoldUntil.current) axis.current = reading.axis
+      const reading = getMinigameMotionReading(
+        event,
+        axis.current,
+        neutral.current,
+        fishing || archery,
+      )
+      if ((fishing || archery) && reading.flick) tiltHoldUntil.current = time + 250
+      if ((!fishing && !archery) || time >= tiltHoldUntil.current) axis.current = reading.axis
       neutral.current = reading.neutral
-      if (fishing) {
+      if (fishing || archery) {
         const edge = fishingFlick.current(event, time)
         const current = client
           .getSnapshot()
           .state?.minigame?.players.find((entry) => entry.playerId === playerId)
-        if (active && edge && current && canFishingAct(current.status, current.actionAt, clock()))
+        if (active && edge && current && canFlickAct(game.kind, current, clock()))
           client.minigameInput(axis.current, true)
         return
       }
@@ -98,7 +106,9 @@ export function MinigameControls({
           {game.kind === "fishing" && touchControls
             ? "Tap Cast line. Wait for REEL NOW, then tap again."
             : game.kind === "archery"
-              ? "Aim at your target on the host. Tap to release."
+              ? touchControls
+                ? "Aim at your target on the host. Tap to release."
+                : "Tilt to aim at your target on the host. Flick once to release."
               : info.instruction}
         </p>
       )}
@@ -151,7 +161,7 @@ export function MinigameControls({
                         : "Center your phone, then reel"
                       : touchControls
                         ? "REEL NOW · tap Reel now!"
-                        : "REEL NOW · lift once or tap",
+                        : "REEL NOW · lift your wrist once",
                   caught: "Landed! Nice catch",
                   miss: touchControls
                     ? "It got away · center the slider and try again"
@@ -173,6 +183,29 @@ export function MinigameControls({
                         : "Follow the beat"
                     : "Ready"}
           </p>
+          {motionEnabled && !usingTouch && (
+            <MotionPrompt
+              title={
+                game.kind === "archery"
+                  ? "Tilt to aim · flick to shoot"
+                  : game.kind === "fishing"
+                    ? me.status === "bite"
+                      ? "Lift once to reel"
+                      : me.status === "casting"
+                        ? "Casting…"
+                        : me.status === "waiting"
+                          ? "Watch the float"
+                          : me.status === "caught"
+                            ? "Nice catch!"
+                            : "Flick to cast"
+                    : game.kind === "balance"
+                      ? "Tilt to stay centered"
+                      : "Flick on the beat"
+              }
+            >
+              Keep a firm grip. Small movements are enough.
+            </MotionPrompt>
+          )}
           {motionEnabled && (
             <button
               className="control-mode"
@@ -186,10 +219,10 @@ export function MinigameControls({
                 setUsingTouch(!usingTouch)
               }}
             >
-              {usingTouch ? "Using touch · switch to motion" : "Using motion · switch to touch"}
+              {usingTouch ? "Return to motion" : "Use touch fallback"}
             </button>
           )}
-          {game.kind !== "rhythm" && (
+          {touchControls && game.kind !== "rhythm" && (
             <label className="tilt-control">
               {game.kind === "archery" ? "Aim" : game.kind === "fishing" ? "Line tension" : "Tilt"}
               <input
@@ -209,7 +242,7 @@ export function MinigameControls({
               />
             </label>
           )}
-          {["archery", "fishing", "rhythm"].includes(game.kind) && (
+          {touchControls && ["archery", "fishing", "rhythm"].includes(game.kind) && (
             <button
               className={`controller-roll${game.kind === "fishing" && me.status === "bite" ? " controller-roll--bite" : ""}`}
               disabled={

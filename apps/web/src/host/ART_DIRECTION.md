@@ -34,6 +34,13 @@ against `diceOrientation.ts`.
 
 ## Rendering
 
+`boardPath.ts` owns the rendered trail centerline. `StartGate` samples the midpoint/tangent
+of its first segment, centers the existing timber model there and squares its posts across
+the route. Never use a world-Z-only offset for the gate: the first segment bends right.
+The model clone extends the posts and lifts the header by 0.65 without stretching START text;
+feet stay grounded and walking characters have headroom. This stays one static draw call and
+does not change the authored GLB, board spaces, movement or server rules.
+
 Instruction cards prioritize reading from the demo audience: 16px numbered steps and goals,
 14px touch guidance and a 760px maximum width, with the game title inside the same card. Keep
 phone diagrams as supporting cues, not text containers. Phone lessons reflect the selected

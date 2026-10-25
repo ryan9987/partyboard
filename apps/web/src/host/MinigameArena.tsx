@@ -3,6 +3,7 @@ import {
   balanceLean,
   RHYTHM_BEAT_MS,
   FISHING_RULES,
+  PLAYER_TINTS,
   type GameState,
   type MinigamePlayer,
 } from "@party-board/protocol"
@@ -18,14 +19,16 @@ import { useGameClock } from "../networking/gameClock"
 import { smoothStep } from "./trailMotion"
 import { createBalanceFallSample, sampleBalanceFall } from "./balanceFall"
 
-const COLORS = { coral: "#ed7180", cyan: "#40c1c8", gold: "#e0b745", violet: "#9476d4" }
+const COLORS = PLAYER_TINTS
 
 export function ArenaEnvironment({
   close = false,
   archeryPlayers = 0,
+  players = 4,
 }: {
   close?: boolean
   archeryPlayers?: number
+  players?: number
 }) {
   const { camera, size } = useThree()
   useEffect(() => {
@@ -41,10 +44,11 @@ export function ArenaEnvironment({
       camera.lookAt(0, 1.5, -6)
       return
     }
-    if (close) camera.position.set(5.5, 5.5, 9.2)
+    if (players > 4) camera.position.set(0, 8, 15)
+    else if (close) camera.position.set(5.5, 5.5, 9.2)
     else camera.position.set(8.5, 7.5, 12.8)
     camera.lookAt(0, 0.7, -0.8)
-  }, [camera, close, archeryPlayers, size.width, size.height])
+  }, [camera, close, players, archeryPlayers, size.width, size.height])
   return (
     <>
       <fog attach="fog" args={["#aed7e4", 22, 43]} />
@@ -68,7 +72,10 @@ export function ArenaEnvironment({
         [0, 1, 2, 3].map((i) => (
           <WoodlandTree
             key={`${side}-${i}`}
-            position={[side * (9.5 + (i % 2)), 3 - i * 4]}
+            position={[
+              side * (Math.max(9.5, ((archeryPlayers - 1) * 2.85) / 2 + 3) + (i % 2)),
+              3 - i * 4,
+            ]}
             scale={1.15 + i * 0.06}
           />
         )),
@@ -80,9 +87,9 @@ export function ArenaEnvironment({
   )
 }
 
-function Pond() {
+function Pond({ wide = false }: { wide?: boolean }) {
   return (
-    <group position={[0, -0.1, -2]}>
+    <group position={[0, -0.1, -2]} scale={[wide ? 1.3 : 1, 1, 1]}>
       <mesh receiveShadow scale={[1, 1, 0.65]}>
         <cylinderGeometry args={[7.3, 7.6, 0.25, 72]} />
         <meshStandardMaterial color="#aa9d78" roughness={1} />
@@ -362,7 +369,11 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
   const game = state.minigame!
   const entry = game.players[index]!
   const player = state.players.find((candidate) => candidate.id === entry.playerId)!
-  const x = (index - (game.players.length - 1) / 2) * 2.85
+  const x =
+    (index - (game.players.length - 1) / 2) *
+    (game.players.length > 4 && game.kind !== "archery" ? 2 : 2.85)
+  // Fan the archers inward: all eight bodies fit while their targets remain clearly spaced.
+  const characterX = game.kind === "archery" && game.players.length > 4 ? x * 0.68 : x
   const grip = useRef<THREE.Group>(null)
   const root = useRef<THREE.Group>(null)
   const fallingBody = useRef<THREE.Group>(null)
@@ -380,7 +391,7 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
       const desired = game.kind === "balance" ? entry.position * 0.2 : 0
       root.current.position.x = THREE.MathUtils.damp(
         root.current.position.x,
-        x + desired,
+        characterX + desired,
         16,
         delta,
       )
@@ -469,7 +480,7 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
           ))}
         </group>
       )}
-      <group ref={root} position={[x, 0, 0]}>
+      <group ref={root} position={[characterX, 0, 0]}>
         <group ref={fallingBody} position={[0, balance ? 0.99 : 0, 0]}>
           <CharacterModel
             clock={clock}
@@ -606,7 +617,7 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
           ))}
         </group>
       )}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x, -0.095, 2.5]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[characterX, -0.095, 2.5]}>
         <circleGeometry args={[0.2, 24]} />
         <meshStandardMaterial color={COLORS[player.color]} />
       </mesh>
@@ -618,8 +629,11 @@ export function MinigameArena({ state }: { state: GameState }) {
   const game = state.minigame!
   return (
     <>
-      <ArenaEnvironment archeryPlayers={game.kind === "archery" ? game.players.length : 0} />
-      {["fishing", "balance"].includes(game.kind) && <Pond />}
+      <ArenaEnvironment
+        players={game.players.length}
+        archeryPlayers={game.kind === "archery" ? game.players.length : 0}
+      />
+      {["fishing", "balance"].includes(game.kind) && <Pond wide={game.players.length > 4} />}
       {game.players.map((player, index) => (
         <Contestant key={player.playerId} state={state} index={index} />
       ))}
