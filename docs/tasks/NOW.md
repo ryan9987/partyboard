@@ -1,5 +1,15 @@
 # Current task board
 
+## Animated mini-game instructions and Balance falls
+
+- [x] Animated phone-to-game demonstrations for all six round games and sword duels.
+- [x] Automatic four-second setup + final 3–2–1, with touch instructions and reduced-motion text.
+- [x] Log tumble/flailing limbs, splash/ripples and unobstructed fall before the winner reveal.
+- [x] Finish Balance with one survivor; preserve four-player play, simultaneous falls and timeout ties.
+- [x] Regression coverage for same-tick winner selection, forfeits, refresh, payouts and board return.
+- [x] Browser-check all seven lessons, inspect fall frames and complete live two-controller rounds.
+- [ ] Physical-device / venue-network rehearsal and production rollout of this change.
+
 ## Fishing reliability and phone setup
 
 - [x] Ignore early reels; separate casting from bite actions and prevent backswing repeats.

@@ -1,5 +1,16 @@
 # Integration notes
 
+### 2026-10-24 — Animated instructions and Balance last-survivor finish
+
+- Ryan requested animated how-to-play splashes before each mini-game, visible log falls, and an
+  immediate winner when the opponent falls. This explicitly requires the corresponding server
+  rules and regression tests in Jack's lane; no unrelated server/controller behavior is in scope.
+- Balance ends with one survivor (not the first elimination in a four-player round). Fall times
+  use the existing server-owned `actionAt` field; the host animates from snapshots without
+  client-side scoring. Simultaneous final falls retain a survival-time draw.
+- All seven introductions retain automatic countdowns and touch alternatives. No dependencies,
+  external assets, new protocol fields or edits to Jack's status file are needed.
+
 ## 2026-10-24 — Ryan-approved Fishing reliability and phone-orientation guide
 
 Ryan requested fixing difficult fishing motion/reeling, clear diagrams explaining phone orientation

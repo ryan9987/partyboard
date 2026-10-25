@@ -1,12 +1,22 @@
 import { MINIGAMES, type GameState } from "@party-board/protocol"
 import { useGameNow } from "../networking/gameClock"
 import { RoundCountdown } from "./RoundCountdown"
-import { PhoneMotionGuide } from "../app/PhoneMotionGuide"
+import { GameTutorial } from "./GameTutorial"
+import { BALANCE_WINNER_REVEAL_MS } from "./balanceFall"
 
 export function MinigameOverlay({ state }: { state: GameState }) {
   const game = state.minigame!
   const info = MINIGAMES[game.kind]
   const now = useGameNow(state.serverTime)
+  const finalFallAt =
+    game.kind === "balance"
+      ? Math.max(
+          0,
+          ...game.players.filter((player) => !player.alive).map((player) => player.actionAt),
+        )
+      : 0
+  const showResult =
+    game.stage === "result" && (!finalFallAt || now - finalFallAt >= BALANCE_WINNER_REVEAL_MS)
   const remaining = Math.min(
     Math.ceil(game.durationMs / 1000),
     Math.max(0, Math.ceil((game.endsAt - now) / 1000)),
@@ -39,16 +49,16 @@ export function MinigameOverlay({ state }: { state: GameState }) {
       </div>
       {game.stage === "intro" && (
         <div className="minigame-brief minigame-brief--instructions">
+          <GameTutorial kind={game.kind} />
           <RoundCountdown
             at={game.startsAt}
             serverTime={state.serverTime}
             paused={!!state.waitingForHost}
           />
-          <PhoneMotionGuide kind={game.kind} />
           <small>Winner +8 coins · everyone else +2 · motion or touch</small>
         </div>
       )}
-      {game.stage === "result" && (
+      {showResult && (
         <div className="minigame-brief">
           <span className="eyebrow">
             {game.winnerIds.length > 1 ? "A shared victory" : "Round winner"}
@@ -61,6 +71,11 @@ export function MinigameOverlay({ state }: { state: GameState }) {
           <p>Winners +8 coins · everyone else +2</p>
           <small>{state.waitingForHost ? "Waiting for the host" : "Returning to the trail…"}</small>
         </div>
+      )}
+      {game.stage === "result" && !showResult && (
+        <p className="minigame-hint" role="status">
+          Splash! Round decided…
+        </p>
       )}
       <div className="minigame-scores">
         {game.players.map((entry) => {

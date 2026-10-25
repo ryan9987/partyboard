@@ -176,6 +176,67 @@ it("allows counter-tilting to survive Balance while idle players fall", () => {
   expect(game.state.players.slice(1).every((entry) => !entry.alive)).toBe(true)
 })
 
+it("ends a two-player Balance round on the first fall and breaks a same-tick score tie by survival", () => {
+  const game = new MinigameRound("balance", ["a", "b"], start, 100, 20000)
+  game.tick(start + 100)
+  game.state.players[0]!.position = 1.14
+  input(game, "a", 100, 1, false)
+  expect(game.tick(start + 200)).toBe(true)
+  expect(game.state.players[0]).toMatchObject({
+    alive: false,
+    status: "out",
+    actionAt: start + 200,
+  })
+  expect(game.state.players[0]!.score).toBe(game.state.players[1]!.score)
+  expect(input(game, "a", 200, -1, false)).toBe(false)
+  game.reconnect("a")
+  expect(input(game, "a", 200, -1, false, 0)).toBe(false)
+  expect(game.state.players[0]!.actionAt).toBe(start + 200)
+  game.finish(start + 200, 3500)
+  expect(game.state.winnerIds).toEqual(["b"])
+  game.finish(start + 500, 3500)
+  expect(game.state.endsAt).toBe(start + 3700)
+})
+
+it("continues four-player Balance after early falls, ending only when one remains", () => {
+  const game = round("balance")
+  for (const [index, elapsed] of [100, 200, 300].entries()) {
+    game.state.players[index]!.position = 1.14
+    input(game, ["a", "b", "c"][index]!, elapsed, 1, false)
+    expect(game.tick(start + 100 + elapsed)).toBe(index === 2)
+    expect(game.state.players.filter((player) => player.alive)).toHaveLength(3 - index)
+  }
+  game.finish(start + 400, 3500)
+  expect(game.state.winnerIds).toEqual(["d"])
+})
+
+it("shares simultaneous final Balance falls and time-limit survival, but excludes forfeits", () => {
+  const simultaneous = new MinigameRound("balance", ["a", "b"], start, 100, 20000)
+  simultaneous.tick(start + 100)
+  simultaneous.state.players.forEach((player) => {
+    player.position = 1.14
+  })
+  input(simultaneous, "a", 100, 1, false)
+  input(simultaneous, "b", 100, 1, false)
+  expect(simultaneous.tick(start + 200)).toBe(true)
+  simultaneous.finish(start + 200, 3500)
+  expect(simultaneous.state.winnerIds).toEqual(["a", "b"])
+
+  const timeout = round("balance")
+  expect(timeout.tick(start + 20100)).toBe(true)
+  timeout.finish(start + 20100, 3500)
+  expect(timeout.state.winnerIds).toEqual(["a", "b", "c", "d"])
+
+  const forfeit = new MinigameRound("balance", ["a", "b"], start, 100, 20000)
+  forfeit.tick(start + 100)
+  forfeit.disconnect("a", start + 150)
+  forfeit.reconnect("a")
+  expect(forfeit.tick(start + 200)).toBe(true)
+  forfeit.finish(start + 200, 3500)
+  expect(forfeit.state.winnerIds).toEqual(["b"])
+  expect(forfeit.state.players[0]!.actionAt).toBe(start + 150)
+})
+
 it("warns about deterministic Dodge lanes before impact and preserves survival times", () => {
   const game = round("dodge")
   for (let t = 100; t <= 20000; t += 100) {

@@ -66,7 +66,7 @@ const APPEARANCES: Record<PlayerColor, CharacterAppearance> = {
 type CharacterModelProps = {
   clock?: () => number
   centered?: boolean
-  pose?: "carry" | "fishing" | "archery" | "balance" | "rhythm" | undefined
+  pose?: "carry" | "fishing" | "archery" | "balance" | "fall" | "rhythm" | undefined
   actionAt?: number
   lean?: number
   rightHand?: ReactNode
@@ -390,6 +390,12 @@ export function CharacterModel({
         pose === "archery" ? -1.4 : pose === "carry" ? -1.1 : pose === "rhythm" ? -0.75 : -0.25
       rightZ = pose === "balance" ? 1.2 : pose === "carry" ? -0.25 : 0
       leftZ = pose === "balance" ? -1.2 : pose === "carry" ? 0.25 : 0
+      if (pose === "fall") {
+        rightX = Math.sin(age * 13) * 0.5 - 0.6
+        leftX = -Math.sin(age * 13) * 0.5 - 0.6
+        rightZ = 1.4
+        leftZ = -1.4
+      }
     }
     const poseRate = combat ? 24 : 14
     if (leftArmRef.current) {
@@ -427,17 +433,18 @@ export function CharacterModel({
           ? Math.sin(time * 35) * 0.12
           : 0
     body.rotation.z = THREE.MathUtils.damp(body.rotation.z, bodyLean, 16, delta)
+    const kick = pose === "fall" ? Math.sin(Math.max(0, clock() - actionAt) / 90) * 0.5 : 0
     if (leftLegRef.current)
       leftLegRef.current.rotation.x = THREE.MathUtils.damp(
         leftLegRef.current.rotation.x,
-        -stride * 0.8,
+        -stride * 0.8 + kick,
         20,
         delta,
       )
     if (rightLegRef.current)
       rightLegRef.current.rotation.x = THREE.MathUtils.damp(
         rightLegRef.current.rotation.x,
-        stride * 0.8,
+        stride * 0.8 - kick,
         20,
         delta,
       )

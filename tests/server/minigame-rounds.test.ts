@@ -7,6 +7,7 @@ import {
   roomJoinedEventSchema,
   type GameState,
   type MinigameKind,
+  balanceLean,
 } from "../../packages/protocol/src"
 
 let server: GameServer
@@ -106,6 +107,52 @@ it("rotates all six games without repeats within a bag", () => {
   }
   expect(kinds[0]).toBe("potato")
   expect(new Set(kinds).size).toBe(6)
+})
+
+it("awards the last Balance survivor once, rejects late inputs, and resumes the board early", () => {
+  const game = setup("balance", { minigameDurationMs: 20_000, minigameResultMs: 3500 })
+  game.boardRound()
+  const before = game.snapshot().players.map((player) => player.coins!)
+  vi.advanceTimersByTime(100)
+  let sequence = 0
+  while (game.snapshot().minigame!.stage === "active" && sequence < 150) {
+    const state = game.snapshot().minigame!
+    const elapsed = Date.now() - state.startsAt + 100
+    state.players.forEach((entry, i) => {
+      server.handle(`p${i}`, "minigame.input", {
+        roomCode: game.room().roomCode,
+        playerSessionId: game.players[i]!.playerSessionId,
+        requestId: randomUUID(),
+        gameId: state.id,
+        sequence,
+        axis:
+          i === 0 ? Math.max(-1, Math.min(1, -balanceLean(elapsed, 0) - entry.position * 0.8)) : 1,
+        action: false,
+      })
+    })
+    vi.advanceTimersByTime(100)
+    sequence++
+  }
+  const result = game.snapshot()
+  expect(result.minigame!.stage).toBe("result")
+  expect(result.minigame!.winnerIds).toEqual([game.players[0]!.playerId])
+  expect(result.minigame!.players.filter((player) => player.alive)).toHaveLength(1)
+  expect(Date.now() - result.minigame!.startsAt).toBeLessThan(20_000)
+  expect(result.players.map((player, i) => player.coins! - before[i]!)).toEqual([8, 2, 2, 2])
+  server.handle("p1", "minigame.input", {
+    roomCode: game.room().roomCode,
+    playerSessionId: game.players[1]!.playerSessionId,
+    requestId: randomUUID(),
+    gameId: result.minigame!.id,
+    sequence: 999,
+    axis: -1,
+    action: false,
+  })
+  vi.advanceTimersByTime(3500)
+  expect(game.snapshot()).toMatchObject({ phase: "AWAITING_ROLL", minigame: null, roundNumber: 2 })
+  expect(game.snapshot().players.map((player) => player.coins)).toEqual(
+    result.players.map((player) => player.coins),
+  )
 })
 
 it("validates authentication and clears the game timer on host restart", () => {

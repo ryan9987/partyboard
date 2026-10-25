@@ -4,6 +4,23 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Animated-instruction/Balance pass on `feat/animated-game-guides`. All six round games plus duels
+  have lightweight phone-to-game SVG/CSS demonstrations, steps, goal and touch alternative.
+  Four-second setup + automatic 3–2–1 now applies consistently to Hot Potato and duels too.
+- Balance tumbles the actual character off the log (flailing limbs, water droplets/ripples).
+  Server timestamps make the 1.4s trajectory snapshot/reconnect-safe and frame-independent.
+  Winner card waits 1.1s so the fall is visible; server result/payout happens immediately.
+- Server ends with one survivor: a two-player first fall decides the game, while four players
+  continue after earlier falls. Same-tick survival scores no longer incorrectly tie the winner.
+  Simultaneous final falls, time-up ties, forfeits, duplicate payouts and board return are tested.
+- Browser checked all seven tutorials and replayed fall/splash frames; fixed Archery labels
+  bleeding through instructions and tutorial overflow during the countdown. Two live two-phone
+  rounds automatically started, ended early, awarded Ryan +8 / Jack +2 and resumed the board.
+  One controller used the real 390px iframe. Test host error log empty; physical motion untested.
+- Full checks pass: 141 Vitest + 10 motion tests, types/lint/format/production build. No added
+  dependencies, external assets or wire fields. Work remains local; this request did not ask
+  for a main push. Production rollout and physical phone testing are separate.
+
 - Ryan-approved Fishing reliability/orientation pass on `fix/fishing-controls-and-motion-guide`.
   Reproduced early-reel failure in regression tests before fixing it. Casting/waiting no longer
   expose an active Reel button or lose a fish on an early action; gentle edge-triggered wrist

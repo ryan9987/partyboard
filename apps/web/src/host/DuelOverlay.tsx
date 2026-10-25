@@ -1,6 +1,7 @@
 import type { GameState } from "@party-board/protocol"
 import { useGameNow } from "../networking/gameClock"
 import { RoundCountdown } from "./RoundCountdown"
+import { GameTutorial } from "./GameTutorial"
 
 function SwordIcon({ className }: { className: string }) {
   return (
@@ -29,7 +30,7 @@ export function DuelOverlay({ state }: { state: GameState }) {
       aria-live="polite"
     >
       {duel.stage === "intro" ? (
-        <div className="duel-announcement" key={duel.id}>
+        <div className="duel-announcement duel-announcement--tutorial" key={duel.id}>
           <div className="crossed-swords">
             <SwordIcon className="crossed-swords__left" />
             <SwordIcon className="crossed-swords__right" />
@@ -38,7 +39,7 @@ export function DuelOverlay({ state }: { state: GameState }) {
           <p>
             {players[0]!.name} <span>vs</span> {players[1]!.name}
           </p>
-          <small>First to two hits keeps the space</small>
+          <GameTutorial kind="duel" />
           <RoundCountdown
             at={duel.stageEndsAt}
             serverTime={state.serverTime}

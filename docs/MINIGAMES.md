@@ -19,11 +19,18 @@ for an operator/rehearsal, but is not the production default. Shops and board tu
 Winners receive 8 coins, other participants receive 2, exactly once. Tied high scores share the
 8-coin prize. No board positions change. Resume the player following the round's final mover.
 
+All six round games and sword duels now include a short animated how-to-play splash. It shows
+the portrait phone input alongside the corresponding game action, three concise steps, the
+goal, and a touch alternative. The seven-second intro includes four seconds of setup followed
+by the final 3–2–1; Hot Potato and duels now have that same setup allowance. No extra Start
+button and no playing time consumed. The SVG/CSS lessons add no downloads, dependencies or
+second WebGL canvas. Reduced-motion preferences show a static diagram with the same text.
+
 ## Games and controls
 
 | Game | Phone / touch | Authoritative rules |
 | --- | --- | --- |
-| Balance | Counter-tilt / slider | Stay centered on a rolling log. Drift amplifies existing lean. Fall at 1.15 displacement; highest survival time wins. |
+| Balance | Counter-tilt / slider | Stay centered on a rolling log. Drift amplifies existing lean. Fall at 1.15 displacement. End immediately with one survivor; simultaneous final falls share the highest survival time. Survivors at time-up share the win. |
 | Fishing | Small forward wrist flick to cast, lift once to reel; tilt to steady / button and slider | Cast lasts 0.8s, bite opens 1.8–4.2s after cast (2.4s reaction window). Reel at axis magnitude ≤0.75 for 55–100 catch points. Sustained extreme tilt breaks the line. Highest total wins. |
 | Dodge | Tilt / left-center-right buttons | Three lanes per player. Ground marker warns before a falling acorn arrives every 1.8s. Collision evaluated after 1.45s. Highest survival time wins. |
 | Archery | Tilt to aim, tap release / slider and release | Three arrows, 900ms cooldown. Shared deterministic sway; 0–100 points per shot depending on horizontal accuracy. Highest total wins. |
@@ -64,6 +71,14 @@ Touch controls remain available without granting sensor permission. Keep phones 
   Once all players finish their arrows (or are out), wait 650ms for the final flights, then score
   immediately instead of waiting out the remaining clock.
 - Balance uses bark-textured floating logs with exposed end-grain rings and outstretched arms.
+- Balance falls now tumble from the log with flailing arms/legs, water droplets and expanding
+  ripples, not an instant relocation. Existing server-owned `actionAt` timestamps the fall and
+  signed `position` determines its direction. Timestamp-based sampling reuses frame storage;
+  late snapshots/reloads show the current point in the fall, never restart the whole animation.
+  The server freezes the round and pays immediately when one survivor remains. The host waits
+  1.1s before its large winner card so the fall/splash remains visible; normal automatic return
+  timing is unchanged. With four players, the first fall alone does not end the round. A final
+  faller's same-tick score cannot tie a player who is still on the log. Forfeits cannot win.
 - Dodge uses separated lane pads, warning rings and falling acorns.
 - Rhythm uses rope-laced drums, metal rims, animated sticks and beat-lit heads.
 - Compact ivory/forest-green HUD, countdown, per-player scores and matching clean controller cards.
@@ -114,6 +129,8 @@ by desktop tests. No audio playback is currently provided; Rhythm uses visual be
 - `pnpm check`: types, lint, formatting, automated rules/network tests and production build.
 - Dev-only `/rehearsal`: select all six art scenes; prominently marked simulated inputs.
   It does not connect to a room and is not available as a production route.
+- The rehearsal now includes the duel scene, an instruction/playing/result selector and a
+  replayable Balance fall/winner sequence. These are visual fixtures, not live-game proof.
 - `tests/manual-minigame-server.ts`: isolated port 3003; set `MINIGAME=fishing` (or another kind).
   Run a separate Vite on 5175 with `VITE_SOCKET_URL=http://localhost:3003` and
   `VITE_CONTROLLER_URL=http://localhost:5175/controller`. Join 2–4 controllers and complete a round.

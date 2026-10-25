@@ -2,6 +2,7 @@ import { SHOP_ITEMS, type GameState, type Item } from "@party-board/protocol"
 import { useGameNow } from "../networking/gameClock"
 import { RoundCountdown } from "./RoundCountdown"
 import { ItemGlyph } from "../app/PowerupNotice"
+import { GameTutorial } from "./GameTutorial"
 
 export function PartyOverlay({ state }: { state: GameState }) {
   const now = useGameNow(state.serverTime)
@@ -40,19 +41,16 @@ export function PartyOverlay({ state }: { state: GameState }) {
       aria-label="Hot Potato mini-game"
     >
       {game.stage === "intro" ? (
-        <div className="duel-announcement">
-          <div className="acorn-emblem" aria-hidden="true">
-            ●
-          </div>
+        <div className="duel-announcement duel-announcement--tutorial">
           <p className="eyebrow">Round {state.roundNumber ?? 1} complete · everyone plays</p>
           <h1>Hot Potato</h1>
+          <GameTutorial kind="potato" />
           <RoundCountdown
             at={game.endsAt}
             serverTime={state.serverTime}
             paused={!!state.waitingForHost}
           />
-          <p>Don't get caught with the hot acorn.</p>
-          <small>Flick or tap to pass · last standing earns 8 coins</small>
+          <small>Winner +8 coins · everyone else +2</small>
         </div>
       ) : (
         <>

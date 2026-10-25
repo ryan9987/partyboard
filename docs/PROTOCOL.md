@@ -76,8 +76,12 @@ Host-only. Returns every player to the starting tile while preserving the room a
 
 Optional operator mode only (`manualStageAdvance: true`). Production round stages auto-advance
 after the server's countdown/result deadlines; no controller/host command is needed.
-The five shared mini-games now show four seconds of illustrated setup before the final
+All six round games and sword duels now show four seconds of animated setup before the final
 three-second countdown; `startsAt` already represents the authoritative end of that whole intro.
+Hot Potato uses `endsAt`, and duels use `stageEndsAt`, for the equivalent intro deadline.
+For Balance, existing player `actionAt` records the server's fall timestamp and signed `position`
+retains the fall side. One remaining survivor ends the round and wins even if the final faller
+has the same survival score on that server tick. No wire fields or event names were added.
 
 Host-only, connected/attached host required. Payload is `{ roomCode, hostToken, continueId }`.
 The UUID must equal the current `waitingForHost.id`; it consumes exactly one paused intro/result.

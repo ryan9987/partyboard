@@ -152,6 +152,7 @@ export class MinigameRound {
         if (Math.abs(player.position) >= 1.15) {
           player.alive = false
           player.status = "out"
+          player.actionAt = now
         }
       } else if (game.kind === "dodge") {
         player.position = player.axis < -0.33 ? -1 : player.axis > 0.33 ? 1 : 0
@@ -188,7 +189,8 @@ export class MinigameRound {
       }
     })
     game.revision++
-    const survival = game.kind === "balance" || game.kind === "dodge"
+    const aliveCount = game.players.filter((player) => player.alive).length
+    const balanceDecided = game.kind === "balance" && game.players.length > 1 && aliveCount <= 1
     // Let the final arrow land, then announce the winner instead of waiting out an idle clock.
     const arrowsFinished =
       game.kind === "archery" &&
@@ -197,14 +199,16 @@ export class MinigameRound {
       )
     return (
       now >= game.endsAt ||
-      (survival && game.players.every((player) => !player.alive)) ||
+      balanceDecided ||
+      ((game.kind === "balance" || game.kind === "dodge") && aliveCount === 0) ||
       arrowsFinished
     )
   }
-  disconnect(id: string): void {
+  disconnect(id: string, now = Date.now()): void {
     this.forfeited.add(id)
     const player = this.state.players.find((entry) => entry.playerId === id)
     if (player) {
+      if (player.alive && this.state.kind === "balance") player.actionAt = now
       player.alive = false
       player.status = "out"
     }
@@ -222,8 +226,12 @@ export class MinigameRound {
     game.stage = "result"
     game.endsAt = now + resultMs
     const eligible = game.players.filter((player) => !this.forfeited.has(player.playerId))
-    const highest = Math.max(...eligible.map((player) => player.score))
-    game.winnerIds = eligible
+    // The last survivor and final faller can have identical scores on the deciding tick.
+    // Being on the log wins; never fabricate extra survival time to break that tie.
+    const survivors = eligible.filter((player) => player.alive)
+    const contenders = game.kind === "balance" && survivors.length ? survivors : eligible
+    const highest = Math.max(...contenders.map((player) => player.score))
+    game.winnerIds = contenders
       .filter((player) => player.score === highest)
       .map((player) => player.playerId)
     game.revision++

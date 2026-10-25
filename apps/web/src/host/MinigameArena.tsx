@@ -18,6 +18,7 @@ import { MeadowGround, MeadowPlanting, WoodlandTree } from "./WoodlandDetails"
 import { createSurfaceTexture } from "./sceneryMaterials"
 import { useGameClock } from "../networking/gameClock"
 import { smoothStep } from "./trailMotion"
+import { createBalanceFallSample, sampleBalanceFall } from "./balanceFall"
 
 const COLORS = { coral: "#ed7180", cyan: "#40c1c8", gold: "#e0b745", violet: "#9476d4" }
 
@@ -305,17 +306,29 @@ function ArcheryShot({
   )
 }
 
-function ArcheryTarget({ x, name, color }: { x: number; name: string; color: string }) {
+function ArcheryTarget({
+  x,
+  name,
+  color,
+  showLabel,
+}: {
+  x: number
+  name: string
+  color: string
+  showLabel: boolean
+}) {
   return (
     <group position={[x, 1.5, -6]}>
-      <Html
-        center
-        position={[0, 0.8, 0.12]}
-        className="archery-target-label"
-        style={{ borderBottomColor: color }}
-      >
-        {name}
-      </Html>
+      {showLabel && (
+        <Html
+          center
+          position={[0, 0.8, 0.12]}
+          className="archery-target-label"
+          style={{ borderBottomColor: color }}
+        >
+          {name}
+        </Html>
+      )}
       {[-1, 1].map((side) => (
         <mesh
           castShadow
@@ -394,6 +407,9 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
   const x = (index - (game.players.length - 1) / 2) * 2.85
   const grip = useRef<THREE.Group>(null)
   const root = useRef<THREE.Group>(null)
+  const fallingBody = useRef<THREE.Group>(null)
+  const splash = useRef<THREE.Group>(null)
+  const fallSample = useRef(createBalanceFallSample())
   const log = useRef<THREE.Group>(null)
   const cue = useRef<THREE.Mesh>(null)
   const crosshair = useRef<THREE.Group>(null)
@@ -415,6 +431,35 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
         16,
         delta,
       )
+    }
+    if (fallingBody.current && game.kind === "balance") {
+      const falling = !entry.alive && entry.actionAt > 0
+      const age = falling ? clock() - entry.actionAt : 0
+      const fall = sampleBalanceFall(age, entry.position, fallSample.current)
+      fallingBody.current.position.set(fall.x, 0.99 + fall.y, fall.z)
+      fallingBody.current.rotation.z = fall.roll
+      fallingBody.current.visible = !falling || fall.visible
+      if (splash.current) {
+        const p = fall.splash
+        splash.current.visible = falling && p > 0 && p < 1
+        splash.current.position.set(Math.sign(entry.position || 1) * 0.85, 0.065, 0.35)
+        splash.current.children.forEach((child, i) => {
+          const mesh = child as THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>
+          if (i < 2) {
+            mesh.scale.setScalar(0.3 + p * (i === 0 ? 1.6 : 1.1))
+            mesh.material.opacity = (1 - p) * 0.7
+          } else {
+            const angle = ((i - 2) / 10) * Math.PI * 2
+            mesh.position.set(
+              Math.cos(angle) * p * 0.75,
+              Math.sin(p * Math.PI) * 0.65,
+              Math.sin(angle) * p * 0.6,
+            )
+            mesh.scale.setScalar(1 - p * 0.8)
+            mesh.material.opacity = 1 - p
+          }
+        })
+      }
     }
     if (log.current)
       log.current.rotation.z = THREE.MathUtils.damp(
@@ -441,13 +486,7 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
   const archery = game.kind === "archery"
   const balance = game.kind === "balance"
   const rhythm = game.kind === "rhythm"
-  const y = fishing
-    ? -0.29
-    : balance && entry.alive
-      ? 0
-      : game.kind === "dodge" && entry.alive
-        ? -0.44
-        : -0.48
+  const y = fishing ? -0.29 : balance ? -0.99 : game.kind === "dodge" && entry.alive ? -0.44 : -0.48
   return (
     <>
       {fishing && <Dock x={x} />}
@@ -493,48 +532,73 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
         </>
       )}
       <group ref={root} position={[x, 0, 0]}>
-        <CharacterModel
-          clock={clock}
-          centered
-          active={game.winnerIds.includes(player.id)}
-          color={player.color}
-          moving={false}
-          playerIndex={index}
-          position={[0, y, fishing ? 1.4 : entry.alive ? 0 : balance ? 4.2 : 2]}
-          facing={fishing || archery ? Math.PI : 0}
-          pose={
-            fishing
-              ? "fishing"
-              : archery
-                ? "archery"
-                : balance
-                  ? "balance"
-                  : rhythm
-                    ? "rhythm"
-                    : undefined
-          }
-          actionAt={entry.actionAt}
-          lean={entry.position}
-          rightHand={
-            <group ref={grip}>
-              {fishing ? (
-                <FishingRod />
-              ) : rhythm ? (
-                <DrumStick />
-              ) : archery && entry.attempts < 3 ? (
-                <group rotation={[1.35, Math.PI, 0]}>
-                  <ArrowModel />
-                </group>
-              ) : null}
-            </group>
-          }
-          leftHand={archery ? <BowModel /> : rhythm ? <DrumStick /> : undefined}
-        />
+        <group ref={fallingBody} position={[0, balance ? 0.99 : 0, 0]}>
+          <CharacterModel
+            clock={clock}
+            centered
+            active={game.winnerIds.includes(player.id)}
+            color={player.color}
+            moving={false}
+            playerIndex={index}
+            position={[0, y, fishing ? 1.4 : balance || entry.alive ? 0 : 2]}
+            facing={fishing || archery ? Math.PI : 0}
+            pose={
+              fishing
+                ? "fishing"
+                : archery
+                  ? "archery"
+                  : balance
+                    ? entry.alive
+                      ? "balance"
+                      : "fall"
+                    : rhythm
+                      ? "rhythm"
+                      : undefined
+            }
+            actionAt={entry.actionAt}
+            lean={entry.position}
+            rightHand={
+              <group ref={grip}>
+                {fishing ? (
+                  <FishingRod />
+                ) : rhythm ? (
+                  <DrumStick />
+                ) : archery && entry.attempts < 3 ? (
+                  <group rotation={[1.35, Math.PI, 0]}>
+                    <ArrowModel />
+                  </group>
+                ) : null}
+              </group>
+            }
+            leftHand={archery ? <BowModel /> : rhythm ? <DrumStick /> : undefined}
+          />
+        </group>
+        {balance && (
+          <group ref={splash} visible={false}>
+            {[0, 1].map((i) => (
+              <mesh key={i} rotation={[-Math.PI / 2, 0, 0]}>
+                <ringGeometry args={[0.4, 0.43, 32]} />
+                <meshBasicMaterial color="#d9f1e6" transparent depthWrite={false} />
+              </mesh>
+            ))}
+            {Array.from({ length: 10 }, (_, i) => (
+              <mesh key={`drop-${i}`}>
+                <sphereGeometry args={[0.035, 6, 4]} />
+                <meshBasicMaterial color="#bfe4dc" transparent depthWrite={false} />
+              </mesh>
+            ))}
+          </group>
+        )}
       </group>
       {fishing && <FishingLine grip={grip} player={entry} x={x} clock={clock} />}
       {archery && (
         <>
-          <ArcheryTarget x={x} name={player.name} color={COLORS[player.color]} />
+          <ArcheryTarget
+            x={x}
+            name={player.name}
+            color={COLORS[player.color]}
+            showLabel={game.stage === "active"}
+          />
           {entry.shots?.length ? (
             entry.shots.map((shot, i) => (
               <ArcheryShot key={i} grip={grip} player={entry} x={x} clock={clock} shot={shot} />
