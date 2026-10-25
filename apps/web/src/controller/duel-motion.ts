@@ -1,3 +1,5 @@
+import { isFishingFlick } from "./fishing-motion"
+
 type Vector = { x: number | null; y: number | null; z: number | null } | null
 type Rotation = { alpha: number | null; beta: number | null; gamma: number | null } | null
 
@@ -5,8 +7,9 @@ export function getMinigameMotionReading(
   event: Parameters<typeof getDuelGesture>[0],
   axis: number,
   neutral: number | null,
+  fishing = false,
 ) {
-  const flick = getDuelGesture(event) === "swing"
+  const flick = fishing ? isFishingFlick(event) : getDuelGesture(event) === "swing"
   const x = event.accelerationIncludingGravity?.x
   if (flick || typeof x !== "number" || !Number.isFinite(x)) return { axis, neutral, flick }
   const center = neutral ?? x

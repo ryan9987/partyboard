@@ -11,7 +11,7 @@ export const MINIGAMES = {
   },
   fishing: {
     name: "Fishing",
-    instruction: "Flick to cast. Keep the tension centered, then reel when the float dips.",
+    instruction: "Hold your phone upright. Flick to cast; lift once when REEL NOW appears, or tap.",
     action: "Cast / reel",
     unit: "catch points",
   },
@@ -81,3 +81,14 @@ export function archeryDrift(elapsed: number): number {
   return Math.sin(elapsed / 730) * 0.28
 }
 export const RHYTHM_BEAT_MS = 750
+
+/** Shared cues/cooldowns; only the server decides catches and awards points. */
+export const FISHING_RULES = {
+  castFlightMs: 800,
+  biteAtMs: 1800,
+  reelUntilMs: 4200,
+  resultHoldMs: 1200,
+  maxCatchTilt: 0.75,
+  strainTilt: 0.9,
+  breakAfterSeconds: 1.2,
+} as const

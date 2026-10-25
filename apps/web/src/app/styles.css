@@ -748,6 +748,69 @@ a {
 .minigame-hud--intro .minigame-scores {
   display: none;
 }
+.phone-motion-guide {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  text-align: left;
+  color: #355445;
+}
+.phone-motion-guide > svg {
+  display: block;
+  flex: 0 0 220px;
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+}
+.phone-motion-guide h3 {
+  margin: 0 0 10px;
+  font:
+    600 1.1rem/1.2 Calibri,
+    "Segoe UI",
+    sans-serif;
+}
+.phone-motion-guide ol {
+  padding-left: 20px;
+  margin: 0 0 10px;
+  display: grid;
+  gap: 8px;
+  font:
+    400 0.95rem/1.45 Calibri,
+    "Segoe UI",
+    sans-serif;
+}
+.phone-motion-guide small {
+  font:
+    400 0.8rem/1.4 Calibri,
+    "Segoe UI",
+    sans-serif;
+  color: #647462;
+}
+.minigame-brief.minigame-brief--instructions {
+  width: min(720px, 90vw);
+  padding: 24px;
+}
+.minigame-brief--instructions > small {
+  display: block;
+  margin-top: 18px;
+}
+.minigame-score--bite {
+  outline: 2px solid #48743a;
+  outline-offset: 2px;
+}
+.minigame-score.minigame-score--bite small {
+  color: #355c2f;
+  font-weight: 700;
+}
+@media (max-width: 600px) {
+  .phone-motion-guide {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .phone-motion-guide > svg {
+    flex-basis: auto;
+  }
+}
 .round-countdown strong {
   font:
     600 4rem/1 Calibri,

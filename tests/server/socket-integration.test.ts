@@ -28,14 +28,14 @@ afterEach(async () => {
   await app?.close()
   app = undefined
 })
-async function listen(roundGame: MinigameKind | "potato" = "potato") {
+async function listen(roundGame: MinigameKind | "potato" = "potato", durationMs = 1500) {
   app = createGameApp({
     allowedOrigins: ["http://localhost:5173"],
     gameOptions: {
       roundGame,
       minigameIntroMs: 100,
       manualStageAdvance: false,
-      minigameDurationMs: 1500,
+      minigameDurationMs: durationMs,
       minigameResultMs: 100,
       dice: () => 2,
       rollDurationMs: 10,
@@ -205,90 +205,110 @@ it("completes five four-controller rotations over actual sockets without duplica
   )
 })
 
-it("carries validated mini-game inputs over real sockets and returns coin rewards to the board", async () => {
-  const url = await listen("archery")
-  const host = client(url)
-  await connected(host)
-  const created = next(host, "room.created")
-  host.emit("room.create", {})
-  const room = roomCreatedEventSchema.parse(await created)
-  const phones: Array<{ socket: GameSocket; playerSessionId: string }> = []
-  for (const color of ["coral", "cyan"] as const) {
-    const phone = client(url)
-    await connected(phone)
-    const joined = next(phone, "room.joined")
-    phone.emit("room.join", { roomCode: room.roomCode, name: color, color })
-    phones.push({
-      socket: phone,
-      playerSessionId: roomJoinedEventSchema.parse(await joined).playerSessionId,
-    })
-  }
-  const waitState = (predicate: (state: ReturnType<typeof gameStateSchema.parse>) => boolean) =>
-    new Promise<ReturnType<typeof gameStateSchema.parse>>((resolve) => {
-      const handler = (payload: unknown) => {
-        const state = gameStateSchema.parse(payload)
-        if (predicate(state)) {
-          host.off("room.snapshot", handler)
-          resolve(state)
+it.each(["archery", "fishing"] as const)(
+  "carries %s inputs and refresh recovery over real sockets, returning coin rewards to the board",
+  async (kind) => {
+    const url = await listen(kind, kind === "fishing" ? 5000 : 1500)
+    const host = client(url)
+    await connected(host)
+    const created = next(host, "room.created")
+    host.emit("room.create", {})
+    const room = roomCreatedEventSchema.parse(await created)
+    const phones: Array<{ socket: GameSocket; playerSessionId: string }> = []
+    for (const color of ["coral", "cyan"] as const) {
+      const phone = client(url)
+      await connected(phone)
+      const joined = next(phone, "room.joined")
+      phone.emit("room.join", { roomCode: room.roomCode, name: color, color })
+      phones.push({
+        socket: phone,
+        playerSessionId: roomJoinedEventSchema.parse(await joined).playerSessionId,
+      })
+    }
+    const waitState = (predicate: (state: ReturnType<typeof gameStateSchema.parse>) => boolean) =>
+      new Promise<ReturnType<typeof gameStateSchema.parse>>((resolve) => {
+        const handler = (payload: unknown) => {
+          const state = gameStateSchema.parse(payload)
+          if (predicate(state)) {
+            host.off("room.snapshot", handler)
+            resolve(state)
+          }
         }
-      }
-      host.on("room.snapshot", handler)
-    })
-  const started = next(host, "game.started")
-  host.emit("game.start", { roomCode: room.roomCode, hostToken: room.hostToken })
-  await started
-  const command = (i: number) =>
-    phones[i]!.socket.emit("dice.roll.request", {
+        host.on("room.snapshot", handler)
+      })
+    const started = next(host, "game.started")
+    host.emit("game.start", { roomCode: room.roomCode, hostToken: room.hostToken })
+    await started
+    const command = (i: number) =>
+      phones[i]!.socket.emit("dice.roll.request", {
+        roomCode: room.roomCode,
+        playerSessionId: phones[i]!.playerSessionId,
+        requestId: crypto.randomUUID(),
+      })
+    const turn2 = waitState((state) => state.phase === "AWAITING_ROLL" && state.turnNumber === 2)
+    command(0)
+    await turn2
+    const active = waitState((state) => state.minigame?.stage === "active")
+    command(1)
+    const game = (await active).minigame!
+    const scored = waitState((state) => state.minigame?.players[0]?.attempts === 1)
+    phones[0]!.socket.emit("minigame.input", {
       roomCode: room.roomCode,
-      playerSessionId: phones[i]!.playerSessionId,
+      playerSessionId: phones[0]!.playerSessionId,
       requestId: crypto.randomUUID(),
+      gameId: game.id,
+      sequence: 100,
+      axis: 0,
+      action: true,
     })
-  const turn2 = waitState((state) => state.phase === "AWAITING_ROLL" && state.turnNumber === 2)
-  command(0)
-  await turn2
-  const active = waitState((state) => state.minigame?.stage === "active")
-  command(1)
-  const game = (await active).minigame!
-  const scored = waitState((state) => state.minigame?.players[0]?.attempts === 1)
-  phones[0]!.socket.emit("minigame.input", {
-    roomCode: room.roomCode,
-    playerSessionId: phones[0]!.playerSessionId,
-    requestId: crypto.randomUUID(),
-    gameId: game.id,
-    sequence: 100,
-    axis: 0,
-    action: true,
-  })
-  expect((await scored).minigame!.players[0]!.score).toBeGreaterThan(0)
-  phones[0]!.socket.disconnect()
-  const refreshed = client(url)
-  await connected(refreshed)
-  const rejoined = next(refreshed, "room.joined")
-  refreshed.emit("room.join", {
-    roomCode: room.roomCode,
-    name: "coral",
-    color: "coral",
-    existingSessionId: phones[0]!.playerSessionId,
-  })
-  const recovered = roomJoinedEventSchema.parse(await rejoined)
-  expect(recovered.state.minigame!.players[0]).toMatchObject({ alive: true, attempts: 1 })
-  const steering = waitState((state) => state.minigame?.players[0]?.axis === 0.6)
-  refreshed.emit("minigame.input", {
-    roomCode: room.roomCode,
-    playerSessionId: phones[0]!.playerSessionId,
-    requestId: crypto.randomUUID(),
-    gameId: game.id,
-    sequence: 0,
-    axis: 0.6,
-    action: false,
-  })
-  expect((await steering).players).toHaveLength(2)
-  const result = await waitState((state) => state.minigame?.stage === "result")
-  expect(result.minigame!.winnerIds).toEqual([result.players[0]!.id])
-  const resumed = await waitState(
-    (state) => state.phase === "AWAITING_ROLL" && state.roundNumber === 2,
-  )
-  expect(resumed.currentPlayerId).toBe(result.players[0]!.id)
-  expect(resumed.players[0]!.coins).toBe(16)
-  expect(resumed.players[1]!.coins).toBe(10)
-})
+    const firstAction = (await scored).minigame!.players[0]!
+    if (kind === "archery") expect(firstAction.score).toBeGreaterThan(0)
+    else expect(firstAction.status).toBe("casting")
+    phones[0]!.socket.disconnect()
+    const refreshed = client(url)
+    await connected(refreshed)
+    const rejoined = next(refreshed, "room.joined")
+    refreshed.emit("room.join", {
+      roomCode: room.roomCode,
+      name: "coral",
+      color: "coral",
+      existingSessionId: phones[0]!.playerSessionId,
+    })
+    const recovered = roomJoinedEventSchema.parse(await rejoined)
+    expect(recovered.state.minigame!.players[0]).toMatchObject({ alive: true, attempts: 1 })
+    const steering = waitState((state) => state.minigame?.players[0]?.axis === 0.6)
+    refreshed.emit("minigame.input", {
+      roomCode: room.roomCode,
+      playerSessionId: phones[0]!.playerSessionId,
+      requestId: crypto.randomUUID(),
+      gameId: game.id,
+      sequence: 0,
+      axis: 0.6,
+      action: false,
+    })
+    expect((await steering).players).toHaveLength(2)
+    if (kind === "fishing") {
+      await waitState((state) => state.minigame?.players[0]?.status === "bite")
+      const caught = waitState((state) => state.minigame?.players[0]?.status === "caught")
+      refreshed.emit("minigame.input", {
+        roomCode: room.roomCode,
+        playerSessionId: phones[0]!.playerSessionId,
+        requestId: crypto.randomUUID(),
+        gameId: game.id,
+        sequence: 1,
+        axis: 0,
+        action: true,
+      })
+      expect((await caught).minigame!.players[0]!.score).toBe(100)
+    }
+    const result = await waitState((state) => state.minigame?.stage === "result")
+    expect(result.minigame!.winnerIds).toEqual([result.players[0]!.id])
+    const resumed = await waitState(
+      (state) => state.phase === "AWAITING_ROLL" && state.roundNumber === 2,
+    )
+    expect(resumed.currentPlayerId).toBe(result.players[0]!.id)
+    expect(resumed.players[0]!.coins).toBe(16)
+    expect(resumed.players[1]!.coins).toBe(10)
+  },
+  10_000,
+)

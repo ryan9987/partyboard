@@ -413,6 +413,34 @@ body:has(.controller-page),
   color: #647462;
   font-size: 0.85rem;
 }
+.controller-page .phone-motion-guide {
+  display: block;
+  padding: 12px 0;
+}
+.controller-page .phone-motion-guide > svg {
+  margin: 0 auto 12px;
+}
+.controller-page .phone-motion-guide ol {
+  font-size: 0.85rem;
+}
+.motion-guide-help {
+  margin-top: 16px;
+  border-top: 1px solid #bfc4ac;
+  padding-top: 8px;
+}
+.motion-guide-help > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #647462;
+  font-size: 0.85rem;
+}
+.controller-page .controller-roll--bite {
+  background: #286148;
+  outline: 2px solid #4c805c;
+  outline-offset: 3px;
+}
 .controller-settings > summary {
   cursor: pointer;
   min-height: 44px;

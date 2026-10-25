@@ -12,6 +12,12 @@ export function RoundCountdown({
 }) {
   const now = useGameNow(serverTime)
   if (paused) return <p>Waiting for the host</p>
+  if (at - now > 3000)
+    return (
+      <div className="round-countdown round-countdown--setup" role="status">
+        <span>Get into position · countdown starts shortly</span>
+      </div>
+    )
   const count = Math.max(1, Math.min(3, Math.ceil((at - now) / 1000)))
   return (
     <div className="round-countdown" role="timer" aria-label={`Starts in ${count}`}>

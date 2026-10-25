@@ -1,5 +1,12 @@
 # Integration notes
 
+## 2026-10-24 — Ryan-approved Fishing reliability and phone-orientation guide
+
+Ryan requested fixing difficult fishing motion/reeling, clear diagrams explaining phone orientation
+before play, verification and a main push. This explicitly authorizes the corresponding server,
+controller, shared rules and regression-test integration. Preserve automatic round countdowns,
+untimed shops/board turns, touch fallbacks, artwork and Jack's unrelated work. No dependencies added.
+
 ## 2026-10-24 — Ryan-approved seamless rounds and controller recovery
 
 Ryan explicitly requested server/controller recovery fixes, automatic three-second mini-game

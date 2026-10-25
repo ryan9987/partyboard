@@ -13,6 +13,7 @@ import { PartyControls } from "./PartyControls"
 import { MinigameControls } from "./MinigameControls"
 import { PowerupNotice } from "../app/PowerupNotice"
 import { CoinCount } from "../app/CoinCount"
+import { PhoneMotionGuide } from "../app/PhoneMotionGuide"
 import "./controller.css"
 
 function initialRoom(): string {
@@ -191,6 +192,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
         />
       )}
       {me && view.state && <PowerupNotice state={view.state} />}
+      {me && view.state?.phase === "LOBBY" && <PhoneMotionGuide />}
       {me && view.state?.waitingForHost && (
         <p className="waiting-for-host" role="status">
           No rush · the host will continue when everyone is ready.

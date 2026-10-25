@@ -23,7 +23,7 @@ const app = createGameApp({
     millisecondsPerTile: 100,
     turnEndMs: 100,
     rollTimeoutMs: 0,
-    minigameIntroMs: 3000,
+    minigameIntroMs: 7000,
     minigameDurationMs: kind === "all" ? 20000 : 60000,
     minigameResultMs: 3500,
   },

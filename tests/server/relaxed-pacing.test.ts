@@ -102,7 +102,7 @@ function round() {
 }
 
 it.each(["potato", "balance", "fishing", "dodge", "archery", "rhythm"] as const)(
-  "automatically counts down three seconds into %s, shows results and returns to the board",
+  "shows setup then automatically counts down three seconds into %s, shows results and returns to the board",
   (kind) => {
     setup(2, kind, false)
     roll(0, 1)
@@ -111,6 +111,11 @@ it.each(["potato", "balance", "fishing", "dodge", "archery", "rhythm"] as const)
     vi.advanceTimersByTime(30)
     expect(state.waitingForHost).toBeFalsy()
     expect((state.minigame ?? state.potato)?.stage).toBe("intro")
+    if (kind !== "potato") {
+      expect(state.minigame!.startsAt - Date.now()).toBe(7000)
+      vi.advanceTimersByTime(4000)
+      expect(state.minigame!.stage).toBe("intro")
+    }
     vi.advanceTimersByTime(2999)
     expect((state.minigame ?? state.potato)?.stage).toBe("intro")
     vi.advanceTimersByTime(1)

@@ -4,6 +4,7 @@ import {
   balanceLean,
   hazardLane,
   RHYTHM_BEAT_MS,
+  FISHING_RULES,
   type MinigameKind,
   type MinigameState,
   type MinigameInputRequest,
@@ -13,7 +14,7 @@ type Runtime = {
   sequence: number
   inputAt: number
   actionAt: number
-  castAt: number
+  castAt: number | null
   beat: number
   wave: number
   strain: number
@@ -50,7 +51,7 @@ export class MinigameRound {
         sequence: -1,
         inputAt: 0,
         actionAt: 0,
-        castAt: 0,
+        castAt: null,
         beat: -1,
         wave: -1,
         strain: 0,
@@ -77,27 +78,23 @@ export class MinigameRound {
     if (!input.action || now - runtime.actionAt < 350) return true
     const elapsed = now - game.startsAt
     if (game.kind === "fishing") {
-      if (!runtime.castAt || now - runtime.castAt >= 3300) {
+      if (["ready", "caught", "miss"].includes(player.status)) {
+        if (player.status !== "ready" && now - player.actionAt < FISHING_RULES.resultHoldMs)
+          return true
         runtime.castAt = now
         runtime.strain = 0
         player.status = "casting"
         player.attempts++
       } else {
-        const age = now - runtime.castAt
-        if (
-          age >= 1800 &&
-          age <= 3000 &&
-          Math.abs(player.axis) < 0.55 &&
-          player.status !== "miss" &&
-          player.status !== "caught" &&
-          runtime.strain < 0.7
-        ) {
+        const age = now - runtime.castAt!
+        // A backswing/early tap must not destroy a cast. Let players steady and retry a bite.
+        if (age < FISHING_RULES.biteAtMs) return true
+        if (age > FISHING_RULES.reelUntilMs || runtime.strain >= FISHING_RULES.breakAfterSeconds)
+          player.status = "miss"
+        else if (Math.abs(player.axis) <= FISHING_RULES.maxCatchTilt) {
           player.score += Math.round(40 + 60 * (1 - Math.abs(player.axis)))
           player.status = "caught"
-        } else if (age >= 800) player.status = "miss"
-        else return true
-        // Preserve the full cast/reel cooldown, without accepting another catch.
-        runtime.castAt = now - 3001
+        } else return true
       }
     } else if (game.kind === "archery") {
       if (player.attempts >= 3 || now - runtime.actionAt < 900) return true
@@ -169,21 +166,25 @@ export class MinigameRound {
         player.score = Math.round(elapsed / 10) / 100
       } else if (
         game.kind === "fishing" &&
-        runtime.castAt &&
+        runtime.castAt !== null &&
         player.status !== "caught" &&
         player.status !== "miss"
       ) {
         const age = now - runtime.castAt
         runtime.strain =
-          Math.abs(player.axis) > 0.8 ? runtime.strain + dt : Math.max(0, runtime.strain - dt)
-        player.status =
-          age < 800
-            ? "casting"
-            : age < 1800
-              ? "waiting"
-              : age <= 3000 && runtime.strain < 0.7
-                ? "bite"
-                : "miss"
+          Math.abs(player.axis) > FISHING_RULES.strainTilt
+            ? runtime.strain + dt
+            : Math.max(0, runtime.strain - dt)
+        if (age > FISHING_RULES.reelUntilMs || runtime.strain >= FISHING_RULES.breakAfterSeconds) {
+          player.status = "miss"
+          player.actionAt = now
+        } else
+          player.status =
+            age < FISHING_RULES.castFlightMs
+              ? "casting"
+              : age < FISHING_RULES.biteAtMs
+                ? "waiting"
+                : "bite"
       }
     })
     game.revision++

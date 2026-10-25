@@ -3,12 +3,15 @@ import {
   RHYTHM_BEAT_MS,
   balanceLean,
   archeryDrift,
+  FISHING_RULES,
   type GameState,
 } from "@party-board/protocol"
 import { useEffect, useRef, useState } from "react"
 import type { ControllerClient } from "./controller-client"
 import { getMinigameMotionReading } from "./duel-motion"
-import { useGameNow } from "../networking/gameClock"
+import { useGameClock, useGameNow } from "../networking/gameClock"
+import { canFishingAct, createFishingFlickDetector } from "./fishing-motion"
+import { PhoneMotionGuide } from "../app/PhoneMotionGuide"
 
 export function MinigameControls({
   client,
@@ -27,7 +30,10 @@ export function MinigameControls({
   const axis = useRef(0)
   const neutral = useRef<number | null>(null)
   const lastFlick = useRef(0)
+  const fishingFlick = useRef(createFishingFlickDetector())
+  const tiltHoldUntil = useRef(0)
   const now = useGameNow(state.serverTime)
+  const clock = useGameClock(state.serverTime)
   const [displayAxis, setDisplayAxis] = useState(0)
   const [usingTouch, setUsingTouch] = useState(!motionEnabled)
   const connection = client.getSnapshot()
@@ -45,13 +51,26 @@ export function MinigameControls({
     return () => window.clearInterval(timer)
   }, [active, client, game.id])
   useEffect(() => {
-    if (!active || !motionEnabled || usingTouch) return
+    if ((!active && game.stage !== "intro") || !motionEnabled || usingTouch) return
     const motion = (event: DeviceMotionEvent) => {
-      const reading = getMinigameMotionReading(event, axis.current, neutral.current)
-      axis.current = reading.axis
+      const fishing = game.kind === "fishing"
+      const time = performance.now()
+      const reading = getMinigameMotionReading(event, axis.current, neutral.current, fishing)
+      if (fishing && reading.flick) tiltHoldUntil.current = time + 250
+      if (!fishing || time >= tiltHoldUntil.current) axis.current = reading.axis
       neutral.current = reading.neutral
+      if (fishing) {
+        const edge = fishingFlick.current(event, time)
+        const current = client
+          .getSnapshot()
+          .state?.minigame?.players.find((entry) => entry.playerId === playerId)
+        if (active && edge && current && canFishingAct(current.status, current.actionAt, clock()))
+          client.minigameInput(axis.current, true)
+        return
+      }
       if (
-        (game.kind === "fishing" || game.kind === "rhythm") &&
+        active &&
+        game.kind === "rhythm" &&
         reading.flick &&
         Date.now() - lastFlick.current > 400
       ) {
@@ -61,7 +80,7 @@ export function MinigameControls({
     }
     window.addEventListener("devicemotion", motion)
     return () => window.removeEventListener("devicemotion", motion)
-  }, [active, client, motionEnabled, usingTouch, game.kind])
+  }, [active, client, clock, motionEnabled, usingTouch, game.kind, game.stage, playerId])
   const elapsed = game.stage === "intro" ? 0 : Math.max(0, now - game.startsAt)
   const beat = (elapsed % RHYTHM_BEAT_MS) / RHYTHM_BEAT_MS
   const meter =
@@ -76,9 +95,11 @@ export function MinigameControls({
       <p>
         {game.stage === "intro"
           ? "Get ready · watch the host screen"
-          : game.kind === "archery"
-            ? "Aim at your target on the host. Tap to release."
-            : info.instruction}
+          : game.kind === "fishing" && (!motionEnabled || usingTouch)
+            ? "Tap Cast line. Wait for REEL NOW, then tap again."
+            : game.kind === "archery"
+              ? "Aim at your target on the host. Tap to release."
+              : info.instruction}
       </p>
       {game.stage === "result" ? (
         <h3>
@@ -86,17 +107,29 @@ export function MinigameControls({
             ? "You win · +8 coins"
             : "+2 participation coins"}
         </h3>
-      ) : game.stage === "intro" ? null : !me ? (
+      ) : game.stage === "intro" ? (
+        <PhoneMotionGuide kind={game.kind} />
+      ) : !me ? (
         <p>You're spectating this round.</p>
       ) : !me.alive ? (
         <h3>You're out. Cheer them on!</h3>
       ) : (
         <>
           <div
-            className="control-meter"
+            className={`control-meter${game.kind === "fishing" ? " control-meter--fishing" : ""}`}
             aria-label={game.kind === "rhythm" ? "Beat timing" : "Control position"}
           >
-            <span className="control-meter-target" />
+            <span
+              className="control-meter-target"
+              style={
+                game.kind === "fishing"
+                  ? {
+                      left: `${50 - FISHING_RULES.maxCatchTilt * 45}%`,
+                      width: `${FISHING_RULES.maxCatchTilt * 90}%`,
+                    }
+                  : undefined
+              }
+            />
             <span
               className="control-meter-marker"
               style={{
@@ -110,9 +143,12 @@ export function MinigameControls({
                   ready: "Ready to cast",
                   casting: "Casting…",
                   waiting: "Watch the float…",
-                  bite: "Bite! Reel now",
+                  bite:
+                    Math.abs(displayAxis) > FISHING_RULES.maxCatchTilt
+                      ? "Center your phone, then reel"
+                      : "REEL NOW · lift once or tap",
                   caught: "Landed! Nice catch",
-                  miss: "It got away. Cast again",
+                  miss: "It got away · steady your phone and try again",
                   hit: "",
                   out: "",
                 }[me.status]
@@ -132,7 +168,14 @@ export function MinigameControls({
             <button
               className="control-mode"
               type="button"
-              onClick={() => setUsingTouch(!usingTouch)}
+              onClick={() => {
+                if (usingTouch) {
+                  neutral.current = null
+                  axis.current = 0
+                  setDisplayAxis(0)
+                }
+                setUsingTouch(!usingTouch)
+              }}
             >
               {usingTouch ? "Using touch · switch to motion" : "Using motion · switch to touch"}
             </button>
@@ -177,18 +220,28 @@ export function MinigameControls({
           )}
           {["archery", "fishing", "rhythm"].includes(game.kind) && (
             <button
-              className="controller-roll"
+              className={`controller-roll${game.kind === "fishing" && me.status === "bite" ? " controller-roll--bite" : ""}`}
               disabled={
                 !active ||
                 (game.kind === "archery" && me.attempts >= 3) ||
+                (game.kind === "fishing" &&
+                  (!canFishingAct(me.status, me.actionAt, now) ||
+                    (me.status === "bite" &&
+                      Math.abs(displayAxis) > FISHING_RULES.maxCatchTilt))) ||
                 now - me.actionAt < (game.kind === "archery" ? 900 : 350)
               }
               onClick={() => client.minigameInput(axis.current, true)}
             >
               {game.kind === "fishing"
-                ? ["casting", "waiting", "bite"].includes(me.status)
-                  ? "Reel in"
-                  : "Cast line"
+                ? me.status === "bite"
+                  ? "Reel now!"
+                  : me.status === "casting" || me.status === "waiting"
+                    ? "Wait for a bite…"
+                    : me.status === "caught" && now - me.actionAt < FISHING_RULES.resultHoldMs
+                      ? "Fish caught!"
+                      : me.status === "miss" && now - me.actionAt < FISHING_RULES.resultHoldMs
+                        ? "Try again shortly"
+                        : "Cast line"
                 : info.action}
             </button>
           )}
@@ -205,6 +258,12 @@ export function MinigameControls({
             </button>
           )}
         </>
+      )}
+      {game.stage === "active" && (
+        <details className="motion-guide-help">
+          <summary>Phone position & controls</summary>
+          <PhoneMotionGuide kind={game.kind} />
+        </details>
       )}
     </section>
   )

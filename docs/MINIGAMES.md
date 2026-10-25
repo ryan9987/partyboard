@@ -11,7 +11,8 @@ After everyone connected completes or skips a board turn, choose from a six-game
 Hot Potato opens each bag, then Balance, Fishing, Dodge, Archery and Rhythm are shuffled without
 repetition. A new bag starts after all six. Occupied-space sword duels remain separate.
 
-Instructions display an automatic, server-timed 3–2–1 countdown. The playing clock (up to 20
+Instructions show four seconds of illustrated phone setup followed by an automatic, server-timed
+3–2–1 countdown. No extra click is required. The playing clock (up to 20
 seconds) then starts fresh. Named winners/rewards display for 3–3.5 seconds and the board resumes
 automatically, with no Start/Continue clicks. Optional `manualStageAdvance: true` remains available
 for an operator/rehearsal, but is not the production default. Shops and board turns stay untimed.
@@ -23,7 +24,7 @@ Winners receive 8 coins, other participants receive 2, exactly once. Tied high s
 | Game | Phone / touch | Authoritative rules |
 | --- | --- | --- |
 | Balance | Counter-tilt / slider | Stay centered on a rolling log. Drift amplifies existing lean. Fall at 1.15 displacement; highest survival time wins. |
-| Fishing | Small flick to cast/reel; tilt to steady / button and slider | Cast lasts 0.8s, bite opens 1.8–3s after cast. Reel with axis under 0.55 magnitude for 40–100 catch points. Sustained extreme tilt breaks the line. Highest total wins. |
+| Fishing | Small forward wrist flick to cast, lift once to reel; tilt to steady / button and slider | Cast lasts 0.8s, bite opens 1.8–4.2s after cast (2.4s reaction window). Reel at axis magnitude ≤0.75 for 55–100 catch points. Sustained extreme tilt breaks the line. Highest total wins. |
 | Dodge | Tilt / left-center-right buttons | Three lanes per player. Ground marker warns before a falling acorn arrives every 1.8s. Collision evaluated after 1.45s. Highest survival time wins. |
 | Archery | Tilt to aim, tap release / slider and release | Three arrows, 900ms cooldown. Shared deterministic sway; 0–100 points per shot depending on horizontal accuracy. Highest total wins. |
 | Rhythm | Small wrist flick / Strike button | Beats every 750ms. Server receipt within 180ms of a beat earns up to 100 points; one attempt per beat. Highest total wins. |
@@ -31,6 +32,26 @@ Winners receive 8 coins, other participants receive 2, exactly once. Tied high s
 The phone calibrates neutral sideways gravity when motion starts. Recenter resets it.
 An explicit touch/motion selector prevents sensors from overriding slider or lane-button input.
 Touch controls remain available without granting sensor permission. Keep phones held securely.
+
+### Fishing reliability and orientation
+
+- Reusable code-native diagrams show portrait orientation, screen facing the player, and a side
+  view of the small wrist lift. Visible in the phone lobby and five mini-game setup screens on
+  host/phone, and available in expandable in-game help. Active phone controls remain compact.
+- Motion calibration listens during setup, not just after play starts. Recenter is still available.
+- Fishing uses a gentler threshold (110°/s rotation or 6m/s² gravity-free acceleration), separate
+  from sword/rhythm gestures. One motion requires 180ms of settled wrist before rearming and at
+  least 600ms between flicks. A 250ms tilt hold keeps the gesture from injecting line tension.
+- Casting/return motions cannot reel early: phone actions are stage-gated, and the server ignores
+  early reels rather than consuming a fish. The button reads Wait for a bite until REEL NOW.
+- Host scorecards, an enlarged bobber and the phone action highlight the bite. The displayed
+  green meter band matches the shared catch tolerance. Players can recenter an over-tilted phone
+  and retry within the bite window instead of instantly losing a fish.
+- Holding absolute tilt over 0.9 for 1.2 seconds breaks the line. Completed/expired casts retain
+  feedback for 1.2 seconds before a new cast. One catch per cast; no implicit time-based recast.
+- `FISHING_RULES` shares timing/tolerance values between host, controller and server. Score,
+  game ID/sequence checks and payouts stay server-owned. Device thresholds require real-phone
+  rehearsal; desktop/synthetic sensor tests are not a substitute for iPhone/Android testing.
 
 ## Art and interface
 

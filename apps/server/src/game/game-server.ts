@@ -151,7 +151,7 @@ export class GameServer {
       potatoIntroMs: options.potatoIntroMs ?? 3000,
       potatoFuseMs: options.potatoFuseMs ?? 5000,
       potatoResultMs: options.potatoResultMs ?? 3000,
-      minigameIntroMs: options.minigameIntroMs ?? 3000,
+      minigameIntroMs: options.minigameIntroMs ?? 7000,
       minigameDurationMs: options.minigameDurationMs ?? 20000,
       minigameResultMs: options.minigameResultMs ?? 3500,
     }

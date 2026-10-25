@@ -91,21 +91,68 @@ it("requires a cast, waits for a bite, lands a fish once and animates a new cast
   expect(game.state.players[0]).toMatchObject({ score: 100, status: "caught" })
   input(game, "a", 3100)
   expect(game.state.players[0]!.score).toBe(100)
-  input(game, "a", 3500)
+  input(game, "a", 4300)
   expect(game.state.players[0]).toMatchObject({ score: 100, status: "casting", attempts: 2 })
-  input(game, "b", 1000)
-  input(game, "b", 2000)
-  expect(game.state.players[1]).toMatchObject({ score: 0, status: "miss" })
 })
 
-it("misses late or over-tensioned fishing reels", () => {
+it("ignores an early reel/backswing and still allows a later bite to be caught", () => {
   const game = round("fishing")
   input(game, "a", 1000)
-  game.tick(start + 4300)
+  input(game, "a", 2000)
+  game.tick(start + 100 + 2900)
+  expect(game.state.players[0]!.status).toBe("bite")
+  input(game, "a", 3100)
+  expect(game.state.players[0]).toMatchObject({ status: "caught", attempts: 1, score: 100 })
+})
+
+it("allows a full reaction window and moderate tilt, with one catch per cast", () => {
+  const game = round("fishing")
+  input(game, "a", 1000)
+  game.tick(start + 100 + 4800)
+  expect(game.state.players[0]!.status).toBe("bite")
+  input(game, "a", 4900, 0.65)
+  const score = game.state.players[0]!.score
+  expect(score).toBeGreaterThan(0)
+  expect(game.state.players[0]!.status).toBe("caught")
+  input(game, "a", 5300)
+  expect(game.state.players[0]).toMatchObject({ score, attempts: 1, status: "caught" })
+})
+
+it("misses an expired bite and breaks a line only after sustained extreme tilt", () => {
+  const game = round("fishing")
+  input(game, "a", 1000)
+  game.tick(start + 100 + 5300)
   expect(game.state.players[0]!.status).toBe("miss")
-  input(game, "b", 1000)
-  input(game, "b", 2900, 0.9)
-  expect(game.state.players[1]).toMatchObject({ status: "miss", score: 0 })
+  const strained = round("fishing")
+  input(strained, "b", 1000)
+  for (let t = 1100; t <= 2400; t += 100) {
+    input(strained, "b", t, 1, false)
+    strained.tick(start + 100 + t)
+  }
+  expect(strained.state.players[1]).toMatchObject({ status: "miss", score: 0 })
+})
+
+it("lets players steady a tilted phone and retry within the same bite", () => {
+  const game = round("fishing")
+  input(game, "a", 1000)
+  game.tick(start + 100 + 2900)
+  input(game, "a", 3000, 0.9)
+  expect(game.state.players[0]).toMatchObject({ status: "bite", score: 0, attempts: 1 })
+  input(game, "a", 3400, 0.2)
+  expect(game.state.players[0]).toMatchObject({ status: "caught", score: 88, attempts: 1 })
+})
+
+it("lets four players catch independently after early motions, late reactions and moderate tilt", () => {
+  const game = round("fishing")
+  for (const id of ["a", "b", "c", "d"]) input(game, id, 1000)
+  for (const id of ["a", "b", "c", "d"]) input(game, id, 2100)
+  game.tick(start + 100 + 4800)
+  for (const id of ["a", "b", "c", "d"]) input(game, id, 4900, 0.65)
+  expect(
+    game.state.players.every(
+      (player) => player.status === "caught" && player.score === 61 && player.attempts === 1,
+    ),
+  ).toBe(true)
 })
 
 it("scores rhythm against server beats and permits only one attempt per beat", () => {

@@ -1,6 +1,7 @@
 import { MINIGAMES, type GameState } from "@party-board/protocol"
 import { useGameNow } from "../networking/gameClock"
 import { RoundCountdown } from "./RoundCountdown"
+import { PhoneMotionGuide } from "../app/PhoneMotionGuide"
 
 export function MinigameOverlay({ state }: { state: GameState }) {
   const game = state.minigame!
@@ -37,15 +38,14 @@ export function MinigameOverlay({ state }: { state: GameState }) {
         </div>
       </div>
       {game.stage === "intro" && (
-        <div className="minigame-brief">
+        <div className="minigame-brief minigame-brief--instructions">
           <RoundCountdown
             at={game.startsAt}
             serverTime={state.serverTime}
             paused={!!state.waitingForHost}
           />
-          <h2>{info.instruction}</h2>
-          <p>Everyone plays · winner earns 8 coins · everyone else earns 2</p>
-          <small>Motion or touch controls on your phone</small>
+          <PhoneMotionGuide kind={game.kind} />
+          <small>Winner +8 coins · everyone else +2 · motion or touch</small>
         </div>
       )}
       {game.stage === "result" && (
@@ -68,7 +68,7 @@ export function MinigameOverlay({ state }: { state: GameState }) {
           return (
             <div
               key={entry.playerId}
-              className={`minigame-score ${!entry.alive ? "minigame-score--out" : ""}`}
+              className={`minigame-score ${!entry.alive ? "minigame-score--out" : ""}${game.kind === "fishing" && entry.status === "bite" && game.stage === "active" ? " minigame-score--bite" : ""}`}
             >
               <span className={`score-dot score-dot--${player.color}`} />
               <span>
@@ -80,7 +80,18 @@ export function MinigameOverlay({ state }: { state: GameState }) {
                       ? "Out"
                       : game.kind === "archery"
                         ? `${entry.attempts}/3 arrows`
-                        : info.unit}
+                        : game.kind === "fishing" && game.stage === "active"
+                          ? {
+                              ready: "Ready to cast",
+                              casting: "Casting",
+                              waiting: "Wait for bite",
+                              bite: "REEL NOW",
+                              caught: "Fish caught!",
+                              miss: "Try again",
+                              hit: "",
+                              out: "Out",
+                            }[entry.status]
+                          : info.unit}
                 </small>
               </span>
               <strong>{entry.score}</strong>

@@ -3,6 +3,7 @@ import {
   balanceLean,
   hazardLane,
   RHYTHM_BEAT_MS,
+  FISHING_RULES,
   type GameState,
   type MinigamePlayer,
   type MinigameState,
@@ -172,7 +173,7 @@ function FishingLine({
     const casting = player.status === "casting"
     const landed = player.status === "caught"
     const fishing = casting || player.status === "waiting" || player.status === "bite"
-    const t = casting ? Math.min(1, age / 0.75) : 1
+    const t = casting ? Math.min(1, age / (FISHING_RULES.castFlightMs / 1000)) : 1
     float.set(x + 0.25, 0.08, -2.8)
     if (casting) {
       float.lerpVectors(tip, float, smoothStep(t))
@@ -182,6 +183,7 @@ function FishingLine({
         Math.sin(renderClock.elapsedTime * (player.status === "bite" ? 16 : 3)) *
         (player.status === "bite" ? 0.09 : 0.025)
     bobber.current.visible = fishing
+    bobber.current.scale.setScalar(player.status === "bite" ? 1.5 : 1)
     bobber.current.position.copy(float)
     ripple.current.visible = fishing && !casting
     ripple.current.position.set(float.x, 0.06, float.z)

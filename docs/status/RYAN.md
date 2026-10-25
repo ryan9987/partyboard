@@ -4,6 +4,25 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Ryan-approved Fishing reliability/orientation pass on `fix/fishing-controls-and-motion-guide`.
+  Reproduced early-reel failure in regression tests before fixing it. Casting/waiting no longer
+  expose an active Reel button or lose a fish on an early action; gentle edge-triggered wrist
+  gestures, setup calibration, 250ms tilt hold, a 2.4s bite window and ±0.75 catch tilt tolerance.
+  Sustained extreme tilt still breaks a line; terminal feedback/catch animation holds 1.2s.
+- Shared `FISHING_RULES` align server/phone/host cues. Named REEL NOW scorecards, larger bite
+  bobber and a green meter band matching the catch threshold. Four-player tests cover independent
+  catches, moderate tilt, early input, late reaction, retries, duplicates and recasting.
+- Code-native portrait/front and wrist-lift diagrams in the phone lobby, all five mini-game
+  setup screens and expandable active-phone help. Four-second setup precedes the unchanged final
+  3–2–1; no new Start click. Touch-mode text explicitly says to tap; lobby explains motion access.
+- Browser: live Fishing cast→wait→bite→reel earned 100 points. Waiting action disabled, catch
+  feedback visible, compact 320px/390px phone layouts and final host setup diagram inspected.
+  Host/controller error logs empty. Real Socket.IO regression also casts, refreshes mid-cast,
+  reels for 100 points, pays rewards once and automatically returns to the correct board turn.
+- Verification: `pnpm check` passes with 134 Vitest + 10 motion tests, types/lint/format/build.
+  No dependencies or new wire fields. Physical phone gesture tuning and Render rollout remain
+  unverified. Main push authorized; server redeploys still require a fresh room.
+
 - Seamless-round/controller-focus integration requested by Ryan; supersedes manual starts/results.
   Default automatic 3–2–1 into all six round games and duels, named results and automatic trail
   return. Connected turns/shops remain untimed. Optional authenticated manual operator mode retained.

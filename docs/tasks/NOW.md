@@ -1,5 +1,15 @@
 # Current task board
 
+## Fishing reliability and phone setup
+
+- [x] Ignore early reels; separate casting from bite actions and prevent backswing repeats.
+- [x] Gentle Fishing-specific gestures, setup calibration and wider timing/tilt tolerance.
+- [x] Shared authoritative rules, state-specific button labels and visible host/phone bite cues.
+- [x] Portrait/front and wrist-lift diagrams in lobby, mini-game setup and expandable phone help.
+- [x] Four-second instruction setup followed by automatic 3–2–1; no new host clicks.
+- [x] Regression tests for early/late reels, four-player catches, line break and gesture rearming.
+- [ ] Physically tune gestures on iPhone/Android and verify the Render deployment.
+
 ## Seamless rounds and controller focus (supersedes manual-stage default below)
 
 - [x] Default automatic 3–2–1, named winners and automatic board return; untimed shops/turns retained.
