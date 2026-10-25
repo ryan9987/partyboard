@@ -1,5 +1,17 @@
 # Integration notes
 
+### 2026-10-24 — Economy review and anti-freeze balance
+
+- Ryan requested a full game pass, more ways to spend coins, and a fix for repeated shop/freezes.
+  This authorizes the required server, controller and test integration in Jack's lane; no unrelated
+  work or edits to Jack's status file are included.
+- Replace turn-skipping Frost with a -2 next-move slowdown (minimum one space), raise its price,
+  grant thaw protection through the victim's next normal roll, and enforce one power-up per turn.
+- Add Lucky Clover (roll at least four) and Trail Compass (choose an exact die value). Prices,
+  eligibility, purchases, movement, per-space coins and effect use remain server-owned. Update
+  strict schemas and all host/phone consumers in the same change. Preserve untimed shopping,
+  touch alternatives, locally authored symbols and automatic mini-game transitions.
+
 ### 2026-10-24 — Animated instructions and Balance last-survivor finish
 
 - Ryan requested animated how-to-play splashes before each mini-game, visible log falls, and an

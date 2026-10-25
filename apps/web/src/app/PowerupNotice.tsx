@@ -21,6 +21,16 @@ export function ItemGlyph({ item }: { item: Item }) {
           <path d="M16 3 27 8v9c0 6-8 11-11 13C13 28 5 23 5 17V8Z" />
           <path d="M11 21c-3-7 1-11 11-12 0 10-3 14-9 12M11 23l8-11M15 18l-1-4M16 17l4 1" />
         </>
+      ) : item === "clover" ? (
+        <>
+          <path d="M16 16C1 15 6 2 13 7l3 5 3-5c7-5 12 8-3 9Zm0 0c15 1 10 14 3 9l-3-5-3 5C6 30 1 17 16 16Z" />
+          <path d="M16 19c0 5-2 8-5 10" />
+        </>
+      ) : item === "compass" ? (
+        <>
+          <circle cx="16" cy="17" r="11" />
+          <path d="M13 4h6M16 6V3m0 5v2m9 7h-2m-7 7v2M7 17h2m11-6-2 8-6 4 2-8Z" />
+        </>
       ) : (
         <>
           <path d="M7 4h10v13l9 4v7H5v-9l2-3Z" />

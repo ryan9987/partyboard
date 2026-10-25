@@ -1,4 +1,5 @@
 import type { GameState, PlayerColor } from "@party-board/protocol"
+import { playerEffectLabels } from "../app/playerEffects"
 
 const COLOR_VALUES: Record<PlayerColor, string> = {
   coral: "#ff6f7d",
@@ -110,15 +111,7 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
               {player.name}
             </span>
             <span className="player-state">
-              <span className="player-effect-label">
-                {[
-                  player.frozen ? "Frozen" : "",
-                  player.shield ? "Shield" : "",
-                  player.boosted ? "+2 ready" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </span>
+              <span className="player-effect-label">{playerEffectLabels(player).join(" · ")}</span>
               {player.tileId === "tile-0" ? "Start" : player.tileId.replace("tile-", "Space ")}
             </span>
           </div>
@@ -127,7 +120,12 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
 
       {state.phase === "AWAITING_ROLL" && (
         <p className="muted">
-          Use a power-up, then roll when ready. Each space earns 1 coin. No time limit.
+          One power-up per turn, then roll when ready. Each space earns 1 coin. No time limit.
+        </p>
+      )}
+      {state.notice && !state.itemEffect && (
+        <p className="muted" role="status">
+          {state.notice}
         </p>
       )}
 

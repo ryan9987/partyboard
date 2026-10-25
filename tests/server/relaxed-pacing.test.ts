@@ -269,7 +269,7 @@ it("shows an authoritative power-up effect on the owner's turn and clears it on 
   expect(state.itemEffect!.id).toBe(effectId)
   roll(0, 1)
   expect(state.itemEffect).toBeNull()
-  expect(state.notice).toBeUndefined()
+  expect(state.notice).toContain("moves 3 spaces")
   settle()
   expect(state.players[0]!.tileId).toBe("tile-9")
 })

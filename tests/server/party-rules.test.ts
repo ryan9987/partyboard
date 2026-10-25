@@ -7,6 +7,7 @@ import {
   roomJoinedEventSchema,
   type GameState,
   type Item,
+  SHOP_ITEMS,
 } from "../../packages/protocol/src"
 
 let server: GameServer
@@ -110,6 +111,139 @@ function use(index: number, item: Item, target?: number) {
   })
 }
 
+/** Play a real turn, purchasing only when its server-owned purse can pay. */
+function marketTurn(index: number, item?: Item) {
+  roll(index)
+  for (let step = 0; step < 2000; step++) {
+    if (state.phase === "AWAITING_ROLL") return
+    if (state.phase === "SHOP") {
+      const player = state.players[index]!
+      const price = item ? SHOP_ITEMS[item].price : Infinity
+      shop(index, item && player.coins! >= price && player.inventory!.length < 3 ? item : "skip")
+    } else vi.advanceTimersByTime(10)
+  }
+  throw new Error("Market turn did not settle")
+}
+
+it("prevents four-player Frost chaining and guarantees an unhindered roll between slowdowns", () => {
+  setup(4)
+  for (let round = 0; round < 4; round++)
+    for (let i = 0; i < 4; i++) marketTurn(i, i === 0 || i === 2 ? "freeze" : undefined)
+  expect(state.players[0]!.inventory).toEqual(["freeze", "freeze"])
+  expect(state.players[2]!.inventory).toEqual(["freeze", "freeze"])
+  use(0, "freeze", 1)
+  expect(state.players[1]).toMatchObject({ frozen: true, frostWard: true })
+  server.disconnect("p1")
+  server.handle("p1", "room.join", {
+    roomCode: room.roomCode,
+    name: "Player 1",
+    color: "cyan",
+    existingSessionId: players[1]!.playerSessionId,
+  })
+  expect(state.players[1]).toMatchObject({ frozen: true, frostWard: true })
+  use(0, "freeze", 2)
+  expect(errors.at(-1)).toBe("ITEM_ALREADY_USED")
+  expect(state.players[0]!.inventory).toEqual(["freeze"])
+  play(0, 1)
+  const victimCoins = state.players[1]!.coins!
+  play(1, 6)
+  expect(state.players[1]).toMatchObject({ frozen: false, frostWard: true, tileId: "tile-28" })
+  expect(state.players[1]!.coins).toBe(victimCoins + 4)
+  use(2, "freeze", 1)
+  expect(errors.at(-1)).toBe("INVALID_TARGET")
+  expect(state.players[2]!.inventory).toHaveLength(2)
+  play(2, 1)
+  play(3, 1)
+  use(0, "freeze", 1)
+  expect(errors.at(-1)).toBe("INVALID_TARGET")
+  play(0, 1)
+  play(1, 1)
+  expect(state.players[1]).toMatchObject({ frozen: false, frostWard: false, tileId: "tile-29" })
+  use(2, "freeze", 1)
+  expect(state.players[1]).toMatchObject({ frozen: true, frostWard: true })
+  expect(state.players[2]!.inventory).toHaveLength(1)
+})
+
+it.each([1, 4, 6])(
+  "uses Lucky Clover once, showing a valid die and paying exactly the %i-derived path",
+  (raw) => {
+    setup(1)
+    marketTurn(0, "clover")
+    const before = state.players[0]!.coins!
+    use(0, "clover")
+    expect(state.players[0]).toMatchObject({ inventory: [], lucky: true })
+    nextDice = raw
+    const request = command(0, "dice.roll.request", {})
+    command(0, "dice.roll.request", {}, request)
+    expect(state.lastRoll).toBe(Math.max(4, raw))
+    settle()
+    expect(state.players[0]!.lucky).toBe(false)
+    expect(state.players[0]!.coins).toBe(before + Math.max(4, raw))
+    expect(state.players[0]!.tileId).toBe(`tile-${6 + Math.max(4, raw)}`)
+  },
+)
+
+it("applies Frost after Lucky Clover without turning a slowed roll into another full turn", () => {
+  setup(2)
+  for (let round = 0; round < 2; round++) {
+    marketTurn(0, "freeze")
+    marketTurn(1, "clover")
+  }
+  use(0, "freeze", 1)
+  play(0, 1)
+  use(1, "clover")
+  const before = state.players[1]!.coins!
+  roll(1, 1)
+  expect(state.lastRoll).toBe(4)
+  settle()
+  expect(state.players[1]).toMatchObject({
+    tileId: "tile-14",
+    lucky: false,
+    frozen: false,
+    frostWard: true,
+  })
+  expect(state.players[1]!.coins).toBeGreaterThanOrEqual(before + 2)
+})
+
+it("validates Compass choices, persists the selected die through refresh, and clears buffs on restart", () => {
+  setup(1)
+  marketTurn(0)
+  marketTurn(0, "compass")
+  const inventory = [...state.players[0]!.inventory!]
+  for (const dieValue of [undefined, 0, 7, 2.5]) {
+    command(0, "item.use", { item: "compass", dieValue, turnNumber: state.turnNumber })
+    expect(errors.at(-1)).toBe("INVALID_PAYLOAD")
+    expect(state.players[0]!.inventory).toEqual(inventory)
+  }
+  const id = command(0, "item.use", { item: "compass", dieValue: 2, turnNumber: state.turnNumber })
+  command(0, "item.use", { item: "compass", dieValue: 2, turnNumber: state.turnNumber }, id)
+  expect(state.players[0]).toMatchObject({ plannedRoll: 2, inventory: [] })
+  server.disconnect("p0")
+  server.handle("p0", "room.join", {
+    roomCode: room.roomCode,
+    name: "Player 0",
+    color: "coral",
+    existingSessionId: players[0]!.playerSessionId,
+  })
+  const before = state.players[0]!.coins!
+  roll(0, 6)
+  expect(state.lastRoll).toBe(2)
+  settle()
+  expect(state.players[0]).toMatchObject({
+    plannedRoll: null,
+    tileId: "tile-14",
+    coins: before + 2,
+  })
+  server.handle("host", "game.restart", { roomCode: room.roomCode, hostToken: room.hostToken })
+  expect(state.players[0]).toMatchObject({
+    plannedRoll: null,
+    lucky: false,
+    frostWard: false,
+    itemUsedTurn: 0,
+    coins: 6,
+  })
+})
+
 it("pauses at a passed shop, buys once, and finishes the original path without an extra roll", () => {
   setup()
   roll(0)
@@ -125,6 +259,19 @@ it("pauses at a passed shop, buys once, and finishes the original path without a
   settle()
   expect(state.players[0]).toMatchObject({ tileId: "tile-6", coins: 8 })
   expect(state.currentPlayerId).toBe(players[1]!.playerId)
+})
+
+it("does not sell unusable sabotage in a solo room or charge for a rejected choice", () => {
+  setup(1)
+  marketTurn(0)
+  roll(0)
+  vi.advanceTimersByTime(35)
+  const coins = state.players[0]!.coins
+  shop(0, "freeze")
+  expect(errors.at(-1)).toBe("ITEM_UNAVAILABLE")
+  expect(state.players[0]).toMatchObject({ coins, inventory: [] })
+  shop(0, "clover")
+  expect(state.players[0]!.inventory).toEqual(["clover"])
 })
 
 it("awards one coin at each actual crossing, including the market, and no extra landing coin", () => {
@@ -215,41 +362,57 @@ it("consumes Boots once and applies exactly two additional spaces", () => {
   expect(state.players[0]).toMatchObject({ tileId: "tile-9", boosted: false })
 })
 
-it("freezes precisely one board turn and resumes the round without losing turn order", () => {
+it("slows one roll without skipping a turn, always moving and paying for at least one space", () => {
   setup(3)
   roll(0)
   vi.advanceTimersByTime(25)
+  const firstPurse = state.players[0]!.coins
+  shop(0, "freeze")
+  expect(errors.at(-1)).toBe("NOT_ENOUGH_COINS")
+  expect(state.players[0]!.coins).toBe(firstPurse)
+  shop(0, "skip")
+  settle()
+  play(1, 1)
+  play(2, 2)
+  roll(0)
+  vi.advanceTimersByTime(35)
   shop(0, "freeze")
   settle()
   play(1, 1)
   play(2, 2)
   use(0, "freeze", 1)
-  expect(state.players[1]!.frozen).toBe(true)
+  expect(state.players[1]).toMatchObject({ frozen: true, frostWard: true })
   const before = state.turnNumber
-  const frozenCoins = state.players[1]!.coins
+  const frozenCoins = state.players[1]!.coins!
   play(0, 1)
+  expect(state.currentPlayerId).toBe(players[1]!.playerId)
+  expect(state.phase).toBe("AWAITING_ROLL")
+  play(1, 1)
   expect(state.currentPlayerId).toBe(players[2]!.playerId)
   expect(state.turnNumber).toBe(before + 2)
-  expect(state.players[1]).toMatchObject({ frozen: false, tileId: "tile-1" })
-  expect(state.players[1]!.coins).toBe(frozenCoins)
+  expect(state.players[1]).toMatchObject({ frozen: false, frostWard: true, tileId: "tile-3" })
+  expect(state.players[1]!.coins).toBe(frozenCoins + 1)
 })
 
 it("consumes a shield when it blocks sabotage and leaves the protected player unfrozen", () => {
   setup()
   roll(0)
   vi.advanceTimersByTime(25)
-  shop(0, "freeze")
+  shop(0, "skip")
   settle()
   roll(1)
   vi.advanceTimersByTime(25)
   shop(1, "shield")
   settle()
-  play(0, 1)
+  roll(0)
+  vi.advanceTimersByTime(35)
+  shop(0, "freeze")
+  settle()
   use(1, "shield")
   play(1, 1)
   use(0, "freeze", 1)
   expect(state.players[0]!.inventory).toEqual([])
-  expect(state.players[1]).toMatchObject({ shield: false, frozen: false })
+  expect(state.players[1]).toMatchObject({ shield: false, frozen: false, frostWard: true })
   expect(state.notice).toContain("blocked")
 })
 

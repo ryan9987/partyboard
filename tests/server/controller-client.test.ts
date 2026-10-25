@@ -7,7 +7,12 @@ import {
   createRollRequestId,
 } from "../../apps/web/src/controller/controller-client"
 import type { GameSocket } from "../../apps/web/src/networking/socket"
-import { gameStateSchema, roomCreatedEventSchema } from "../../packages/protocol/src/index"
+import {
+  gameStateSchema,
+  roomCreatedEventSchema,
+  SHOP_ITEMS,
+  type Item,
+} from "../../packages/protocol/src/index"
 
 class FakeSocket {
   holdItem = false
@@ -103,6 +108,53 @@ function controller(roomCode: string, id = randomUUID()) {
 function start(room: ReturnType<typeof host>) {
   server.handle("host", "game.start", { roomCode: room.roomCode, hostToken: room.hostToken })
 }
+
+it("preserves a Compass choice and the one-item limit through reconnect and controller refresh", () => {
+  const room = host()
+  const { client, socket } = controller(room.roomCode)
+  client.join({ roomCode: room.roomCode, name: "Ryan", color: "coral" })
+  start(room)
+  function buy(item: Item) {
+    for (let step = 0; step < 30; step++) {
+      expect(client.requestRoll()).toBe(true)
+      vi.advanceTimersByTime(1200)
+      const state = client.getSnapshot().state!
+      const me = state.players[0]!
+      if (state.phase === "SHOP")
+        client.chooseShop(me.coins! >= SHOP_ITEMS[item].price ? item : "skip")
+      vi.advanceTimersByTime(600)
+      if (client.getSnapshot().state!.players[0]!.inventory!.includes(item)) return
+    }
+    throw new Error("Did not reach an affordable market")
+  }
+  buy("compass")
+  expect(client.useItem("compass")).toBe(false)
+  expect(client.useItem("compass", undefined, 7)).toBe(false)
+  expect(client.useItem("compass", undefined, 1.5)).toBe(false)
+  socket.holdItem = true
+  expect(client.useItem("compass", undefined, 3)).toBe(true)
+  const original = client.getSnapshot().pendingItem!.requestId
+  expect(client.getSnapshot().pendingItem!.dieValue).toBe(3)
+  socket.disconnect()
+  socket.holdItem = false
+  socket.connect()
+  expect(client.getSnapshot().state!.players[0]!.plannedRoll).toBe(3)
+  expect(client.canUseItem()).toBe(false)
+  expect(client.canRoll()).toBe(true)
+  const refreshed = controller(room.roomCode).client
+  expect(refreshed.canUseItem()).toBe(false)
+  expect(refreshed.canRoll()).toBe(true)
+  expect(refreshed.getSnapshot().state!.players[0]!.plannedRoll).toBe(3)
+  expect(
+    socket.sent
+      .filter((entry) => entry.event === "item.use")
+      .map((entry) => (entry.payload as { requestId: string }).requestId),
+  ).toEqual([original, original])
+  expect(refreshed.requestRoll()).toBe(true)
+  expect(refreshed.getSnapshot().state!.lastRoll).toBe(3)
+  vi.advanceTimersByTime(2400)
+  expect(refreshed.getSnapshot().state!.players[0]!.plannedRoll).toBeNull()
+})
 
 it("blocks double-tap shop purchases while waiting for a server response", () => {
   const room = host()

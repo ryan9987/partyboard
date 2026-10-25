@@ -367,6 +367,10 @@ export class GameServer {
             player.frozen = false
             player.shield = false
             player.boosted = false
+            player.lucky = false
+            player.plannedRoll = null
+            player.frostWard = false
+            player.itemUsedTurn = 0
           }
           // Turn numbers remain monotonic across restarts to distinguish delayed UI events.
           room.state.lastRoll = null
@@ -398,17 +402,26 @@ export class GameServer {
             throw new CommandError("NOT_YOUR_TURN", "Wait for your turn")
           if (room.state.phase !== "AWAITING_ROLL")
             throw new CommandError("INVALID_PHASE", "A roll is already in progress")
-          const value = this.dice()
-          if (!Number.isInteger(value) || value < 1 || value > 6)
+          const raw = player.plannedRoll ?? this.dice()
+          if (!Number.isInteger(raw) || raw < 1 || raw > 6)
             throw new Error("Invalid server dice source")
+          const value = player.lucky ? Math.max(4, raw) : raw
           const fromTileId = player.tileId
-          const path = getMovementPath(defaultBoard, fromTileId, value + (player.boosted ? 2 : 0))
+          const slowed = !!player.frozen
+          const spaces = Math.max(1, value + (player.boosted ? 2 : 0) - (slowed ? 2 : 0))
+          const path = getMovementPath(defaultBoard, fromTileId, spaces)
+          const rollNotice = `${player.name} rolled ${value} · moves ${spaces} ${spaces === 1 ? "space" : "spaces"}${slowed ? " · Frost −2 (minimum 1)" : player.lucky ? " · Lucky Clover" : player.plannedRoll ? " · Trail Compass" : player.boosted ? " · Trail Boots +2" : ""}.`
           player.boosted = false
+          player.lucky = false
+          player.plannedRoll = null
+          player.frozen = false
+          // A slowed roll earns another full, unhindered roll before opponents can Frost again.
+          player.frostWard = slowed
           room.acceptedRequests.add(key)
           this.clearTimer(room)
           room.state.phase = "ROLLING"
           room.state.itemEffect = null
-          delete room.state.notice
+          room.state.notice = rollNotice
           room.state.lastRoll = value
           this.broadcast(room, "dice.rolled", {
             playerId: player.id,
@@ -441,6 +454,11 @@ export class GameServer {
             const item = SHOP_ITEMS[parsed.data.item]
             if ((player.coins ?? 0) < item.price)
               throw new CommandError("NOT_ENOUGH_COINS", "Not enough coins for that item")
+            if (parsed.data.item === "freeze" && room.state.players.length < 2)
+              throw new CommandError(
+                "ITEM_UNAVAILABLE",
+                "Frost needs an opponent. Choose a solo-friendly item.",
+              )
             if ((player.inventory?.length ?? 0) >= 3)
               throw new CommandError("INVENTORY_FULL", "Your pack holds three items")
             player.coins = (player.coins ?? 0) - item.price
@@ -468,28 +486,42 @@ export class GameServer {
           const inventory = player.inventory ?? []
           const index = inventory.indexOf(parsed.data.item)
           if (index < 0) throw new CommandError("ITEM_NOT_OWNED", "That item is not in your pack")
+          if (player.itemUsedTurn === room.state.turnNumber)
+            throw new CommandError("ITEM_ALREADY_USED", "One power-up per turn. Roll when ready.")
+          if (
+            ["boots", "clover", "compass"].includes(parsed.data.item) &&
+            (player.boosted || player.lucky || player.plannedRoll)
+          )
+            throw new CommandError("EFFECT_ACTIVE", "A roll power-up is already prepared")
           if (parsed.data.item === "freeze") {
             const target = room.state.players.find(
               (entry) =>
                 entry.id === parsed.data.targetId && entry.id !== player.id && entry.connected,
             )
-            if (!target || target.frozen)
+            if (!target || target.frozen || target.frostWard)
               throw new CommandError(
                 "INVALID_TARGET",
-                "Choose a connected opponent who is not frozen",
+                "Choose a connected opponent without Frost or thaw protection",
               )
+            target.frostWard = true
             if (target.shield) {
               target.shield = false
               room.state.notice = `${player.name} used Frost Charm on ${target.name} · Leaf Shield blocked it!`
             } else {
               target.frozen = true
-              room.state.notice = `${player.name} froze ${target.name}'s next board turn.`
+              room.state.notice = `${player.name} slowed ${target.name}'s next move by 2 · they still roll (minimum 1).`
             }
           } else if (parsed.data.item === "boots") {
             if (player.boosted)
               throw new CommandError("EFFECT_ACTIVE", "Boots are already ready for this roll")
             player.boosted = true
             room.state.notice = `${player.name} equipped Trail Boots · next roll +2 spaces.`
+          } else if (parsed.data.item === "clover") {
+            player.lucky = true
+            room.state.notice = `${player.name} used Lucky Clover · next die at least 4.`
+          } else if (parsed.data.item === "compass") {
+            player.plannedRoll = parsed.data.dieValue!
+            room.state.notice = `${player.name} set Trail Compass · next die ${player.plannedRoll}.`
           } else {
             if (player.shield)
               throw new CommandError("EFFECT_ACTIVE", "Your shield is already active")
@@ -498,6 +530,7 @@ export class GameServer {
           }
           inventory.splice(index, 1)
           player.inventory = inventory
+          player.itemUsedTurn = room.state.turnNumber
           room.state.itemEffect = {
             id: randomUUID(),
             playerId: player.id,
@@ -691,14 +724,8 @@ export class GameServer {
     room.state.turnNumber += 1
     room.state.phase = "AWAITING_ROLL"
     const player = this.player(room, playerId)
-    if (player.frozen) {
-      player.frozen = false
-      room.state.phase = "TURN_END"
-      room.state.notice = `${player.name} is thawing out · this board turn is skipped.`
-      this.snapshot(room)
-      this.schedule(room, this.timing.turnEndMs, () => this.advance(room))
-      return
-    }
+    if (player.frozen)
+      room.state.notice = `${player.name} is slowed by Frost · roll normally, move 2 fewer spaces (minimum 1).`
     this.armRollDeadline(room)
     this.snapshot(room)
   }

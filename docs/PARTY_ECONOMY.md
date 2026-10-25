@@ -34,12 +34,40 @@ server-approved tile path; animation never decides the route, reward, or dice va
 
 | Item        | Price | Effect                                                                            |
 | ----------- | ----: | --------------------------------------------------------------------------------- |
-| Frost Charm |     5 | Skip one connected opponent's next board turn. Does not stack on a frozen player. |
 | Trail Boots |     4 | Add two spaces to the next roll; consumed when equipped. Maximum move is eight.   |
+| Lucky Clover |    3 | Next die is at least four; Frost is applied afterward to movement.                |
+| Trail Compass |  10 | Choose the next die value from 1–6, with a phone landing-space preview.           |
 | Leaf Shield |     4 | Block one incoming Frost Charm, then disappear.                                   |
+| Frost Charm |    10 | Next move −2, minimum one space. The victim still rolls and plays.               |
+
+### Balance pass: keep everyone playing
+
+- Frost no longer skips turns. It cannot stack or target someone with thaw protection. On a
+  slowed roll, protection stays active until that player completes their following unhindered
+  roll. A shield block grants protection until the next unhindered roll too. Different attackers
+  cannot bypass it, and refresh/disconnect does not reset it. This guarantees an actual normal
+  roll between slowdowns. A 10-coin price also prevents the old 5-coin first-market Frost spam.
+- One power-up per player's turn, enforced on the server and restored after controller refresh.
+  Failed/invalid uses do not consume that allowance or an item. Duplicate accepted requests remain
+  idempotent. Shield can remain active across turns; one purchase per shop and three pack slots
+  are unchanged. Solo rooms do not sell unusable Frost, with a visible Needs an opponent label.
+- Clover upgrades the actual displayed die: raw 1/2/3 become four; 4/5/6 stay unchanged. Compass
+  chooses one legal die value, not a destination or client-submitted reward. Roll buffs do not
+  stack; the server applies Boots +2 or Frost −2 to movement with a one-space minimum. The die,
+  path and per-space coins agree. The host announces rolled value versus movement explicitly.
+- The catalogue offers low-cost movement, safe rolls, precise landings, defense and premium
+  sabotage. Regular travel averages 3.5 coins before mini-game rewards; prices range 3–10, with
+  no price inflation or changes to the existing 8/2 coin payouts. These are initial tuning values,
+  not a claim of competitive balance proven by human playtests.
+- Phone shopping remains untimed and scrollable. Unaffordable choices stay readable and show
+  the missing coin amount. Compass previews Start/space numbers, including Frost's reduction.
+  Active effects stay visible even after the pack becomes empty. Host ledger shows protection
+  and prepared rolls, with shared textual labels so color is never the only cue.
+- Hand-authored Clover/Compass symbols match the woodland UI. A small potted clover and brass
+  compass join the existing modeled stall stock; no new assets, packages or physics engine.
 
 Use items before rolling on your own turn: open Use a power-up, select an item (and an opponent
-for Frost), then activate it. Back to roll cancels selection without spending anything.
+for Frost, or a die value for Compass), then activate it. Back to roll cancels selection without spending anything.
 Shake-to-roll and touch Roll are disabled while choosing or awaiting item confirmation. A named
 effect announcement appears on the host and phones until the next roll. Every player's live
 coin balance remains visible on the host through shops, duels, and mini-games. Phones show only
@@ -61,12 +89,18 @@ After a gameplay elimination or grace expiry, rejoining cannot reenter that game
 Eliminations do not move board pieces.
 
 The host shows instructions/countdown and automatically returns after displaying the winner.
-A four-player active game needs at most three fuses. Freeze skips count as board turns
-for round progress. A one-player room keeps the board loop and shops, without a group mini-game.
+A four-player active game needs at most three fuses. Frost does not skip any board turns.
+A one-player room keeps the board loop and shops, without a group mini-game.
 
 ## Wire and recovery
 
 Snapshots add optional player coins/inventory/effects, roundNumber, notice, shop, and potato state.
+Balance-pass player fields are `lucky`, `plannedRoll` (nullable 1–6), `frostWard`, and
+`itemUsedTurn` (the authoritative turn number of the last successful item use). Existing `frozen`
+now means a pending slowdown, not a skipped turn. All reset on host restart. The item enum adds
+`clover` and `compass`. Only Compass requires the optional `item.use.dieValue`; other items must
+omit it. Strict schemas reject unknown fields and out-of-range/fractional choices. Refresh all
+host/controller tabs when deploying this contract; old clients cannot parse the new item IDs.
 New phases are `SHOP` and `POTATO`. Commands include `shop.choice`, `item.use`, and `potato.pass`,
 each with private session authorization, UUID request deduplication, and shared-schema validation.
 Shop commands bind to a visit UUID, items to a turn number, and passes to a game UUID plus holder
@@ -99,5 +133,6 @@ rehearsal deadlines, and the separate local port. Two players can exercise a pur
 resumption, full-round Hot Potato, and a coin payout. Production timings and random rolls are unchanged.
 
 Automated checks cover pass-by purchase/skip, optional timed rehearsals, stale visits, duplicates, inventory limits,
-exact Boots movement, a single frozen turn, shield consumption, four-player game cadence, pass
+exact Boots/Clover/Compass movement, Frost minimum movement and anti-chain protection,
+one-item-per-turn across refresh, shield consumption, four-player game cadence, pass
 revisions, payouts, disconnects, and restart. Physical iPhone/Android gestures still need testing.

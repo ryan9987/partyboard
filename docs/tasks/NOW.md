@@ -1,5 +1,15 @@
 # Current task board
 
+## Economy review / anti-freeze balance
+
+- [x] Review board, shops, all mini-game rules/recovery and document remaining design/performance risks.
+- [x] Replace turn-skipping Frost with premium −2 movement and shared anti-chain thaw protection.
+- [x] Enforce one successful power-up per turn across refresh; preserve idempotence and failed-use refunds.
+- [x] Add Lucky Clover and exact-roll Trail Compass, matching symbols and physical market stock.
+- [x] Readable prices/eligibility, adjusted landing preview and persistent effect labels on host/phone.
+- [x] Regression tests for four-player chaining, minimum movement, new item ordering, coins and refresh.
+- [ ] Four-human physical-device balance playtest and coordinated production rollout.
+
 ## Animated mini-game instructions and Balance falls
 
 - [x] Animated phone-to-game demonstrations for all six round games and sword duels.

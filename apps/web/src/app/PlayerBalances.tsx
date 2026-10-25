@@ -1,5 +1,6 @@
 import type { GameState } from "@party-board/protocol"
 import { CoinCount } from "./CoinCount"
+import { playerEffectLabels } from "./playerEffects"
 
 /** A quiet, persistent purse ledger, separate from mini-game scores. */
 export function PlayerBalances({
@@ -29,6 +30,9 @@ export function PlayerBalances({
               {player.name}
               {player.id === playerId && <small>you</small>}
               {!player.connected && <small>offline</small>}
+              {host && playerEffectLabels(player).length > 0 && (
+                <small>{playerEffectLabels(player).join(" · ")}</small>
+              )}
             </span>
             <CoinCount coins={player.coins ?? 0} />
           </li>

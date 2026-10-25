@@ -5,6 +5,7 @@ import { getDuelGesture } from "./duel-motion"
 import { useGameNow } from "../networking/gameClock"
 import { CoinCount } from "../app/CoinCount"
 import { ItemGlyph } from "../app/PowerupNotice"
+import { defaultBoard, getMovementPath } from "@party-board/board"
 
 export function PartyControls({
   client,
@@ -19,6 +20,7 @@ export function PartyControls({
 }) {
   const me = state.players.find((player) => player.id === playerId)
   const [targetId, setTargetId] = useState("")
+  const [dieValue, setDieValue] = useState(3)
   const now = useGameNow(state.serverTime)
   const canPass = client.canPass()
   const { choosingItem, pendingItem } = client.getSnapshot()
@@ -32,6 +34,10 @@ export function PartyControls({
     return () => window.removeEventListener("devicemotion", motion)
   }, [client, motionEnabled, canPass])
   if (!me) return null
+  const itemUsed = me.itemUsedTurn === state.turnNumber
+  const target = state.players.find((player) => player.id === targetId)
+  const canTarget =
+    !!target && target.connected && target.id !== me.id && !target.frozen && !target.frostWard
   const game = state.potato
   if (state.phase === "POTATO" && game) {
     const holder = state.players.find((player) => player.id === game.holderId)
@@ -87,7 +93,9 @@ export function PartyControls({
         <p>
           <CoinCount coins={me.coins ?? 0} /> · {(me.inventory ?? []).length}/3 pack slots
         </p>
-        <p className="shop-no-rush">No time limit. Read the items, then buy one or keep walking.</p>
+        <p className="shop-no-rush">
+          One purchase per stop · one power-up per turn. No time limit.
+        </p>
         {shopper?.id === me.id ? (
           <>
             <div className="shop-choices">
@@ -95,7 +103,11 @@ export function PartyControls({
                 <button
                   key={id}
                   type="button"
-                  disabled={(me.coins ?? 0) < item.price || (me.inventory?.length ?? 0) >= 3}
+                  disabled={
+                    (me.coins ?? 0) < item.price ||
+                    (me.inventory?.length ?? 0) >= 3 ||
+                    (id === "freeze" && state.players.length < 2)
+                  }
                   onClick={() => client.chooseShop(id as Item)}
                 >
                   <ItemGlyph item={id as Item} />
@@ -103,6 +115,17 @@ export function PartyControls({
                     {item.name} · {item.price} coins
                   </strong>
                   <small>{item.description}</small>
+                  {(me.inventory?.length ?? 0) >= 3 ? (
+                    <small>Pack full · use an item next turn</small>
+                  ) : (
+                    (me.coins ?? 0) < item.price && (
+                      <small>
+                        Need {item.price - (me.coins ?? 0)} more{" "}
+                        {item.price - (me.coins ?? 0) === 1 ? "coin" : "coins"}
+                      </small>
+                    )
+                  )}
+                  {id === "freeze" && state.players.length < 2 && <small>Needs an opponent</small>}
                 </button>
               ))}
             </div>
@@ -131,9 +154,9 @@ export function PartyControls({
       {(me.inventory ?? []).length > 0 && (
         <>
           <p className="inventory-help">
-            {myTurn
-              ? "Use a power-up before your roll. No rush."
-              : "Your power-ups are ready for your next turn."}
+            {itemUsed
+              ? "Power-up used this turn. Roll when ready."
+              : "Choose one power-up before your roll. No rush."}
           </p>
           <div className="inventory-summary">
             {(me.inventory ?? []).map((item, index) => (
@@ -146,7 +169,7 @@ export function PartyControls({
           {myTurn && (
             <button
               type="button"
-              disabled={!!pendingItem}
+              disabled={!!pendingItem || itemUsed}
               onClick={() => client.setChoosingItem(!choosingItem)}
             >
               {choosingItem ? "Back to roll" : "Use a power-up"}
@@ -154,18 +177,57 @@ export function PartyControls({
           )}
           {choosingItem && (me.inventory ?? []).includes("freeze") && (
             <label>
-              Freeze target
+              Frost target
               <select value={targetId} onChange={(event) => setTargetId(event.target.value)}>
                 <option value="">Choose an opponent</option>
                 {state.players
-                  .filter((player) => player.id !== me.id && player.connected && !player.frozen)
+                  .filter((player) => player.id !== me.id && player.connected)
                   .map((player) => (
-                    <option key={player.id} value={player.id}>
+                    <option
+                      key={player.id}
+                      value={player.id}
+                      disabled={player.frozen || player.frostWard}
+                    >
                       {player.name}
-                      {player.shield ? " · shielded" : ""}
+                      {player.frozen || player.frostWard
+                        ? " · thaw protected"
+                        : player.shield
+                          ? " · shielded"
+                          : ""}
                     </option>
                   ))}
               </select>
+              <small>
+                Frost never skips turns. Thaw protection guarantees a normal roll before another
+                Frost.
+              </small>
+              {!state.players.some(
+                (player) =>
+                  player.id !== me.id && player.connected && !player.frozen && !player.frostWard,
+              ) && <small>No eligible opponents right now. Keep the charm for a later turn.</small>}
+            </label>
+          )}
+          {choosingItem && (me.inventory ?? []).includes("compass") && (
+            <label>
+              Compass die
+              <select
+                value={dieValue}
+                onChange={(event) => setDieValue(Number(event.target.value))}
+              >
+                {[1, 2, 3, 4, 5, 6].map((value) => {
+                  const spaces = Math.max(1, value - (me.frozen ? 2 : 0))
+                  const end = getMovementPath(defaultBoard, me.tileId, spaces).at(-1)!
+                  return (
+                    <option key={value} value={value}>
+                      {value} · move {spaces} →{" "}
+                      {end === "tile-0" ? "Start" : end.replace("tile-", "Space ")}
+                    </option>
+                  )
+                })}
+              </select>
+              <small>
+                The die shows your choice. Frost, if active, still reduces your movement.
+              </small>
             </label>
           )}
           {choosingItem && (
@@ -175,11 +237,19 @@ export function PartyControls({
                   key={`${item}-${index}`}
                   disabled={
                     !client.canUseItem() ||
-                    (item === "freeze" && !targetId) ||
+                    (item === "freeze" && !canTarget) ||
                     (item === "boots" && me.boosted) ||
+                    (item === "clover" && me.lucky) ||
+                    (item === "compass" && !!me.plannedRoll) ||
                     (item === "shield" && me.shield)
                   }
-                  onClick={() => client.useItem(item, item === "freeze" ? targetId : undefined)}
+                  onClick={() =>
+                    client.useItem(
+                      item,
+                      item === "freeze" ? targetId : undefined,
+                      item === "compass" ? dieValue : undefined,
+                    )
+                  }
                 >
                   <ItemGlyph item={item} />
                   <strong>
@@ -195,15 +265,6 @@ export function PartyControls({
       {!(me.inventory ?? []).length && (
         <p className="inventory-help">Your pack is empty. Pick up a power-up at a market.</p>
       )}
-      <p>
-        {[
-          me.frozen ? "Frozen next turn" : "",
-          me.shield ? "Shield active" : "",
-          me.boosted ? "Next roll +2" : "",
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      </p>
     </section>
   )
 }

@@ -125,15 +125,21 @@ export const duelActionRequestSchema = rollRequestSchema
   .strict()
 export type DuelActionRequest = z.infer<typeof duelActionRequestSchema>
 export const shopChoiceRequestSchema = rollRequestSchema
-  .extend({ visitId: z.string().uuid(), item: z.enum(["freeze", "boots", "shield", "skip"]) })
+  .extend({ visitId: z.string().uuid(), item: z.union([itemSchema, z.literal("skip")]) })
   .strict()
 export const itemUseRequestSchema = rollRequestSchema
   .extend({
     item: itemSchema,
     targetId: idSchema.optional(),
+    dieValue: z.number().int().min(1).max(6).optional(),
     turnNumber: z.number().int().positive(),
   })
   .strict()
+  .refine(
+    (request) =>
+      request.item === "compass" ? request.dieValue !== undefined : request.dieValue === undefined,
+    "Only Trail Compass requires a die value",
+  )
 export const potatoPassRequestSchema = rollRequestSchema
   .extend({ gameId: z.string().uuid(), revision: z.number().int().nonnegative() })
   .strict()

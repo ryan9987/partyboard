@@ -33,7 +33,8 @@ cancels the pending path; an older animation cannot clear a replacement run.
 Each server crossing timer awards one coin, capped at 999, then publishes the existing snapshot.
 Markets split movement and preserve the remaining path. They cannot replay paid spaces. Coins
 are never computed from frame count, animation completion, a client's position, or a supplied die.
-Backwards duel displacement and frozen/skipped turns are not rewarding movement.
+Backwards duel displacement and disconnected/skipped turns are not rewarding movement. Frost now
+slows a real roll by two spaces (minimum one); only the actual forward spaces pay coins.
 
 ## Verification
 

@@ -14,6 +14,7 @@ import { MinigameControls } from "./MinigameControls"
 import { PowerupNotice } from "../app/PowerupNotice"
 import { CoinCount } from "../app/CoinCount"
 import { PhoneMotionGuide } from "../app/PhoneMotionGuide"
+import { playerEffectLabels } from "../app/playerEffects"
 import "./controller.css"
 
 function initialRoom(): string {
@@ -173,6 +174,11 @@ function ConnectedController({ client }: { client: ControllerClient }) {
             </span>
             <CoinCount coins={me.coins ?? 0} />
           </div>
+          {!inActivity && playerEffectLabels(me).length > 0 && (
+            <p className="controller-effects" role="status">
+              {playerEffectLabels(me).join(" · ")}
+            </p>
+          )}
           {view.state?.phase === "LOBBY" ? <p>Waiting for the host to start.</p> : null}
           {canRoll && (
             <p>

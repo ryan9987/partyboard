@@ -23,7 +23,13 @@ export type ControllerView = {
   playerId: string | null
   joining: boolean
   pending: { requestId: string; turnNumber: number } | null
-  pendingItem: { requestId: string; turnNumber: number; item: Item; targetId?: string } | null
+  pendingItem: {
+    requestId: string
+    turnNumber: number
+    item: Item
+    targetId?: string
+    dieValue?: number
+  } | null
   choosingItem: boolean
   error: string | null
 }
@@ -318,7 +324,8 @@ export class ControllerClient {
       !pendingItem &&
       !!playerId &&
       state?.phase === "AWAITING_ROLL" &&
-      state.currentPlayerId === playerId
+      state.currentPlayerId === playerId &&
+      state.players.find((player) => player.id === playerId)?.itemUsedTurn !== state.turnNumber
     )
   }
 
@@ -362,7 +369,7 @@ export class ControllerClient {
     return true
   }
 
-  useItem(item: Item, targetId?: string): boolean {
+  useItem(item: Item, targetId?: string, dieValue?: number): boolean {
     const { state, playerId, connection } = this.view
     if (
       connection !== "connected" ||
@@ -371,7 +378,9 @@ export class ControllerClient {
       state.currentPlayerId !== playerId ||
       !this.session?.existingSessionId ||
       Date.now() - this.lastItemInputAt < 350 ||
-      !state.players.find((player) => player.id === playerId)?.inventory?.includes(item)
+      !state.players.find((player) => player.id === playerId)?.inventory?.includes(item) ||
+      (item === "compass" && (!Number.isInteger(dieValue) || dieValue! < 1 || dieValue! > 6)) ||
+      (item !== "compass" && dieValue !== undefined)
     )
       return false
     this.lastItemInputAt = Date.now()
@@ -382,6 +391,7 @@ export class ControllerClient {
         turnNumber: state.turnNumber,
         item,
         ...(targetId ? { targetId } : {}),
+        ...(dieValue !== undefined ? { dieValue } : {}),
       },
       error: null,
     })

@@ -8,7 +8,11 @@ const kind =
     ? "all"
     : minigameKindSchema.parse(process.env.MINIGAME ?? "fishing")
 const rotation = ["potato", "fishing", "archery", "rhythm", "balance", "dodge"] as const
-const rolls = [1, 2, 3, 4]
+const rolls = process.env.DICE_SEQUENCE
+  ? process.env.DICE_SEQUENCE.split(",").map(Number)
+  : [1, 2, 3, 4]
+if (!rolls.length || rolls.some((value) => !Number.isInteger(value) || value < 1 || value > 6))
+  throw new Error("DICE_SEQUENCE must contain comma-separated values from 1 to 6")
 let index = 0
 const app = createGameApp({
   allowedOrigins: ["http://localhost:5175"],

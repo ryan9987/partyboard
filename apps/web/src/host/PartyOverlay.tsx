@@ -20,14 +20,16 @@ export function PartyOverlay({ state }: { state: GameState }) {
               <ItemGlyph item={id as Item} />
               <strong>
                 {item.name}
-                <span>{item.price}</span>
+                <span>{item.price} coins</span>
               </strong>
               <small>{item.description}</small>
             </div>
           ))}
         </div>
-        <p className="muted">Buy or keep walking on your phone.</p>
-        <p className="eyebrow">Take your time · no shopping timer</p>
+        <p className="muted">One purchase per stop · one power-up per turn.</p>
+        <p className="market-rule">
+          Frost slows, never skips. Thaw protection prevents back-to-back attacks.
+        </p>
       </aside>
     )
   }

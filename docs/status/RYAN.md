@@ -4,6 +4,27 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- Full game/economy pass on `feat/balanced-market`, based on the previous local tutorial commit.
+  Frost costs 10, slows by two (minimum one), never skips a turn, and gives shared thaw protection
+  through the following unhindered roll. Shield blocks grant protection too. Different attackers
+  cannot bypass it. One successful power-up per turn persists through refresh; rejects cost nothing.
+- Five-item catalogue: Clover 3, Boots 4, Shield 4, Compass 10, Frost 10. Clover raises the displayed
+  die to at least four; Compass selects a server-validated 1–6 and previews adjusted landing spaces.
+  Roll buffs do not stack. New status fields and Compass-only dieValue are covered by strict schemas.
+- Wider readable host shop, unaffordable/full-pack/solo explanations, matching Clover/Compass glyphs
+  and physical stall stock. Equipped effects remain visible after the pack empties. Host announces
+  actual roll versus movement; phone stays focused on its owner and controls. Solo Frost is not sold.
+- Verified live Clover raw 1→4, Compass 2 and controller refresh (space 16→18), then two-controller
+  Frost: Jack retained his turn, rolled 1, moved 2→3 and earned 12→13 coins; thaw protection stayed
+  visible and round/board resumption continued through turn 7. Checked 320/390px phone layouts and
+  all seven active art scenes. Fresh host/phone browser error logs empty. Art fixtures are not proof
+  of physical sensors; the live economy checks used real browser controls and a scripted test server.
+- Final `pnpm check`: 151 Vitest + 10 motion tests, types/lint/format/build pass. Four-player anti-chain,
+  payouts, ordering, duplicates, invalid choices, refresh, solo eligibility and restart covered.
+  No dependencies or external assets added. Existing 3D bundle warning remains. Review/next steps in
+  `docs/PLAYTEST_REVIEW.md`: overall match objective, human balance/device playtest and measured FPS.
+  Saved locally; no main push/deploy requested. Production needs coordinated client refresh/new room.
+
 - Animated-instruction/Balance pass on `feat/animated-game-guides`. All six round games plus duels
   have lightweight phone-to-game SVG/CSS demonstrations, steps, goal and touch alternative.
   Four-second setup + automatic 3–2–1 now applies consistently to Hot Potato and duels too.

@@ -17,12 +17,26 @@ export const gamePhaseSchema = z.enum([
 ])
 
 export const playerColorSchema = z.enum(PLAYER_COLORS)
-export const itemSchema = z.enum(["freeze", "boots", "shield"])
+export const itemSchema = z.enum(["freeze", "boots", "shield", "clover", "compass"])
 export type Item = z.infer<typeof itemSchema>
 export const SHOP_ITEMS = {
-  freeze: { name: "Frost Charm", price: 5, description: "Freeze an opponent's next board turn." },
   boots: { name: "Trail Boots", price: 4, description: "Add two spaces to your next roll." },
+  clover: {
+    name: "Lucky Clover",
+    price: 3,
+    description: "Your next die shows at least 4. Frost still slows movement.",
+  },
+  compass: {
+    name: "Trail Compass",
+    price: 10,
+    description: "Choose your next die: 1–6. Pick your landing space.",
+  },
   shield: { name: "Leaf Shield", price: 4, description: "Block one incoming Frost Charm." },
+  freeze: {
+    name: "Frost Charm",
+    price: 10,
+    description: "Slow an opponent's next move by 2, minimum 1. Never skips their turn.",
+  },
 } as const
 
 export const publicPlayerSchema = z
@@ -38,6 +52,10 @@ export const publicPlayerSchema = z
     frozen: z.boolean().optional(),
     shield: z.boolean().optional(),
     boosted: z.boolean().optional(),
+    lucky: z.boolean().optional(),
+    plannedRoll: z.number().int().min(1).max(6).nullable().optional(),
+    frostWard: z.boolean().optional(),
+    itemUsedTurn: z.number().int().nonnegative().optional(),
   })
   .strict()
 

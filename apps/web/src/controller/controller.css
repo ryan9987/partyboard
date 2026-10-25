@@ -335,6 +335,13 @@ body:has(.controller-page),
   font-size: 0.8rem;
   line-height: 1.5;
 }
+.controller-effects {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  padding-left: 10px;
+  border-left: 2px solid #a6b69b;
+  color: #4a674f;
+}
 .inventory-summary {
   display: grid;
   gap: 8px;
@@ -373,6 +380,11 @@ body:has(.controller-page),
 .shop-choices button > small {
   font-size: 0.75rem;
   font-weight: 400;
+}
+.shop-choices button:disabled {
+  opacity: 1;
+  background: #eeecdf;
+  color: #647462;
 }
 .controller-page .player-balances {
   margin: 1.5rem 0;

@@ -88,6 +88,11 @@ The UUID must equal the current `waitingForHost.id`; it consumes exactly one pau
 Stale, duplicate and controller commands cannot advance another screen. See `PARTY_ECONOMY.md`
 for untimed board/shop behavior and additive `itemEffect` feedback.
 
+The economy balance pass adds `clover` / `compass`, player `lucky`, `plannedRoll`, `frostWard` and
+`itemUsedTurn`, and Compass-only `item.use.dieValue` (integer 1–6). Existing `frozen` now denotes
+a two-space next-move slowdown, never a skipped turn. See `PARTY_ECONOMY.md` for exact ordering,
+protection lifetime, one-item-per-turn enforcement and client refresh requirements.
+
 ### `dice.roll.request`
 
 ```ts
