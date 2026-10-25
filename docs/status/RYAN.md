@@ -4,6 +4,12 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- CI follow-up: reproduced the failed release's exact `pnpm check` command and confirmed the
+  GitHub annotation points to an unused `MinigameState` import left by Dodge removal. Removed
+  that import only; lint and CI enforcement unchanged. Full `pnpm check` now passes, including
+  lint, formatting, 184 Vitest +10 motion tests, types and build. Main releases must use the
+  full gate, not a subset. No gameplay changes or dependencies.
+
 - October 25 instruction-review follow-through: larger 16px host steps/goals and 14px touch
   guidance in 760px cards with integrated game titles. Six host lessons fit without scrolling
   at 1280x720. Lobby objective and Start button fit together without scrolling too.

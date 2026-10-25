@@ -41,6 +41,7 @@ The named ownership split is documented in `docs/COLLABORATION.md`.
 - Do not add dependencies without documenting why.
 - Do not overwrite another contributor's unrelated edits.
 - Run relevant tests and type checking before declaring a task complete.
+- Before a main push, run the exact CI gate, `pnpm check`, including lint; do not substitute a subset.
 - Update the corresponding documentation when a contract changes.
 - Keep `main` in a demonstrable state.
 

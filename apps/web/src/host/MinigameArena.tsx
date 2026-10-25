@@ -5,7 +5,6 @@ import {
   FISHING_RULES,
   type GameState,
   type MinigamePlayer,
-  type MinigameState,
 } from "@party-board/protocol"
 import { Html, Line } from "@react-three/drei"
 import { useFrame, useThree } from "@react-three/fiber"
