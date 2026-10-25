@@ -37,7 +37,6 @@ function setup(count = 2, roundGame: MinigameKind | "potato" = "potato", manual 
     turnEndMs: 10,
     potatoFuseMs: 500,
     minigameDurationMs: 1000,
-    duelDurationMs: 1500,
     deliver: (connection, event, payload) => {
       if (event === "room.created") room = roomCreatedEventSchema.parse(payload)
       if (event === "room.joined") players.push(roomJoinedEventSchema.parse(payload))
@@ -226,26 +225,23 @@ for (const kind of ["balance", "fishing", "archery", "rhythm"] as const)
     expect(state).toMatchObject({ phase: "AWAITING_ROLL", minigame: null, roundNumber: 2 })
   })
 
-it("waits before/after a duel and invalidates an old Continue after a disconnect or restart", () => {
-  setup()
-  roll(0, 1)
-  settle()
-  roll(1, 1)
-  settle()
-  expect(state.duel?.stage).toBe("intro")
-  const introId = state.waitingForHost!.id
+it("preserves a round's pending instructions across host reconnect and starts its full clock", () => {
+  setup(2, "fishing")
+  round()
+  const continueId = state.waitingForHost!.id
+  server.disconnect("host")
   vi.advanceTimersByTime(600_000)
-  expect(state.duel?.stage).toBe("intro")
-  server.disconnect("p0")
-  expect(state.duel?.stage).toBe("result")
-  continueGame(introId)
-  expect(state.duel?.stage).toBe("result")
-  expect(errors.at(-1)).toBe("INVALID_PHASE")
+  server.handle("host", "room.host.resume", { roomCode: room.roomCode, hostToken: room.hostToken })
+  expect(state.waitingForHost!.id).toBe(continueId)
+  continueGame()
+  expect(state.minigame).toMatchObject({ stage: "active", endsAt: Date.now() + 1000 })
+  vi.advanceTimersByTime(1000)
+  expect(state.minigame?.stage).toBe("result")
   const resultId = state.waitingForHost!.id
   server.handle("host", "game.restart", { roomCode: room.roomCode, hostToken: room.hostToken })
   continueGame(resultId)
-  vi.advanceTimersByTime(600_000)
-  expect(state).toMatchObject({ phase: "AWAITING_ROLL", waitingForHost: null, duel: null })
+  expect(errors.at(-1)).toBe("INVALID_PHASE")
+  expect(state).toMatchObject({ phase: "AWAITING_ROLL", waitingForHost: null, minigame: null })
 })
 
 it("shows an authoritative power-up effect on the owner's turn and clears it on rolling", () => {
@@ -272,23 +268,4 @@ it("shows an authoritative power-up effect on the owner's turn and clears it on 
   expect(state.notice).toContain("moves 3 spaces")
   settle()
   expect(state.players[0]!.tileId).toBe("tile-9")
-})
-
-it("preserves the pending rules screen across host reconnect and gives a duel its full fight clock", () => {
-  setup()
-  roll(0, 1)
-  settle()
-  roll(1, 1)
-  settle()
-  const continueId = state.waitingForHost!.id
-  server.disconnect("host")
-  vi.advanceTimersByTime(600_000)
-  server.handle("host", "room.host.resume", { roomCode: room.roomCode, hostToken: room.hostToken })
-  expect(state.waitingForHost!.id).toBe(continueId)
-  continueGame()
-  expect(state.duel).toMatchObject({ stage: "active", stageEndsAt: Date.now() + 1500 })
-  vi.advanceTimersByTime(1500)
-  expect(state.duel?.stage).toBe("result")
-  vi.advanceTimersByTime(600_000)
-  expect(state.duel?.stage).toBe("result")
 })

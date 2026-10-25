@@ -616,12 +616,12 @@
 
 /* Gameplay gets one top ribbon and one low instruction strip, not a dashboard. */
 .host-shell .minigame-hud,
-.host-shell .duel-overlay {
+.host-shell .round-overlay {
   inset: 88px 24px 124px;
   z-index: 5;
 }
 .host-shell .minigame-titlebar,
-.host-shell .duel-scoreboard {
+.host-shell .round-scoreboard {
   width: fit-content;
   max-width: min(620px, 100%);
   min-width: 320px;
@@ -634,7 +634,7 @@
   box-shadow: var(--hud-shadow);
 }
 .host-shell .minigame-titlebar h1,
-.host-shell .duel-scoreboard h2 {
+.host-shell .round-scoreboard h2 {
   margin: 4px 0 0;
   font: 700 1.5rem/1.2 var(--font-display);
   letter-spacing: -0.045em;
@@ -653,7 +653,7 @@
   color: var(--muted);
   font-size: 0.55rem;
 }
-.host-shell .duel-timer {
+.host-shell .round-timer {
   border: 0;
   border-radius: 9px;
   background: #e8eddb;
@@ -661,29 +661,29 @@
   font-weight: 700;
   white-space: nowrap;
 }
-.host-shell .duel-scoreboard__scores {
+.host-shell .round-scoreboard__scores {
   gap: 16px;
 }
-.host-shell .duel-scoreboard__scores > div {
+.host-shell .round-scoreboard__scores > div {
   display: grid;
   grid-template-columns: 30px auto;
   gap: 0 7px;
   align-items: center;
   text-align: left;
 }
-.host-shell .duel-scoreboard__scores .player-portrait {
+.host-shell .round-scoreboard__scores .player-portrait {
   width: 30px;
   height: 30px;
   grid-row: span 2;
 }
-.host-shell .duel-scoreboard__scores span {
+.host-shell .round-scoreboard__scores span {
   font-size: 0.62rem;
 }
-.host-shell .duel-scoreboard__scores strong {
+.host-shell .round-scoreboard__scores strong {
   font: 700 1.15rem var(--font-body);
 }
 .host-shell .minigame-hint,
-.host-shell .duel-instructions {
+.host-shell .round-instructions {
   bottom: 0;
   margin: 0;
   padding: 10px 18px;
@@ -694,7 +694,7 @@
   font-size: 0.875rem;
   line-height: 1.4;
 }
-.host-shell .duel-instructions {
+.host-shell .round-instructions {
   display: flex;
   align-items: center;
   gap: 18px;
@@ -708,9 +708,9 @@
 
 /* Lessons and victory screens share the same physical 'trail card' language. */
 .host-shell .minigame-hud--intro::before,
-.host-shell .duel-overlay--intro::before,
+.host-shell .round-overlay--intro::before,
 .host-shell .minigame-hud--result:has(.round-result)::before,
-.host-shell .duel-overlay--result::before {
+.host-shell .round-overlay--result::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -719,7 +719,7 @@
   pointer-events: none;
 }
 .host-shell .minigame-brief.minigame-brief--instructions,
-.host-shell .duel-announcement.duel-announcement--tutorial {
+.host-shell .round-announcement.round-announcement--tutorial {
   pointer-events: auto;
   position: absolute;
   top: 50%;
@@ -833,32 +833,21 @@
   min-height: 40px;
 }
 .host-shell .minigame-brief--instructions > small,
-.host-shell .duel-announcement > small {
+.host-shell .round-announcement > small {
   display: block;
   margin: 9px 0 0;
   font-size: 0.8rem;
   color: var(--muted);
 }
-.host-shell .duel-announcement.duel-announcement--tutorial h1 {
+.host-shell .round-announcement.round-announcement--tutorial h1 {
   font: 700 1.7rem/1.15 var(--font-display);
   letter-spacing: -0.05em;
 }
-.host-shell .duel-announcement--tutorial > p {
+.host-shell .round-announcement--tutorial > p {
   margin: 6px 0 12px;
   font-size: 0.8rem;
 }
-.host-shell .duel-announcement--tutorial .crossed-swords {
-  display: block;
-  width: 60px;
-  height: 36px;
-  margin-bottom: 4px;
-}
-.host-shell .duel-announcement--tutorial .crossed-swords svg {
-  width: 20px;
-  height: 36px;
-  left: 20px;
-}
-.host-shell .duel-announcement--tutorial > .eyebrow {
+.host-shell .round-announcement--tutorial > .eyebrow {
   font-size: 0.6rem;
 }
 .host-shell .round-result {
@@ -966,7 +955,7 @@
   border-radius: 13px;
   background: var(--paper);
 }
-.host-shell:has(.host-continue) .duel-instructions {
+.host-shell:has(.host-continue) .round-instructions {
   bottom: 64px;
 }
 .host-shell .host-game-error {
@@ -1034,7 +1023,7 @@
     margin-bottom: 8px;
   }
   .host-shell .minigame-brief.minigame-brief--instructions,
-  .host-shell .duel-announcement.duel-announcement--tutorial {
+  .host-shell .round-announcement.round-announcement--tutorial {
     padding: 16px 22px;
   }
   .host-shell .game-tutorial > svg {
@@ -1074,7 +1063,7 @@
   .host-shell .player-balances__name small {
     font-size: 0.56rem;
   }
-  .host-shell .duel-scoreboard {
+  .host-shell .round-scoreboard {
     min-width: 0;
   }
 }
@@ -1173,37 +1162,37 @@
     padding: 16px;
   }
   .host-shell .minigame-hud,
-  .host-shell .duel-overlay {
+  .host-shell .round-overlay {
     inset: 72px 12px 178px;
   }
   .host-shell .minigame-titlebar,
-  .host-shell .duel-scoreboard {
+  .host-shell .round-scoreboard {
     min-width: 0;
     padding: 10px 13px;
     gap: 14px;
     border-radius: 13px;
   }
   .host-shell .minigame-titlebar h1,
-  .host-shell .duel-scoreboard h2 {
+  .host-shell .round-scoreboard h2 {
     font-size: 1.15rem;
   }
   .host-shell .minigame-titlebar .eyebrow,
-  .host-shell .duel-scoreboard .eyebrow {
+  .host-shell .round-scoreboard .eyebrow {
     font-size: 0.52rem;
   }
   .host-shell .minigame-hint,
-  .host-shell .duel-instructions {
+  .host-shell .round-instructions {
     max-width: 100%;
     padding: 8px 12px;
     font-size: 0.875rem;
   }
-  .host-shell .duel-instructions {
+  .host-shell .round-instructions {
     flex-wrap: wrap;
     justify-content: center;
     gap: 5px 12px;
   }
   .host-shell .minigame-brief.minigame-brief--instructions,
-  .host-shell .duel-announcement.duel-announcement--tutorial {
+  .host-shell .round-announcement.round-announcement--tutorial {
     top: 50%;
     padding: 16px;
     width: min(600px, calc(100vw - 24px));
@@ -1318,7 +1307,7 @@
   top: 7px;
 }
 .host-shell:has(.player-balances--large) .minigame-hud,
-.host-shell:has(.player-balances--large) .duel-overlay {
+.host-shell:has(.player-balances--large) .round-overlay {
   bottom: 182px;
 }
 .host-shell:has(.player-balances--large) .market-panel {
@@ -1329,7 +1318,7 @@
   margin-block: 5px 8px;
 }
 .host-shell:has(.player-balances--large) .minigame-brief--instructions,
-.host-shell:has(.player-balances--large) .duel-announcement--tutorial {
+.host-shell:has(.player-balances--large) .round-announcement--tutorial {
   padding: 12px 22px;
 }
 .host-shell:has(.player-balances--large) .tutorial-control-labels {
@@ -1440,7 +1429,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .host-shell:has(.player-balances--large) .minigame-hud,
-  .host-shell:has(.player-balances--large) .duel-overlay {
+  .host-shell:has(.player-balances--large) .round-overlay {
     bottom: 304px;
   }
   .host-shell .player-balances--large .player-portrait {

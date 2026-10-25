@@ -5,7 +5,6 @@ import {
   roomJoinedEventSchema,
   playerReadyRequestSchema,
   rollRequestSchema,
-  duelActionRequestSchema,
   shopChoiceRequestSchema,
   itemUseRequestSchema,
   potatoPassRequestSchema,
@@ -51,7 +50,6 @@ export class ControllerClient {
   private lastItemInputAt = 0
   private minigameSequence = 0
   private lastPartyInputAt = 0
-  private lastDuelActionAt = 0
   private lastReattachAt = -Infinity
   private view: ControllerView = {
     connection: "connecting",
@@ -336,16 +334,6 @@ export class ControllerClient {
     this.update({ choosingItem })
   }
 
-  canDuel(): boolean {
-    return (
-      this.view.connection === "connected" &&
-      !this.view.joining &&
-      this.view.state?.phase === "DUEL" &&
-      this.view.state.duel?.stage === "active" &&
-      this.view.state.duel.fighters.some((fighter) => fighter.playerId === this.view.playerId)
-    )
-  }
-
   chooseShop(item: Item | "skip"): boolean {
     const { state, playerId, connection } = this.view
     if (
@@ -471,25 +459,6 @@ export class ControllerClient {
         revision: game.revision,
       }),
     )
-    return true
-  }
-
-  requestDuelAction(action: "swing" | "guard"): boolean {
-    if (
-      !this.canDuel() ||
-      !this.session?.existingSessionId ||
-      Date.now() - this.lastDuelActionAt < 900
-    )
-      return false
-    const payload = duelActionRequestSchema.parse({
-      roomCode: this.session.roomCode,
-      playerSessionId: this.session.existingSessionId,
-      requestId: this.newRequestId(),
-      duelId: this.view.state!.duel!.id,
-      action,
-    })
-    this.lastDuelActionAt = Date.now()
-    this.socket.emit("duel.action", payload)
     return true
   }
 

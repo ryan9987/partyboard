@@ -28,9 +28,6 @@ function setup(count = 1) {
     millisecondsPerTile: 1,
     turnEndMs: 1,
     shopDurationMs: 1,
-    duelIntroMs: 1,
-    duelDurationMs: 1,
-    duelResultMs: 1,
     roundGame: "archery",
     minigameIntroMs: 1,
     minigameDurationMs: 1,
@@ -117,7 +114,6 @@ it("the first of four players to finish wins before a new round game or next tur
     phase: "FINISHED",
     winnerId: game.players[0]!.playerId,
     minigame: null,
-    duel: null,
     potato: null,
   })
   expect(game.snapshot().players.map((p) => p.tileId)).toEqual([

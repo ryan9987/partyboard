@@ -1,5 +1,5 @@
 import { expect, it } from "vitest"
-import { getMinigameMotionReading } from "../apps/web/src/controller/duel-motion"
+import { getMinigameMotionReading } from "../apps/web/src/controller/game-motion"
 import { canFlickAct } from "../apps/web/src/controller/minigame-gestures"
 import type { MinigamePlayer } from "../packages/protocol/src"
 import {
@@ -61,7 +61,7 @@ it("releases arrows by a gentle, settled wrist flick without changing aim or fir
   expect(canFlickAct("archery", { ...player, alive: false }, 5000)).toBe(false)
 })
 
-it("accepts a gentle Fishing wrist flick without changing the sword/rhythm threshold or tilt", () => {
+it("accepts a gentle Fishing wrist flick without changing the general action/rhythm threshold or tilt", () => {
   expect(getMinigameMotionReading(flick, 0.1, 1, true)).toEqual({
     axis: 0.1,
     neutral: 1,

@@ -1,7 +1,7 @@
 import { SHOP_ITEMS, GAME_REWARDS, type GameState, type Item } from "@party-board/protocol"
 import { useEffect, useState } from "react"
 import type { ControllerClient } from "./controller-client"
-import { getDuelGesture } from "./duel-motion"
+import { getWristGesture } from "./game-motion"
 import { useGameNow } from "../networking/gameClock"
 import { CoinCount } from "../app/CoinCount"
 import { ItemGlyph } from "../app/PowerupNotice"
@@ -30,7 +30,7 @@ export function PartyControls({
   useEffect(() => {
     if (!motionEnabled || !canPass) return
     const motion = (event: DeviceMotionEvent) => {
-      if (getDuelGesture(event) === "swing") client.passPotato()
+      if (getWristGesture(event) === "flick") client.passPotato()
     }
     window.addEventListener("devicemotion", motion)
     return () => window.removeEventListener("devicemotion", motion)
@@ -57,7 +57,7 @@ export function PartyControls({
     )
     return (
       <section className="party-controller" aria-label="Hot Potato controller">
-        <p className="duel-kicker">Round {state.roundNumber ?? 1} · Hot Potato</p>
+        <p className="activity-kicker">Round {state.roundNumber ?? 1} · Hot Potato</p>
         <h2>
           {game.stage === "intro"
             ? "Don't hold the hot acorn!"
@@ -112,7 +112,7 @@ export function PartyControls({
     const shopper = state.players.find((player) => player.id === state.shop!.playerId)
     return (
       <section className="party-controller" aria-label="Trail shop">
-        <p className="duel-kicker">Wildwood Market</p>
+        <p className="activity-kicker">Wildwood Market</p>
         <h2>
           {shopper?.id === me.id
             ? "Something for the trail?"

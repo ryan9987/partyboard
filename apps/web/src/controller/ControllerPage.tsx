@@ -9,7 +9,6 @@ import {
 } from "@party-board/motion"
 import { createGameSocket } from "../networking/socket"
 import { ControllerClient } from "./controller-client"
-import { DuelControls } from "./DuelControls"
 import { PartyControls } from "./PartyControls"
 import { MinigameControls } from "./MinigameControls"
 import { PowerupNotice } from "../app/PowerupNotice"
@@ -67,12 +66,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   const canRoll = client.canRoll()
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" })
-  }, [
-    view.state?.phase,
-    view.state?.minigame?.stage,
-    view.state?.duel?.stage,
-    view.state?.potato?.stage,
-  ])
+  }, [view.state?.phase, view.state?.minigame?.stage, view.state?.potato?.stage])
 
   useEffect(() => {
     client.start()
@@ -106,7 +100,6 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   const setup =
     view.state?.phase === "LOBBY" ||
     view.state?.minigame?.stage === "intro" ||
-    view.state?.duel?.stage === "intro" ||
     view.state?.potato?.stage === "intro"
   const enableMotion = async () => {
     if (permission === "enabled") {
@@ -123,14 +116,13 @@ function ConnectedController({ client }: { client: ControllerClient }) {
       setRequestingPermission(false)
     }
   }
-  const inActivity = ["DUEL", "SHOP", "POTATO", "MINIGAME"].includes(view.state?.phase ?? "")
+  const inActivity = ["SHOP", "POTATO", "MINIGAME"].includes(view.state?.phase ?? "")
   let headline = "Join the table"
   if (me) {
     if (view.connection !== "connected") headline = "Reconnecting…"
     else if (finished)
       headline = winner?.id === me.id ? "Trail champion!" : `${winner?.name ?? "The leader"} wins!`
     else if (view.state?.phase === "LOBBY") headline = "You're in!"
-    else if (view.state?.phase === "DUEL") headline = "Sword duel"
     else if (view.state?.phase === "SHOP") headline = "Wildwood Market"
     else if (view.state?.phase === "POTATO") headline = "Hot Potato"
     else if (view.state?.minigame) headline = MINIGAMES[view.state.minigame.kind].name
@@ -308,15 +300,8 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           playerId={view.playerId}
           motionEnabled={permission === "enabled"}
         />
-      ) : view.state?.phase === "SHOP" || view.state?.phase === "POTATO" ? null : view.state
-          ?.phase === "DUEL" && view.state.duel ? (
-        <DuelControls
-          client={client}
-          state={view.state}
-          playerId={view.playerId}
-          motionEnabled={permission === "enabled"}
-        />
-      ) : view.choosingItem || view.pendingItem ? (
+      ) : view.state?.phase === "SHOP" ||
+        view.state?.phase === "POTATO" ? null : view.choosingItem || view.pendingItem ? (
         <p className="inventory-help" role="status">
           {view.pendingItem
             ? "Waiting for the game to confirm your power-up…"
@@ -374,9 +359,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           </button>
           <p aria-live="polite">
             {permission === "off"
-              ? view.state?.phase === "DUEL"
-                ? "Enable motion for swing and tilt, or use the Swing and Guard buttons."
-                : "Enable motion to shake, tilt and flick. Use touch fallback if sensors aren't available."
+              ? "Enable motion to shake, tilt and flick. Use touch fallback if sensors aren't available."
               : `Motion ${permission}. Touch fallbacks stay available in every game.`}
           </p>
           <details>

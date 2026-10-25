@@ -4,10 +4,6 @@ Laptop-facing code belongs here.
 
 Implemented components:
 
-- `DuelArena.tsx`: woodland stone arena, armed characters, spectators, and combat effects
-- `DuelOverlay.tsx`: animated crossed-swords introduction, scores, countdown, and outcome
-- `SwordModel.tsx`: beveled blade, fuller, crossguard, wrapped grip, and pommel
-
 - `HostPage.tsx`: room lifecycle and top-level host state
 - `LobbyOverlay.tsx`: room code, QR code, players, and Start
 - `GameOverlay.tsx`: current player, phase, and restart controls

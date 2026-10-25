@@ -2,11 +2,11 @@
 
 Partyboard is a woodland board game for up to **eight players**, controlled by phone motion.
 The laptop shows the shared 3D world; phones shake to roll, tilt to balance/aim, and flick
-to cast, reel, release arrows, pass, swing and strike. Touch fallbacks remain accessible.
+to cast, reel, release arrows, pass and strike. Touch fallbacks remain accessible.
 
-Race to the end of the 48-space trail, shop for power-ups, duel over occupied spaces, and
+Race to the end of the 48-space trail, shop for power-ups, and
 compete in Hot Potato, Balance, Fishing, Archery and Rhythm. Dice, results, coins and turns
-are server-authoritative. Dodge is retired.
+are server-authoritative. Dodge and sword fights are retired. Sharing a space never interrupts a turn.
 
 Presenting alone? Join one phone, click **Demo mode** in the host lobby, then **Start game**.
 Three gentle bots handle their own turns and activities. See the

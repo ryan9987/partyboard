@@ -8,7 +8,6 @@ import { BoardTiles } from "./BoardTile"
 import { getCharacterOffset } from "./characterLayout"
 import { CharacterModel } from "./CharacterModel"
 import { DiceView } from "./DiceView"
-import { DuelArena } from "./DuelArena"
 import { createSurfaceTexture } from "./sceneryMaterials"
 import { WorldEnvironment } from "./WorldEnvironment"
 import { TrailMarkets } from "./MarketStall"
@@ -203,8 +202,6 @@ export function BoardScene(props: BoardSceneProps) {
           <MinigameArena state={props.state} />
         ) : props.state.phase === "POTATO" && props.state.potato ? (
           <PotatoArena state={props.state} />
-        ) : props.state.phase === "DUEL" && props.state.duel ? (
-          <DuelArena state={props.state} />
         ) : (
           <Scene {...props} />
         )}

@@ -5,7 +5,7 @@ import {
   type TutorialMode,
 } from "../apps/web/src/host/gameLessons"
 
-const kinds: TutorialKind[] = ["balance", "fishing", "archery", "rhythm", "potato", "duel"]
+const kinds: TutorialKind[] = ["balance", "fishing", "archery", "rhythm", "potato"]
 it.each(kinds)("%s has short, complete lessons for both control modes", (kind) => {
   for (const mode of ["touch", "motion"] as TutorialMode[]) {
     const lesson = getGameLesson(kind, mode)
@@ -31,7 +31,7 @@ it("explains Archery's three-arrow total and Rhythm's timing target", () => {
   expect(getGameLesson("rhythm", "touch").steps).toContain("Tap Strike")
   expect(getGameLesson("rhythm").goal).toContain("marker reaches the center line")
 })
-it("uses the real action button labels and explains elimination and knockback", () => {
+it("uses the real action button labels and explains elimination", () => {
   expect(getGameLesson("potato", "touch").steps).toContain("Tap Pass acorn")
   expect(getGameLesson("potato").steps.join(" ")).toContain("you're out")
   expect(getGameLesson("fishing", "touch").steps).toEqual([
@@ -39,6 +39,4 @@ it("uses the real action button labels and explains elimination and knockback", 
     "Wait for REEL NOW",
     "Tap Reel now!",
   ])
-  expect(getGameLesson("duel", "touch").touchControls).toBe("Swing sword / Guard")
-  expect(getGameLesson("duel").goal).toContain("back up to three spaces")
 })

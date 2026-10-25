@@ -1,5 +1,8 @@
 # Core milestone scope
 
+Current override: sword fights were retired on October 25. Occupied spaces allow co-location;
+only the five round-end games interrupt normal board play. Older duel references below are history.
+
 This file records the original core milestone. Ryan subsequently approved sword duels and the
 round-game/shop economy; see `SWORD_DUEL.md` and `PARTY_ECONOMY.md` for the current extensions.
 On October 25 Ryan approved first-to-finish at space 47, retired Dodge, replaced per-space

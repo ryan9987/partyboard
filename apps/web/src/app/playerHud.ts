@@ -89,17 +89,7 @@ export function getPlayerHud(state: GameState, player: PublicPlayer, now: number
       tone: winner ? "winner" : out ? "out" : holding ? "current" : "normal",
     }
   }
-  if (state.phase === "DUEL" && state.duel) {
-    const fighter = state.duel.fighters.find((entry) => entry.playerId === player.id)
-    if (fighter)
-      return {
-        label: state.duel.winnerId === player.id ? "Winner" : "Dueling",
-        score: fighter.score,
-        unit: "hits",
-        tone: state.duel.winnerId === player.id ? "winner" : "normal",
-      }
-    return { label: "Watching the duel", score: null, unit: "", tone: "normal" }
-  }
+
   const current = player.id === state.currentPlayerId
   const space =
     player.tileId === "tile-0"

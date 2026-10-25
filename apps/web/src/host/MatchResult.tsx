@@ -4,7 +4,10 @@ import { RoundResult } from "./RoundResult"
 export function MatchResult({ state, onRestart }: { state: GameState; onRestart: () => void }) {
   const winner = state.players.find((player) => player.id === state.winnerId)
   return (
-    <section className="duel-overlay duel-overlay--result match-result" aria-label="Match results">
+    <section
+      className="round-overlay round-overlay--result match-result"
+      aria-label="Match results"
+    >
       <RoundResult
         players={winner ? [winner] : []}
         detail="First to the finish. The trail has a champion."

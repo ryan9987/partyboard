@@ -4,6 +4,19 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- October 25 sword-fight retirement: no occupied-space combat, knockback, arena, controller,
+  lesson, rehearsal choice or wire command. Strict snapshots reject the retired phase/field.
+  Shared-space regression covers eight co-located players, normal round rotation and coins;
+  bot co-location and reconnect-safe round instruction coverage remain in place.
+- Shared wrist-motion helpers and round overlay classes now have game-neutral names. All five
+  retained games, shops, items, motion/touch alternatives and trail victory are unchanged.
+- Full gate: 198 Vitest +11 motion tests, types, lint, formatting and production build passed.
+  All five compact motion lessons and the retained gameplay scenes were visually inspected.
+  Refreshed host/phones and a new room are required after deployment. Submission story/tags
+  are in DEVPOST.md; the revised 120-second video and seven PNG screenshots stay outside Git.
+
+### Previous release history
+
 - Eight-player motion-first presenter release: shared eight-seat/color contracts, matching
   outfits/portraits, grounded compact trail lineup, adaptive arena cameras, unobstructed archery
   targets, six duel spectators, and a two-row host ledger with separate coin/score values.

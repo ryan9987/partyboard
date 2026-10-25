@@ -120,13 +120,6 @@ export type RoomJoinedEvent = z.infer<typeof roomJoinedEventSchema>
 export type PlayerReadyRequest = z.infer<typeof playerReadyRequestSchema>
 export type HostCommand = z.infer<typeof hostCommandSchema>
 export type RollRequest = z.infer<typeof rollRequestSchema>
-export const duelActionRequestSchema = rollRequestSchema
-  .extend({
-    duelId: z.string().uuid(),
-    action: z.enum(["swing", "guard"]),
-  })
-  .strict()
-export type DuelActionRequest = z.infer<typeof duelActionRequestSchema>
 export const shopChoiceRequestSchema = rollRequestSchema
   .extend({ visitId: z.string().uuid(), item: z.union([itemSchema, z.literal("skip")]) })
   .strict()

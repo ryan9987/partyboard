@@ -1,13 +1,13 @@
 import { FISHING_RULES, type MinigamePlayer } from "@party-board/protocol"
-import type { getDuelGesture } from "./duel-motion"
+import type { getWristGesture } from "./game-motion"
 
-type Motion = Parameters<typeof getDuelGesture>[0]
+type Motion = Parameters<typeof getWristGesture>[0]
 const magnitude = (values: Array<number | null | undefined>) =>
   Math.hypot(
     ...values.map((value) => (typeof value === "number" && Number.isFinite(value) ? value : 0)),
   )
 
-/** A small wrist flick, not the large sword-swing threshold. Gravity is never an action. */
+/** A small wrist flick, with a lower threshold than general action gestures. Gravity is never an action. */
 function strength(event: Motion): number {
   return Math.max(
     magnitude([event.rotationRate?.alpha, event.rotationRate?.beta, event.rotationRate?.gamma]) /

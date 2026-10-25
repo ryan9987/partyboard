@@ -8,7 +8,6 @@ import {
   MAX_PLAYERS,
   PLAYER_COLORS,
   demoModeRequestSchema,
-  duelActionRequestSchema,
   shopChoiceRequestSchema,
   itemUseRequestSchema,
   potatoPassRequestSchema,
@@ -66,10 +65,6 @@ type Room = {
   connections: Set<string>
   acceptedRequests: Set<string>
   timer: ReturnType<typeof setTimeout> | null
-  duelRuntime: Map<
-    string,
-    { nextInputAt: number; guardUntil: number; attackAt: number | null }
-  > | null
   remainingPath: string[] | null
   roundCompleted: Set<string>
   nextPassAt: number
@@ -90,9 +85,6 @@ export type GameServerOptions = {
   rollTimeoutMs?: number
   disconnectTimeoutMs?: number
   disconnectGraceMs?: number
-  duelIntroMs?: number
-  duelDurationMs?: number
-  duelResultMs?: number
   shopDurationMs?: number
   potatoIntroMs?: number
   potatoFuseMs?: number
@@ -126,9 +118,6 @@ export class GameServer {
     turnEndMs: number
     rollTimeoutMs: number
     disconnectTimeoutMs: number
-    duelIntroMs: number
-    duelDurationMs: number
-    duelResultMs: number
     shopDurationMs: number
     potatoIntroMs: number
     potatoFuseMs: number
@@ -151,9 +140,6 @@ export class GameServer {
       turnEndMs: options.turnEndMs ?? 500,
       rollTimeoutMs: options.rollTimeoutMs ?? 0,
       disconnectTimeoutMs: options.disconnectTimeoutMs ?? 60_000,
-      duelIntroMs: options.duelIntroMs ?? 10000,
-      duelDurationMs: options.duelDurationMs ?? 25_000,
-      duelResultMs: options.duelResultMs ?? 3200,
       shopDurationMs: options.shopDurationMs ?? 0,
       potatoIntroMs: options.potatoIntroMs ?? 10000,
       potatoFuseMs: options.potatoFuseMs ?? 5000,
@@ -206,7 +192,6 @@ export class GameServer {
             connections: new Set([connectionId]),
             acceptedRequests: new Set(),
             timer: null,
-            duelRuntime: null,
             remainingPath: null,
             roundCompleted: new Set(),
             nextPassAt: 0,
@@ -409,8 +394,6 @@ export class GameServer {
           }
           // Turn numbers remain monotonic across restarts to distinguish delayed UI events.
           room.state.lastRoll = null
-          room.state.duel = null
-          room.duelRuntime = null
           room.state.shop = null
           room.state.potato = null
           room.state.minigame = null
@@ -619,38 +602,6 @@ export class GameServer {
           this.snapshot(room)
           break
         }
-        case CLIENT_EVENTS.DUEL_ACTION: {
-          const parsed = duelActionRequestSchema.safeParse(payload)
-          if (!parsed.success) throw new CommandError("INVALID_PAYLOAD", "Invalid duel action")
-          requestId = parsed.data.requestId
-          const room = this.room(parsed.data.roomCode)
-          const player = this.authorizePlayer(room, connectionId, parsed.data.playerSessionId)
-          const duel = room.state.duel
-          const key = `${parsed.data.playerSessionId}:${requestId}`
-          if (room.acceptedRequests.has(key)) return
-          if (
-            room.state.phase !== "DUEL" ||
-            !duel ||
-            duel.id !== parsed.data.duelId ||
-            duel.stage !== "active"
-          )
-            throw new CommandError("INVALID_DUEL", "This duel is not accepting actions")
-          const fighter = duel.fighters.find((candidate) => candidate.playerId === player.id)
-          const runtime = room.duelRuntime?.get(player.id)
-          if (!fighter || !runtime)
-            throw new CommandError("NOT_A_DUELIST", "Watch this duel from the sidelines")
-          const now = Date.now()
-          if (now >= duel.stageEndsAt || now < runtime.nextInputAt) return
-          room.acceptedRequests.add(key)
-          runtime.nextInputAt = now + 900
-          fighter.action = parsed.data.action
-          fighter.actionAt = now
-          if (parsed.data.action === "guard") runtime.guardUntil = now + 700
-          else runtime.attackAt = now + 450
-          duel.revision++
-          this.snapshot(room)
-          break
-        }
         default:
           throw new CommandError("UNKNOWN_EVENT", "Unsupported game event")
       }
@@ -676,8 +627,7 @@ export class GameServer {
     session.connectionId = null
     this.player(room, session.playerId).connected = false
     if (!room.state.players.some((p) => !p.isBot && p.connected)) this.stopBots(room)
-    const activityId =
-      room.state.shop?.id ?? room.state.minigame?.id ?? room.state.potato?.id ?? room.state.duel?.id
+    const activityId = room.state.shop?.id ?? room.state.minigame?.id ?? room.state.potato?.id
     const forfeit = () => {
       delete session.recoveryTimer
       if (session.connectionId || !activityId) return
@@ -691,16 +641,6 @@ export class GameServer {
         this.removePotatoPlayer(room, session.playerId)
       if (room.state.minigame?.id === activityId && room.state.minigame.stage !== "result")
         room.minigameRuntime?.disconnect(session.playerId)
-      if (
-        room.state.duel?.id === activityId &&
-        room.state.duel.stage !== "result" &&
-        room.state.duel.fighters.some((fighter) => fighter.playerId === session.playerId)
-      ) {
-        const opponent = room.state.duel.fighters.find(
-          (fighter) => fighter.playerId !== session.playerId,
-        )!
-        this.finishDuel(room, opponent.playerId, "forfeit")
-      }
       this.snapshot(room)
     }
     if (this.options.disconnectGraceMs === 0) forfeit()
@@ -790,16 +730,10 @@ export class GameServer {
       index++
       const state = room.state
       const game = state.minigame
-      const key = `${state.phase}:${state.turnNumber}:${game?.id ?? state.potato?.revision ?? state.duel?.id ?? state.shop?.id ?? ""}:${game?.stage ?? state.duel?.stage ?? state.potato?.stage ?? ""}`
+      const key = `${state.phase}:${state.turnNumber}:${game?.id ?? state.potato?.revision ?? state.shop?.id ?? ""}:${game?.stage ?? state.potato?.stage ?? ""}`
       if (bot.phaseKey !== key) {
         bot.phaseKey = key
-        bot.nextActionAt =
-          now +
-          (state.phase === "POTATO"
-            ? 2200 + index * 400
-            : state.phase === "DUEL"
-              ? 3200
-              : 650 + index * 150)
+        bot.nextActionAt = now + (state.phase === "POTATO" ? 2200 + index * 400 : 650 + index * 150)
         if (game?.stage === "intro") bot.sequence = 0
       }
       if (now < bot.nextActionAt) continue
@@ -835,12 +769,6 @@ export class GameServer {
                 ? "shield"
                 : "skip"
         send(CLIENT_EVENTS.SHOP_CHOICE, { visitId: state.shop.id, item })
-      } else if (
-        state.duel?.stage === "active" &&
-        state.duel.fighters.some((p) => p.playerId === id)
-      ) {
-        send(CLIENT_EVENTS.DUEL_ACTION, { duelId: state.duel.id, action: "swing" })
-        bot.nextActionAt = now + 3600
       } else if (
         state.potato?.stage === "active" &&
         state.potato.holderId === id &&
@@ -896,8 +824,6 @@ export class GameServer {
   private beginTurn(room: Room, playerId: string): void {
     room.state.itemEffect = null
     delete room.state.notice
-    room.state.duel = null
-    room.duelRuntime = null
     room.state.currentPlayerId = playerId
     room.state.turnNumber += 1
     room.state.phase = "AWAITING_ROLL"
@@ -964,8 +890,6 @@ export class GameServer {
 
   private endBoardTurn(room: Room): void {
     room.state.phase = "TURN_END"
-    room.state.duel = null
-    room.duelRuntime = null
     this.snapshot(room)
     this.schedule(room, this.timing.turnEndMs, () => this.advance(room))
   }
@@ -1047,23 +971,17 @@ export class GameServer {
       room.state.waitingForHost = null
       room.state.itemEffect = null
       room.state.shop = null
-      room.state.duel = null
       room.state.potato = null
       room.state.minigame = null
       room.remainingPath = null
       room.continueTask = null
       room.minigameRuntime = null
-      room.duelRuntime = null
       room.state.notice = `${player.name} reached the finish and wins the trail!`
       this.snapshot(room)
       return
     }
-    const opponent = room.state.players.find(
-      (other) => other.id !== player.id && other.connected && other.tileId === player.tileId,
-    )
-    if (opponent && player.connected && player.tileId !== defaultBoard.startingTileId)
-      this.beginDuel(room, player, opponent)
-    else this.endBoardTurn(room)
+    // Sharing a trail space does not interrupt the board loop.
+    this.endBoardTurn(room)
   }
 
   private fuseDelay(): number {
@@ -1211,113 +1129,6 @@ export class GameServer {
       game.endsAt = game.fuseAt
       this.snapshot(room)
     }
-  }
-
-  private beginDuel(room: Room, challenger: PublicPlayer, defender: PublicPlayer): void {
-    room.state.phase = "DUEL"
-    room.state.duel = {
-      id: randomUUID(),
-      tileId: challenger.tileId,
-      stage: "intro",
-      fighters: [challenger, defender].map((player) => ({
-        playerId: player.id,
-        score: 0,
-        action: "idle" as const,
-        actionAt: 0,
-      })) as NonNullable<GameState["duel"]>["fighters"],
-      stageEndsAt: Date.now() + this.timing.duelIntroMs,
-      winnerId: null,
-      loserId: null,
-      outcome: "pending",
-      revision: 0,
-      penaltySpaces: 0,
-    }
-    room.duelRuntime = new Map(
-      [challenger, defender].map((player) => [
-        player.id,
-        { nextInputAt: 0, guardUntil: 0, attackAt: null },
-      ]),
-    )
-    this.snapshot(room)
-    this.afterStage(room, "Start duel", this.timing.duelIntroMs, () => {
-      const duel = room.state.duel!
-      duel.stage = "active"
-      duel.stageEndsAt = Date.now() + this.timing.duelDurationMs
-      duel.revision++
-      this.snapshot(room)
-      this.schedule(room, 50, () => this.tickDuel(room))
-    })
-  }
-
-  private tickDuel(room: Room): void {
-    const duel = room.state.duel
-    const runtimes = room.duelRuntime
-    if (!duel || duel.stage !== "active" || !runtimes) return
-    const now = Date.now()
-    let changed = false
-    for (const fighter of duel.fighters) {
-      const attacker = runtimes.get(fighter.playerId)!
-      if (attacker.attackAt === null || attacker.attackAt > now) continue
-      const opponent = duel.fighters.find((other) => other.playerId !== fighter.playerId)!
-      const defender = runtimes.get(opponent.playerId)!
-      const impactAt = attacker.attackAt
-      attacker.attackAt = null
-      if (defender.attackAt !== null && Math.abs(defender.attackAt - impactAt) <= 180) {
-        defender.attackAt = null
-        duel.outcome = "clash"
-      } else if (defender.guardUntil >= impactAt) duel.outcome = "block"
-      else {
-        fighter.score++
-        opponent.action = "hit"
-        opponent.actionAt = now
-        duel.outcome = "hit"
-        if (fighter.score >= 2) {
-          this.finishDuel(room, fighter.playerId, "victory")
-          return
-        }
-      }
-      changed = true
-    }
-    if (now >= duel.stageEndsAt) {
-      const [first, second] = duel.fighters
-      this.finishDuel(
-        room,
-        first.score === second.score
-          ? null
-          : first.score > second.score
-            ? first.playerId
-            : second.playerId,
-        "victory",
-      )
-      return
-    }
-    if (changed) {
-      duel.revision++
-      this.snapshot(room)
-    }
-    this.schedule(room, 50, () => this.tickDuel(room))
-  }
-
-  private finishDuel(room: Room, winnerId: string | null, outcome: "victory" | "forfeit"): void {
-    const duel = room.state.duel!
-    duel.stage = "result"
-    duel.winnerId = winnerId
-    duel.loserId = winnerId
-      ? duel.fighters.find((fighter) => fighter.playerId !== winnerId)!.playerId
-      : null
-    duel.outcome = winnerId ? outcome : "draw"
-    duel.stageEndsAt = Date.now() + this.timing.duelResultMs
-    duel.revision++
-    if (duel.loserId) {
-      const loser = this.player(room, duel.loserId)
-      const index = defaultBoard.tiles.findIndex((tile) => tile.id === loser.tileId)
-      duel.penaltySpaces = Math.min(3, index)
-      loser.tileId = defaultBoard.tiles[Math.max(0, index - 3)]!.id
-    }
-    this.snapshot(room)
-    this.afterStage(room, "Back to the trail", this.timing.duelResultMs, () =>
-      this.endBoardTurn(room),
-    )
   }
 
   private afterStage(room: Room, label: string, delay: number, task: () => void): void {

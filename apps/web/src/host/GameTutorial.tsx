@@ -34,7 +34,7 @@ export function GameTutorial({
 }) {
   const lesson = getGameLesson(kind, mode)
   const touch = mode === "touch"
-  const flick = ["fishing", "rhythm", "potato", "duel"].includes(kind)
+  const flick = ["fishing", "rhythm", "potato"].includes(kind)
   return (
     <section
       className={`game-tutorial game-tutorial--${kind}`}
@@ -167,25 +167,6 @@ export function GameTutorial({
               <path d="M278 86q51-46 102 0" fill="none" stroke="#a8b7a6" strokeDasharray="3 5" />
               <g className="tutorial-pass">
                 <Acorn x={278} y={107} />
-              </g>
-            </>
-          )}
-          {kind === "duel" && (
-            <>
-              <Person x={260} />
-              <Person x={400} color="#4d9996" />
-              <g className="tutorial-sword">
-                <path d="M283 109V65l5-9 5 9v44Z" fill="#dce7d5" stroke="#537063" strokeWidth="2" />
-                <path d="M278 109h20m-10 0v9" stroke="#a36a30" strokeWidth="4" />
-              </g>
-              <g className="tutorial-guard">
-                <path
-                  d="m377 112-30-30 0-12 12 0 30 30Z"
-                  fill="#dce7d5"
-                  stroke="#537063"
-                  strokeWidth="2"
-                />
-                <path d="m370 114 20-20" stroke="#a36a30" strokeWidth="4" />
               </g>
             </>
           )}

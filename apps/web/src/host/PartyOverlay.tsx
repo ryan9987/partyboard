@@ -64,11 +64,11 @@ export function PartyOverlay({ state }: { state: GameState }) {
   const winner = state.players.find((player) => player.id === game.winnerId)
   return (
     <section
-      className={`duel-overlay duel-overlay--${game.stage}`}
+      className={`round-overlay round-overlay--${game.stage}`}
       aria-label="Hot Potato mini-game"
     >
       {game.stage === "intro" ? (
-        <div className="duel-announcement duel-announcement--tutorial">
+        <div className="round-announcement round-announcement--tutorial">
           <p className="eyebrow">Round {state.roundNumber ?? 1} complete · everyone plays</p>
           <h1>Hot Potato</h1>
           <GameTutorial kind="potato" />
@@ -91,14 +91,14 @@ export function PartyOverlay({ state }: { state: GameState }) {
         />
       ) : (
         <>
-          <div className="duel-scoreboard">
+          <div className="round-scoreboard">
             <div>
               <p className="eyebrow">Hot Potato · round {state.roundNumber ?? 1}</p>
               <h2>{holder?.name ?? "Someone"} has the acorn!</h2>
             </div>
-            <span className="duel-timer">{game.aliveIds.length} left</span>
+            <span className="round-timer">{game.aliveIds.length} left</span>
           </div>
-          <div className="duel-instructions">
+          <div className="round-instructions">
             Pass clockwise with a flick or a tap
             <span className="fuse-pill">
               Pops in {Math.max(0, Math.ceil((game.fuseAt - now) / 1000))}s

@@ -1,9 +1,8 @@
 # Phone controller
 
-Occupied-space duels replace Roll with `DuelControls.tsx`: Swing/Guard buttons, score, recovery,
-and a spectator state. `duel-motion.ts` classifies deliberate wrist motion and sideways tilt. The
-existing permission flow enables sensors; no inputs are buffered across disconnects. See
-`docs/SWORD_DUEL.md` for timings and real-device verification still needed.
+`game-motion.ts` classifies wrist flicks and tilt for the five round-end games. Explicit
+permission enables sensors; touch fallbacks stay available. Sword fights have been removed.
+No inputs are buffered across disconnects.
 
 `ControllerPage.tsx` renders the join form, lobby/waiting/current-turn status, connection state, explicit motion permission, and the always-visible touch Roll button. `/controller/ABCD` pre-fills the room code; `/controller?room=ABCD` and manually entering a code also work.
 

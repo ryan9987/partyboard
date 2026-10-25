@@ -31,9 +31,6 @@ function setup(count = 1, options: Partial<GameServerOptions> = {}) {
     rollDurationMs: 10,
     millisecondsPerTile: 10,
     turnEndMs: 10,
-    duelIntroMs: 100,
-    duelDurationMs: 100,
-    duelResultMs: 100,
     minigameIntroMs: 1000,
     minigameDurationMs: 12000,
     minigameResultMs: 1000,
@@ -262,23 +259,15 @@ it("keeps eight-player compact footprints inside the stone plinth", () => {
   })
 })
 
-it("a visitor can beat a bot in a real two-hit duel without waiting for a timeout", () => {
-  const g = setup(1, { dice: () => 1, duelDurationMs: 25000 })
+it("bots can share the visitor's space and reach the round game without combat input", () => {
+  const g = setup(1, { dice: () => 1, roundGame: "fishing" })
   g.demo()
   g.start()
   g.send(0, "dice.roll.request")
-  g.until(() => g.state().duel?.stage === "active")
-  const duelId = g.state().duel!.id
-  g.send(0, "duel.action", { duelId, action: "swing" })
-  vi.advanceTimersByTime(1000)
-  g.send(0, "duel.action", { duelId, action: "swing" })
-  vi.advanceTimersByTime(500)
-  expect(g.state().duel).toMatchObject({
-    stage: "result",
-    winnerId: g.players[0]!.playerId,
-    outcome: "victory",
-  })
-  expect(g.state().duel!.fighters.find((p) => p.playerId === g.players[0]!.playerId)?.score).toBe(2)
+  g.until(() => g.state().phase === "MINIGAME")
+  expect(g.state().players.every((p) => p.tileId === "tile-1")).toBe(true)
+  expect(g.state().minigame).toMatchObject({ kind: "fishing", stage: "intro" })
+  expect(g.state()).not.toHaveProperty("duel")
   expect(g.errors).toEqual([])
 })
 

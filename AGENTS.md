@@ -4,14 +4,15 @@ These instructions apply to every contributor and coding agent working in this r
 
 ## Current objective
 
-Maintain the core board loop and the user-approved occupied-space sword duel: up to eight phone controllers, server-authoritative rolls/combat, 3D movement, turn rotation, and recovery.
+Maintain the board loop and five round-end games: up to eight phone controllers, server-authoritative rolls/scoring, 3D movement, turn rotation, and recovery.
 
 ## Scope guardrails
 
-- Sword duels, round-end Hot Potato, coins, pass-by shops, Frost Charm, Trail Boots, Leaf Shield,
+- Round-end Hot Potato, coins, pass-by shops, Frost Charm, Trail Boots, Leaf Shield,
   and the 48-space route are approved by Ryan. Other content needs a new request.
 - Ryan also approved Balance, Fishing, Archery, and Rhythm, including their integrated
   server/controller behavior and random round-end rotation. Preserve touch alternatives.
+- Sword fights were retired at Ryan's request on October 25. Players may share spaces; no combat or knockback.
 - Dodge was retired at Ryan's request on October 25. The default trail ends at space 47;
   first arrival wins. Travel pays one coin per completed forward turn, never per space.
 - Do not implement accounts, matchmaking, databases, or additional boards without a new request.

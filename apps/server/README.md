@@ -1,8 +1,7 @@
 # Authoritative server
 
-Occupied-space sword duels are now part of the phase machine. All action authorization, cooldowns,
-hit/parry/clash decisions, results, penalties, and timeout/disconnect recovery run in `GameServer`.
-The wire extension and timings are documented in `docs/SWORD_DUEL.md`.
+Players may share trail spaces without combat. Five round-end games, pass-by shopping,
+validated motion inputs, coins, power-ups and first-to-finish victory remain authoritative.
 
 Node.js / Socket.IO authority for in-memory rooms, private player sessions, dice, positions, phases, turn rotation, request deduplication, and reconnection. Room state is deliberately lost when the server stops.
 
@@ -55,7 +54,7 @@ The initial Linux demo used cloudflared 2026.10.3 downloaded from the official G
 - Server dice use `crypto.randomInt(1, 7)`. Board movement uses `getMovementPath` with the die value plus any equipped Boots bonus.
 - The server schedules 900 ms rolling, 420 ms per tile, and a 500 ms turn-end pause. It requires no animation completion acknowledgement. At movement start, snapshots contain the destination so rejoining screens can recover immediately.
 - Each actual forward crossing awards one coin, capped at 999, including the market tile before purchasing and any Boots spaces. There is no extra landing bonus. Shop continuation cannot replay previous crossings; restart cancels unpaid crossing timers.
-- Connected players and shops have no deadline. An awaiting active player's disconnect starts a 60-second reconnect grace period; reattachment cancels it. Duel/mini-game rules and results wait for host Continue; active gameplay clocks remain.
+- Connected players and shops have no deadline. An awaiting active player's disconnect starts a 60-second reconnect grace period; reattachment cancels it. Round-game introductions/results advance automatically by default; shops and connected board turns stay untimed.
 - Turn order skips disconnected players. With nobody connected, the room pauses in `TURN_END` with no active player or timer; a rejoining player resumes it. No `turn.ended` event is emitted while no next player exists, because the shared schema requires a next player. Public snapshots remain authoritative.
 - Membership/session reservations last for the room lifetime; disconnected players are not evicted or replaced. Restart cancels pending animation timers, resets positions, retains membership and request deduplication, and starts a new turn. Turn numbers remain monotonic across restarts to distinguish old UI events.
 

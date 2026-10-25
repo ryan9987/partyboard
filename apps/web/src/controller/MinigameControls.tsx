@@ -8,7 +8,7 @@ import {
 } from "@party-board/protocol"
 import { useEffect, useRef, useState } from "react"
 import type { ControllerClient } from "./controller-client"
-import { getMinigameMotionReading } from "./duel-motion"
+import { getMinigameMotionReading } from "./game-motion"
 import { useGameClock, useGameNow } from "../networking/gameClock"
 import { canFishingAct, createFishingFlickDetector } from "./fishing-motion"
 import { GameTutorial } from "../host/GameTutorial"

@@ -5,7 +5,6 @@ import { useCallback, useMemo, useRef, useState } from "react"
 import { buildControllerUrl, createRuntimeConfig } from "../app/runtimeConfig"
 import { BoardScene } from "./BoardScene"
 import { DemoPreflight } from "./DemoPreflight"
-import { DuelOverlay } from "./DuelOverlay"
 import { PartyOverlay } from "./PartyOverlay"
 import { MinigameOverlay } from "./MinigameOverlay"
 import { createFixtureState } from "./fixture"
@@ -179,7 +178,7 @@ export default function HostPage() {
         ? "Join on your phone. Start when your party is ready."
         : "Connecting to the authoritative game server and creating a room…"))
     : "Scan to join from a phone. Four fixture players are shown for Ryan's host preview."
-  const sceneKey = state.minigame?.id ?? state.duel?.id ?? state.potato?.id ?? "trail"
+  const sceneKey = state.minigame?.id ?? state.potato?.id ?? "trail"
 
   return (
     <main className="host-shell">
@@ -228,8 +227,6 @@ export default function HostPage() {
         <MinigameOverlay state={state} />
       ) : state.phase === "SHOP" || state.phase === "POTATO" ? (
         <PartyOverlay state={state} />
-      ) : state.phase === "DUEL" && state.duel ? (
-        <DuelOverlay state={state} />
       ) : state.phase === "LOBBY" ? (
         <LobbyOverlay
           actionLabel={liveMode ? "Start game" : "Start host preview"}

@@ -1,6 +1,6 @@
 import type { MinigameKind } from "@party-board/protocol"
 
-export type TutorialKind = MinigameKind | "potato" | "duel"
+export type TutorialKind = MinigameKind | "potato"
 export type TutorialMode = "motion" | "touch"
 type Steps = readonly [string, string, string]
 type Lesson = { motion: Steps; touch: Steps; goal: string; touchControls: string }
@@ -44,12 +44,6 @@ const LESSONS: Record<TutorialKind, Lesson> = {
     ],
     goal: "The acorn passes clockwise. Last player standing wins.",
     touchControls: "Pass acorn",
-  },
-  duel: {
-    motion: ["Swing gently to attack", "Tilt sideways to guard", "Land two hits to win"],
-    touch: ["Tap Swing sword to attack", "Tap Guard to block", "Land two hits to win"],
-    goal: "Winner keeps the space. Loser moves back up to three spaces.",
-    touchControls: "Swing sword / Guard",
   },
 }
 

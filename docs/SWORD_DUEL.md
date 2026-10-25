@@ -1,3 +1,6 @@
+> Retired October 25 at Ryan's request. This document records the former implementation only.
+> No sword fights, combat commands, penalties or arena are present in the current game.
+
 # Occupied-space sword duel
 
 Ryan requested the first mini-game on October 24, 2026. This supersedes the original no-mini-games

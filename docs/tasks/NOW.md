@@ -1,5 +1,15 @@
 # Current task board
 
+## October 25 — Sword-fight retirement and submission refresh
+
+- [x] Remove combat phase, commands, models, controllers, lessons and rehearsal selection.
+- [x] Preserve shared motion gestures and generic round overlay styling.
+- [x] Add eight-player shared-space and retired-command regression coverage.
+- [x] Full gate: 198 Vitest +11 motion tests, types, lint, formatting and production build.
+- [x] Revised two-minute silent gameplay footage and seven visually checked Devpost screenshots.
+
+Older completed task sections below are historical, not current combat requirements.
+
 ## October 25 — Instruction clarity release
 
 - [x] Plain-language three-step lessons and explicit winning rules for all six activities.

@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import * as THREE from "three"
 
 import { getCharacterOffset } from "./characterLayout"
-import { SwordModel } from "./SwordModel"
 import { createFabricTexture } from "./sceneryMaterials"
 import { createMotionSample, dampAngle, sampleTrailMotion, type TrailMotion } from "./trailMotion"
 
@@ -109,7 +108,6 @@ type CharacterModelProps = {
   lean?: number
   rightHand?: ReactNode
   leftHand?: ReactNode
-  combat?: { action: "idle" | "swing" | "guard" | "hit"; actionAt: number }
   facing?: number
   active: boolean
   appearance?: CharacterAppearance
@@ -123,7 +121,6 @@ type CharacterModelProps = {
 type LimbProps = {
   fabric?: THREE.Texture
   children?: ReactNode
-  armed?: boolean
   color: string
   limbRef: React.RefObject<THREE.Group | null>
   position: readonly [number, number, number]
@@ -131,7 +128,7 @@ type LimbProps = {
   skinTone: string
 }
 
-function Arm({ color, limbRef, position, side, skinTone, armed, children, fabric }: LimbProps) {
+function Arm({ color, limbRef, position, side, skinTone, children, fabric }: LimbProps) {
   return (
     <group ref={limbRef} position={position}>
       <mesh castShadow position={[0, -0.135, 0]}>
@@ -170,12 +167,7 @@ function Arm({ color, limbRef, position, side, skinTone, armed, children, fabric
         </mesh>
       ))}
       <group position={[0, -0.37, 0]}>{children}</group>
-      {side === "right" && armed && (
-        <group position={[0, -0.38, 0.04]} rotation={[Math.PI / 2, 0, 0]}>
-          <SwordModel />
-        </group>
-      )}
-      {side === "right" && !armed && !children && (
+      {side === "right" && !children && (
         <mesh castShadow position={[0, -0.1, -0.09]} rotation={[0.15, 0, 0]}>
           <boxGeometry args={[0.085, 0.25, 0.05]} />
           <meshStandardMaterial color="#f7fbff" roughness={0.5} />
@@ -302,7 +294,6 @@ export function CharacterModel({
   leftHand,
   active,
   appearance: appearanceOverride,
-  combat,
   facing = 0,
   color,
   moving,
@@ -407,19 +398,6 @@ export function CharacterModel({
     let leftZ = 0
     let rightX = active && !moving ? -0.45 + Math.sin(time * 3) * 0.12 : -stride
     let rightZ = 0
-    if (rightArmRef.current) {
-      if (combat) {
-        const age = Math.max(0, (clock() - combat.actionAt) / 1000)
-        const swinging = combat.action === "swing" && age < 0.85
-        const guarding = combat.action === "guard" && age < 0.7
-        rightX = guarding
-          ? -1.3
-          : swinging
-            ? -1.8 + Math.sin(Math.min(1, age / 0.65) * Math.PI) * 2.7
-            : -0.4
-        rightZ = guarding ? -0.8 : swinging ? Math.sin(age * 7) * 0.65 : 0
-      }
-    }
     if (pose && rightArmRef.current && leftArmRef.current) {
       const age = (clock() - actionAt) / 1000
       const gesture = age >= 0 && age < 0.75 ? Math.sin((age / 0.75) * Math.PI) : 0
@@ -444,7 +422,7 @@ export function CharacterModel({
         leftZ = -1.4
       }
     }
-    const poseRate = combat ? 24 : 14
+    const poseRate = 14
     if (leftArmRef.current) {
       leftArmRef.current.rotation.x = THREE.MathUtils.damp(
         leftArmRef.current.rotation.x,
@@ -473,12 +451,7 @@ export function CharacterModel({
         delta,
       )
     }
-    const bodyLean =
-      pose === "balance"
-        ? lean * -0.3
-        : combat?.action === "hit" && clock() - combat.actionAt < 400
-          ? Math.sin(time * 35) * 0.12
-          : 0
+    const bodyLean = pose === "balance" ? lean * -0.3 : 0
     body.rotation.z = THREE.MathUtils.damp(body.rotation.z, bodyLean, 16, delta)
     const kick = pose === "fall" ? Math.sin(Math.max(0, clock() - actionAt) / 90) * 0.5 : 0
     if (leftLegRef.current)
@@ -644,7 +617,6 @@ export function CharacterModel({
           limbRef={rightArmRef}
           position={[0.255, 0.47, 0]}
           side="right"
-          armed={Boolean(combat)}
           skinTone={appearance.skinTone}
         >
           {rightHand}

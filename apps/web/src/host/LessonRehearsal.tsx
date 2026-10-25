@@ -25,7 +25,6 @@ export default function LessonRehearsal() {
           <option value="archery">Archery</option>
           <option value="rhythm">Rhythm</option>
           <option value="potato">Hot Potato</option>
-          <option value="duel">Sword duel</option>
         </select>
       </label>
       <label>

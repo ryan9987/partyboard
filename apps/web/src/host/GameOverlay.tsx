@@ -3,7 +3,6 @@ import { PlayerPortrait } from "../app/PlayerPortrait"
 import { defaultBoard } from "@party-board/board"
 
 const PHASE_LABELS: Record<GameState["phase"], string> = {
-  DUEL: "A duel on the trail",
   SHOP: "Visiting the market",
   POTATO: "Hot Potato",
   MINIGAME: "Mini-game",

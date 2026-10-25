@@ -6,8 +6,9 @@ validated per-player snapshots, and authenticated `minigame.input` commands with
 The round-game/economy extension in [PARTY_ECONOMY.md](./PARTY_ECONOMY.md) adds `SHOP`, `POTATO`,
 optional public economy state, and validated `shop.choice`, `item.use`, and `potato.pass` commands.
 
-The combat extension is documented in [SWORD_DUEL.md](./SWORD_DUEL.md): `DUEL`, validated snapshot
-combat state, and the authenticated `duel.action` command.
+Sword fights are retired. `DUEL`, the `duel` snapshot field and `duel.action` are no longer
+accepted. Players can share trail spaces without combat or knockback. Refresh host and phones
+and create a new room after this coordinated deployment. `SWORD_DUEL.md` is historical only.
 
 This is the initial contract to implement in `packages/protocol`. Change it deliberately and update every affected consumer in the same integration cycle.
 
@@ -26,19 +27,19 @@ bot players and their private sessions. Larger human parties can still join up t
 Public snapshots carry optional `demoMode` and player `isBot`; bot session tokens remain private.
 
 Bots issue the same validated commands as controllers. They auto-roll, browse/buy/leave shops,
-use defensive items or a short Compass roll, duel, pass and play every round game. Novice
+use defensive items or a short Compass roll, pass and play every round game. Novice
 inputs provide approachable rivals, without changing dice sources, points, or winning rules.
 Bot turns pause while all human controllers are disconnected. Restart resets their runtime;
 finish/dispose cancels their scheduler. Host resume preserves the party.
 
 Controllers guide users through explicit motion permission. Shake rolls; tilt balances/aims;
-wrist flicks cast, reel, release arrows, pass, swing and strike. Touch fallbacks remain visible
+wrist flicks cast, reel, release arrows, pass and strike. Touch fallbacks remain visible
 for accessibility, unsupported sensors and permission denial. Archery flick release preserves
 the last settled aim, requires a quiet wrist before the next flick, and respects three arrows
 and the server cooldown. Sensor permission is per page session; refresh asks to enable it again.
 
 ```ts
-type GamePhase = "LOBBY" | "AWAITING_ROLL" | "ROLLING" | "MOVING" | "TURN_END" | "FINISHED" | "DUEL"
+type GamePhase = "LOBBY" | "AWAITING_ROLL" | "ROLLING" | "MOVING" | "TURN_END" | "FINISHED" | "SHOP" | "POTATO" | "MINIGAME"
 
 type PlayerState = {
   id: string
@@ -115,9 +116,9 @@ Host-only. Returns every player to the starting tile while preserving the room a
 
 Optional operator mode only (`manualStageAdvance: true`). Production round stages auto-advance
 after the server's countdown/result deadlines; no controller/host command is needed.
-All five round games and sword duels now show seven seconds of animated setup before the final
+All five round games show seven seconds of animated setup before the final
 three-second countdown; `startsAt` already represents the authoritative end of that whole intro.
-Hot Potato uses `endsAt`, and duels use `stageEndsAt`, for the equivalent intro deadline.
+Hot Potato uses `endsAt` for the equivalent intro deadline.
 For Balance, existing player `actionAt` records the server's fall timestamp and signed `position`
 retains the fall side. One remaining survivor ends the round and wins even if the final faller
 has the same survival score on that server tick. No wire fields or event names were added.

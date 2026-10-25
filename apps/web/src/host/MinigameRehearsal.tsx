@@ -10,7 +10,6 @@ import { MinigameOverlay } from "./MinigameOverlay"
 import { createFixtureState } from "./fixture"
 import { CharacterStudy } from "./CharacterStudy"
 import { PartyOverlay } from "./PartyOverlay"
-import { DuelOverlay } from "./DuelOverlay"
 import { GameOverlay } from "./GameOverlay"
 import { LobbyOverlay } from "./LobbyOverlay"
 import { PlayerBalances } from "../app/PlayerBalances"
@@ -18,7 +17,7 @@ import "./hud.css"
 import { MatchResult } from "./MatchResult"
 
 type PreviewSelection =
-  MinigameKind | "potato" | "duel" | "characters" | "shop" | "board" | "lobby" | "finish"
+  MinigameKind | "potato" | "characters" | "shop" | "board" | "lobby" | "finish"
 
 // Development-only art inspection. This never connects to or changes a live room.
 export default function MinigameRehearsal() {
@@ -27,7 +26,6 @@ export default function MinigameRehearsal() {
   const kind =
     selection === "characters" ||
     selection === "shop" ||
-    selection === "duel" ||
     selection === "board" ||
     selection === "lobby" ||
     selection === "finish"
@@ -139,79 +137,48 @@ export default function MinigameRehearsal() {
         }),
   }
   const displayState: GameState =
-    selection === "duel"
+    selection === "shop"
       ? {
           ...fixture,
-          serverTime: now,
-          phase: "DUEL",
-          duel: {
+          phase: "SHOP",
+          currentPlayerId: fixture.players[0]!.id,
+          players: fixture.players.map((player, i) => ({
+            ...player,
+            tileId: i === 0 ? "tile-3" : "tile-0",
+            coins: 6,
+          })),
+          shop: {
             id: "00000000-0000-4000-8000-000000000001",
-            tileId: "tile-1",
-            stage,
-            fighters: [
-              {
-                playerId: fixture.players[0]!.id,
-                score: 0,
-                action: "swing",
-                actionAt: started + cycle * 4000,
-              },
-              {
-                playerId: fixture.players[1]!.id,
-                score: 0,
-                action: "guard",
-                actionAt: started + cycle * 4000,
-              },
-            ],
-            stageEndsAt: stage === "intro" ? introEndsAt : now + 10000,
-            winnerId: stage === "result" ? fixture.players[0]!.id : null,
-            loserId: stage === "result" ? fixture.players[1]!.id : null,
-            outcome: stage === "result" ? "victory" : "pending",
-            revision: 0,
-            penaltySpaces: 3,
+            playerId: fixture.players[0]!.id,
+            tileId: "tile-3",
+            endsAt: now + 8000,
           },
         }
-      : selection === "shop"
+      : selection === "board" || selection === "lobby" || selection === "finish"
         ? {
             ...fixture,
-            phase: "SHOP",
-            currentPlayerId: fixture.players[0]!.id,
-            players: fixture.players.map((player, i) => ({
+            phase:
+              selection === "finish"
+                ? "FINISHED"
+                : selection === "board"
+                  ? "AWAITING_ROLL"
+                  : "LOBBY",
+            winnerId: selection === "finish" ? fixture.players[0]!.id : null,
+            currentPlayerId: selection === "lobby" ? null : fixture.players[0]!.id,
+            turnNumber: 7,
+            lastRoll: 5,
+            players: fixture.players.map((player, index) => ({
               ...player,
-              tileId: i === 0 ? "tile-3" : "tile-0",
-              coins: 6,
-            })),
-            shop: {
-              id: "00000000-0000-4000-8000-000000000001",
-              playerId: fixture.players[0]!.id,
-              tileId: "tile-3",
-              endsAt: now + 8000,
-            },
-          }
-        : selection === "board" || selection === "lobby" || selection === "finish"
-          ? {
-              ...fixture,
-              phase:
+              tileId:
                 selection === "finish"
-                  ? "FINISHED"
+                  ? `tile-${47 - index * 3}`
                   : selection === "board"
-                    ? "AWAITING_ROLL"
-                    : "LOBBY",
-              winnerId: selection === "finish" ? fixture.players[0]!.id : null,
-              currentPlayerId: selection === "lobby" ? null : fixture.players[0]!.id,
-              turnNumber: 7,
-              lastRoll: 5,
-              players: fixture.players.map((player, index) => ({
-                ...player,
-                tileId:
-                  selection === "finish"
-                    ? `tile-${47 - index * 3}`
-                    : selection === "board"
-                      ? `tile-${4 + index}`
-                      : "tile-0",
-                coins: 12 + index * 7,
-              })),
-            }
-          : state
+                    ? `tile-${4 + index}`
+                    : "tile-0",
+              coins: 12 + index * 7,
+            })),
+          }
+        : state
   return (
     <main className="host-shell">
       {selection === "characters" ? (
@@ -230,7 +197,6 @@ export default function MinigameRehearsal() {
               value === "characters" ||
                 value === "potato" ||
                 value === "shop" ||
-                value === "duel" ||
                 value === "board" ||
                 value === "lobby" ||
                 value === "finish"
@@ -242,7 +208,6 @@ export default function MinigameRehearsal() {
           }}
         >
           <option value="potato">Hot Potato</option>
-          <option value="duel">Sword duel</option>
           <option value="characters">Character study</option>
           <option value="shop">Wildwood Market</option>
           <option value="board">Board HUD</option>
@@ -308,8 +273,6 @@ export default function MinigameRehearsal() {
           disabled={false}
           onStart={() => setKind("board")}
         />
-      ) : selection === "duel" ? (
-        <DuelOverlay state={displayState} />
       ) : selection === "shop" || selection === "potato" ? (
         <PartyOverlay state={displayState} />
       ) : (

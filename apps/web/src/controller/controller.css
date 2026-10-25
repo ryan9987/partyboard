@@ -63,33 +63,8 @@ body:has(.controller-page),
   outline-offset: 3px;
 }
 
-.duel-controller {
-  padding: 1.25rem;
-  margin: 1.25rem 0;
-  border: 1px solid #cdc7b2;
-  border-radius: 1rem;
-  background: #f4efdf;
-}
-.duel-controller h2 {
-  font-family: "Times New Roman", Times, "Liberation Serif", serif;
-  font-size: 1.8rem;
-}
-.duel-kicker {
+.activity-kicker {
   font-size: 0.75rem;
-  color: #647462;
-}
-.duel-controller__buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-.duel-controller__buttons button {
-  min-height: 6rem;
-  background: #f0e5c9;
-  color: #294638;
-  border-color: #e3cd93;
-}
-.duel-controller small {
   color: #647462;
 }
 
@@ -145,7 +120,6 @@ body:has(.controller-page),
 }
 .party-controller,
 .inventory-controller,
-.duel-controller,
 .minigame-controller {
   background: #f4efdf;
   color: #294638;
@@ -154,9 +128,8 @@ body:has(.controller-page),
   padding: 1.1rem;
   margin: 1rem 0;
 }
-.duel-controller small,
 .party-notice,
-.duel-kicker {
+.activity-kicker {
   color: #647462;
 }
 .minigame-controller h2 {
@@ -292,12 +265,10 @@ body:has(.controller-page),
   font-size: 0.8rem;
   margin: 0.4rem 0;
 }
-.controller-page--activity .party-controller h2,
-.controller-page--activity .duel-controller h2 {
+.controller-page--activity .party-controller h2 {
   font-size: 1.55rem;
 }
-.controller-page--activity .party-controller p,
-.controller-page--activity .duel-controller p {
+.controller-page--activity .party-controller p {
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -476,7 +447,6 @@ body:has(.controller-page) {
 .controller-page h1,
 .controller-page h2,
 .controller-page .party-controller h2,
-.controller-page .duel-controller h2,
 .controller-page .minigame-controller h2 {
   font-family: var(--font-body);
   font-weight: 700;
@@ -623,7 +593,6 @@ body:has(.controller-page) {
   margin: 0;
 }
 .controller-page--activity .minigame-controller:has(.game-tutorial),
-.controller-page--activity .duel-controller:has(.game-tutorial),
 .controller-page--activity .party-controller:has(.game-tutorial) {
   margin-top: 14px;
 }
@@ -767,14 +736,6 @@ body:has(.controller-page) {
 .controller-page .recenter-button {
   min-height: 44px;
   font-size: 0.74rem;
-}
-.controller-page .duel-controller__buttons button {
-  border-radius: 14px;
-  font-size: 0.95rem;
-}
-.controller-page .duel-controller__buttons button:first-child {
-  background: #2d5140;
-  color: #fff9e9;
 }
 .controller-page .controller-match-result {
   text-align: center;

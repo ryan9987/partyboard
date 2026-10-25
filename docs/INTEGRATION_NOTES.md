@@ -1,5 +1,15 @@
 # Integration notes
 
+### 2026-10-25 — Ryan-requested sword-fight retirement and submission refresh
+
+- Ryan explicitly requested removing sword fights, remaking the gameplay video and creating
+  Devpost images/story. This authorizes the related server, controller and test edits across
+  both lanes. Occupied spaces now allow peaceful co-location and normal turn progression.
+- Remove the combat phase, commands, equipment, lessons and rehearsal fixtures together.
+  Preserve all five round-end games, motion controls, shops, bots and terminal-trail victory.
+- Strict protocol changes require refreshed clients and a new room after deployment. Capture
+  submission media from the updated game; do not represent generated concept art as gameplay.
+
 ### 2026-10-25 — Ryan-authorized eight-player motion demo
 
 - Ryan explicitly requested support beyond four players, motion-first controllers, and a
