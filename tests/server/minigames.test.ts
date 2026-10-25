@@ -4,7 +4,6 @@ import { MinigameRound } from "../../apps/server/src/game/minigames"
 import {
   archeryDrift,
   balanceLean,
-  hazardLane,
   minigameInputRequestSchema,
   type MinigameKind,
 } from "../../packages/protocol/src"
@@ -235,18 +234,6 @@ it("shares simultaneous final Balance falls and time-limit survival, but exclude
   forfeit.finish(start + 200, 3500)
   expect(forfeit.state.winnerIds).toEqual(["b"])
   expect(forfeit.state.players[0]!.actionAt).toBe(start + 150)
-})
-
-it("warns about deterministic Dodge lanes before impact and preserves survival times", () => {
-  const game = round("dodge")
-  for (let t = 100; t <= 20000; t += 100) {
-    const wave = Math.floor(t / 1800)
-    const safe = hazardLane(wave, 0) === 0 ? 1 : 0
-    input(game, "a", t, safe, false)
-    game.tick(start + 100 + t)
-  }
-  expect(game.state.players[0]).toMatchObject({ alive: true, score: 20 })
-  expect(game.state.players.slice(1).every((entry) => !entry.alive)).toBe(true)
 })
 
 it("expires held inputs, excludes disconnect forfeits and allows tied winners", () => {

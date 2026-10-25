@@ -1,7 +1,6 @@
 import {
   archeryDrift,
   balanceLean,
-  hazardLane,
   RHYTHM_BEAT_MS,
   FISHING_RULES,
   type GameState,
@@ -13,7 +12,7 @@ import { useFrame, useThree } from "@react-three/fiber"
 import { useEffect, useMemo, useRef, type RefObject } from "react"
 import * as THREE from "three"
 import { CharacterModel } from "./CharacterModel"
-import { AcornModel, BowModel, DrumStick, FishingRod } from "./GameEquipment"
+import { BowModel, DrumStick, FishingRod } from "./GameEquipment"
 import { MeadowGround, MeadowPlanting, WoodlandTree } from "./WoodlandDetails"
 import { createSurfaceTexture } from "./sceneryMaterials"
 import { useGameClock } from "../networking/gameClock"
@@ -359,46 +358,6 @@ function ArcheryTarget({
   )
 }
 
-function DodgeHazard({
-  game,
-  index,
-  x,
-  clock,
-}: {
-  game: MinigameState
-  index: number
-  x: number
-  clock: () => number
-}) {
-  const acorn = useRef<THREE.Group>(null)
-  const warning = useRef<THREE.Mesh>(null)
-  useFrame(() => {
-    if (!acorn.current || !warning.current) return
-    const elapsed =
-      game.stage === "intro" ? 0 : Math.max(0, Math.min(game.durationMs, clock() - game.startsAt))
-    const wave = Math.floor(elapsed / 1800)
-    const phase = elapsed % 1800
-    const laneX = x + hazardLane(wave, index) * 0.63
-    warning.current.position.x = laneX
-    warning.current.visible = game.stage === "active" && phase < 1500
-    warning.current.scale.setScalar(phase < 900 ? 0.8 : 1.05)
-    acorn.current.visible = game.stage === "active" && phase > 900 && phase < 1500
-    acorn.current.position.set(laneX, 4.5 - Math.min(1, (phase - 900) / 550) * 3, 0)
-    acorn.current.rotation.z = phase / 230
-  })
-  return (
-    <>
-      <group ref={acorn}>
-        <AcornModel />
-      </group>
-      <mesh ref={warning} position={[x, -0.055, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.22, 0.3, 32]} />
-        <meshBasicMaterial color="#b95e3e" transparent opacity={0.8} />
-      </mesh>
-    </>
-  )
-}
-
 function Contestant({ state, index }: { state: GameState; index: number }) {
   const clock = useGameClock(state.serverTime)
   const game = state.minigame!
@@ -419,12 +378,7 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
     const elapsed =
       game.stage === "intro" ? 0 : Math.max(0, Math.min(game.durationMs, clock() - game.startsAt))
     if (root.current) {
-      const desired =
-        game.kind === "dodge" && entry.alive
-          ? entry.position * 0.63
-          : game.kind === "balance"
-            ? entry.position * 0.2
-            : 0
+      const desired = game.kind === "balance" ? entry.position * 0.2 : 0
       root.current.position.x = THREE.MathUtils.damp(
         root.current.position.x,
         x + desired,
@@ -486,7 +440,7 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
   const archery = game.kind === "archery"
   const balance = game.kind === "balance"
   const rhythm = game.kind === "rhythm"
-  const y = fishing ? -0.29 : balance ? -0.99 : game.kind === "dodge" && entry.alive ? -0.44 : -0.48
+  const y = fishing ? -0.29 : balance ? -0.99 : -0.48
   return (
     <>
       {fishing && <Dock x={x} />}
@@ -515,21 +469,6 @@ function Contestant({ state, index }: { state: GameState; index: number }) {
             </group>
           ))}
         </group>
-      )}
-      {game.kind === "dodge" && (
-        <>
-          <mesh receiveShadow position={[x, -0.145, 0]}>
-            <boxGeometry args={[2.2, 0.15, 2]} />
-            <meshStandardMaterial color="#d8c9a5" />
-          </mesh>
-          {[-1, 1].map((lane) => (
-            <mesh key={lane} position={[x + lane * 0.32, -0.065, 0]}>
-              <boxGeometry args={[0.016, 0.006, 1.8]} />
-              <meshStandardMaterial color="#a9926d" />
-            </mesh>
-          ))}
-          <DodgeHazard game={game} index={index} x={x} clock={clock} />
-        </>
       )}
       <group ref={root} position={[x, 0, 0]}>
         <group ref={fallingBody} position={[0, balance ? 0.99 : 0, 0]}>

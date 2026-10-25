@@ -44,6 +44,49 @@ const initialState: GameState = {
 }
 
 describe("host authoritative event projection", () => {
+  it("keeps the match result when late events from its final turn arrive", () => {
+    const finished: GameState = {
+      ...initialState,
+      phase: "FINISHED",
+      winnerId: "player-1",
+      turnNumber: 8,
+      players: initialState.players.map((p) =>
+        p.id === "player-1" ? { ...p, tileId: "tile-47" } : p,
+      ),
+    }
+    expect(
+      applyDiceRolled(finished, {
+        playerId: "player-1",
+        value: 6,
+        turnNumber: 8,
+        rollDurationMs: 900,
+      }),
+    ).toBe(finished)
+    expect(
+      applyMovementStarted(finished, {
+        playerId: "player-1",
+        fromTileId: "tile-42",
+        toTileId: "tile-47",
+        path: ["tile-47"],
+        millisecondsPerTile: 420,
+        turnNumber: 8,
+      }),
+    ).toBe(finished)
+    expect(applyMovementStep(finished, "player-1", "tile-43")).toBe(finished)
+    expect(
+      applyTurnEnded(finished, {
+        completedPlayerId: "player-1",
+        nextPlayerId: "player-2",
+        turnNumber: 8,
+      }),
+    ).toBe(finished)
+    expect(
+      applyTurnStarted(finished, { playerId: "player-2", turnNumber: 8, timeoutAt: null }),
+    ).toBe(finished)
+    expect(
+      applyTurnStarted(finished, { playerId: "player-1", turnNumber: 9, timeoutAt: null }),
+    ).toMatchObject({ phase: "AWAITING_ROLL", winnerId: null })
+  })
   it("projects a server dice result without generating a value locally", () => {
     const event: DiceRolledEvent = {
       playerId: "player-1",

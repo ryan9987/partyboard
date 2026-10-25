@@ -1,5 +1,27 @@
 # Current task board
 
+## October 25 — Instruction clarity release
+
+- [x] Plain-language three-step lessons and explicit winning rules for all six activities.
+- [x] Mode-specific phone lessons/help, exact button names and touch-aware feedback.
+- [x] Larger host text, integrated headings, visible lobby objective and Start button.
+- [x] Check all six host lessons fit and all 36 phone game/mode/width combinations avoid overflow.
+- [x] Regression coverage for lesson completeness, touch steps, scoring explanations and labels.
+- [x] Final typecheck, 184 Vitest +10 motion tests, formatting and production build.
+- [x] Prepare the integrated pending changes for Ryan's requested main release; remote push
+  confirmation is reported in the release handoff and Git history.
+
+## October 25 — Finish line, coin pacing and clear controllers (supersedes older rules below)
+
+- [x] Completely retire Dodge from gameplay, enum, controls, rendering and lessons.
+- [x] Terminal 48-space trail; overshoots clamp, first arrival wins with persistent named results.
+- [x] Host Play again, reconnect-safe winner and no late timer/roll continuation after finish.
+- [x] One coin per completed forward turn, zero per-space income; round prizes 4/1.
+- [x] Clear woodland phone hierarchy, explicit Touch/Motion and numbered animated lessons.
+- [x] Ten-second setup/countdown without adding clicks or timing out shopping/board decisions.
+- [x] Regression coverage: four-player finish, exact/overshoot/Boots, restart, reconnect, duplicate rewards.
+- [ ] Four-human physical-phone/venue-network playtest and coordinated production rollout.
+
 ## Economy review / anti-freeze balance
 
 - [x] Review board, shops, all mini-game rules/recovery and document remaining design/performance risks.

@@ -2,6 +2,8 @@ import type { GameState } from "@party-board/protocol"
 import { useGameNow } from "../networking/gameClock"
 import { RoundCountdown } from "./RoundCountdown"
 import { GameTutorial } from "./GameTutorial"
+import { PlayerPortrait } from "../app/PlayerPortrait"
+import { RoundResult } from "./RoundResult"
 
 function SwordIcon({ className }: { className: string }) {
   return (
@@ -46,44 +48,46 @@ export function DuelOverlay({ state }: { state: GameState }) {
             paused={!!state.waitingForHost}
           />
         </div>
+      ) : duel.stage === "result" ? (
+        <RoundResult
+          gameName="Woodland duel"
+          players={winner ? [winner] : []}
+          title="An even match"
+          waiting={!!state.waitingForHost}
+          detail={
+            loser
+              ? `${loser.name} moves back ${duel.penaltySpaces} spaces${duel.outcome === "forfeit" ? " · opponent disconnected" : ""}.`
+              : "Both players keep their space."
+          }
+        />
       ) : (
         <>
           <div className="duel-scoreboard">
             <div>
-              <h2>
-                {duel.stage === "result"
-                  ? winner
-                    ? `${winner.name} wins!`
-                    : "A draw!"
-                  : "First to two hits"}
-              </h2>
+              <p className="eyebrow">Woodland duel</p>
+              <h2>First to two hits</h2>
             </div>
             <div className="duel-scoreboard__scores">
               {players.map((player, index) => (
                 <div key={player.id}>
+                  <PlayerPortrait color={player.color} />
                   <span>{player.name}</span>
                   <strong>{duel.fighters[index]!.score}</strong>
                 </div>
               ))}
             </div>
-            {duel.stage === "active" && (
-              <span className="duel-timer">
-                {Math.max(0, Math.ceil((duel.stageEndsAt - now) / 1000))}s
-              </span>
-            )}
+            <span className="duel-timer">
+              {Math.max(0, Math.ceil((duel.stageEndsAt - now) / 1000))}s
+            </span>
           </div>
           <div className="duel-instructions" role="status">
-            {duel.stage === "result"
-              ? loser
-                ? `${loser.name} moves back ${duel.penaltySpaces} spaces${duel.outcome === "forfeit" ? " · opponent disconnected" : ""}.`
-                : "Both players keep their space."
-              : duel.outcome === "block"
-                ? "Parried! Wait for an opening."
-                : duel.outcome === "clash"
-                  ? "Swords clash!"
-                  : duel.outcome === "hit"
-                    ? "A clean hit!"
-                    : "Swing to attack · tilt sideways to guard · or use your phone buttons"}
+            {duel.outcome === "block"
+              ? "Parried! Wait for an opening."
+              : duel.outcome === "clash"
+                ? "Swords clash!"
+                : duel.outcome === "hit"
+                  ? "A clean hit!"
+                  : "Swing to attack · tilt sideways to guard · or use your phone buttons"}
           </div>
         </>
       )}

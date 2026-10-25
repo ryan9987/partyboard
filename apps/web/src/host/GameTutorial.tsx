@@ -1,43 +1,4 @@
-import type { MinigameKind } from "@party-board/protocol"
-
-type TutorialKind = MinigameKind | "potato" | "duel"
-const LESSONS: Record<TutorialKind, { steps: readonly string[]; goal: string; touch: string }> = {
-  balance: {
-    steps: ["Watch your lean", "Gently counter-tilt", "Stay on the log"],
-    goal: "Last player on the log wins. Still standing at time-up? Share the win.",
-    touch: "Touch alternative: balance slider",
-  },
-  fishing: {
-    steps: ["Flick forward to cast", "Wait for REEL NOW", "Lift once to reel"],
-    goal: "Keep the phone centered. Catch the most points before time runs out.",
-    touch: "Touch alternative: Cast / Reel now button",
-  },
-  dodge: {
-    steps: ["Watch the warning", "Tilt to a clear lane", "Avoid the falling acorn"],
-    goal: "Three lanes. Stay alive longer than the other players.",
-    touch: "Touch alternative: left / center / right buttons",
-  },
-  archery: {
-    steps: ["Tilt to aim", "Center your reticle", "Tap Release arrow"],
-    goal: "Three arrows. Aim at your named target; closest to the center scores most.",
-    touch: "Touch alternative: aim slider + Release arrow",
-  },
-  rhythm: {
-    steps: ["Watch the beat cue", "Wait for the center", "Flick once on the beat"],
-    goal: "Follow the visual beat. Accurate strikes earn more points.",
-    touch: "Touch alternative: Strike button",
-  },
-  potato: {
-    steps: ["Watch who holds it", "Flick once to pass", "Don't hold it at the pop"],
-    goal: "The acorn passes clockwise. Last player standing wins.",
-    touch: "Touch alternative: Pass button",
-  },
-  duel: {
-    steps: ["Swing gently to attack", "Tilt sideways to guard", "Land two clean hits"],
-    goal: "Winner keeps the space. The loser moves back up to three spaces.",
-    touch: "Touch alternative: Swing / Guard buttons",
-  },
-}
+import { getGameLesson, type TutorialKind, type TutorialMode } from "./gameLessons"
 
 function Person({ x, y = 135, color = "#cd715d" }: { x: number; y?: number; color?: string }) {
   return (
@@ -64,18 +25,31 @@ function Acorn({ x = 0, y = 0 }: { x?: number; y?: number }) {
 }
 
 /** Lightweight, code-native demonstration. No live game inputs, downloads or extra WebGL canvas. */
-export function GameTutorial({ kind }: { kind: TutorialKind }) {
-  const lesson = LESSONS[kind]
+export function GameTutorial({
+  kind,
+  mode = "motion",
+}: {
+  kind: TutorialKind
+  mode?: TutorialMode
+}) {
+  const lesson = getGameLesson(kind, mode)
+  const touch = mode === "touch"
   const flick = ["fishing", "rhythm", "potato", "duel"].includes(kind)
   return (
-    <section className={`game-tutorial game-tutorial--${kind}`} aria-label="How to play">
+    <section
+      className={`game-tutorial game-tutorial--${kind}`}
+      data-control-mode={mode}
+      aria-label="How to play"
+    >
       <h2>How to play</h2>
       <svg
         viewBox="0 0 480 180"
         role="img"
         aria-label={`${lesson.steps.join(". ")}. ${lesson.goal}`}
       >
-        <g className={`tutorial-phone ${flick ? "tutorial-phone--flick" : "tutorial-phone--tilt"}`}>
+        <g
+          className={`tutorial-phone ${touch ? "tutorial-phone--touch" : flick ? "tutorial-phone--flick" : "tutorial-phone--tilt"}`}
+        >
           <rect
             x="48"
             y="36"
@@ -94,7 +68,7 @@ export function GameTutorial({ kind }: { kind: TutorialKind }) {
             stroke="#355445"
             strokeWidth="2"
           />
-          {kind === "archery" && (
+          {(touch || kind === "archery") && (
             <circle className="tutorial-tap" cx="75" cy="87" r="9" fill="#a36a30" />
           )}
         </g>
@@ -145,35 +119,6 @@ export function GameTutorial({ kind }: { kind: TutorialKind }) {
               >
                 REEL NOW
               </text>
-            </>
-          )}
-          {kind === "dodge" && (
-            <>
-              {[-1, 0, 1].map((i) => (
-                <rect
-                  key={i}
-                  x={306 + i * 49}
-                  y="138"
-                  width="44"
-                  height="13"
-                  rx="3"
-                  fill="#e5dcc5"
-                />
-              ))}
-              <ellipse
-                className="tutorial-warning"
-                cx="328"
-                cy="142"
-                rx="15"
-                ry="4"
-                fill="#cd715d"
-              />
-              <g className="tutorial-dodger">
-                <Person x={328} />
-              </g>
-              <g className="tutorial-hazard">
-                <Acorn x={328} y={32} />
-              </g>
             </>
           )}
           {kind === "archery" && (
@@ -247,20 +192,13 @@ export function GameTutorial({ kind }: { kind: TutorialKind }) {
             </>
           )}
         </g>
-        <g
-          fill="#647462"
-          fontFamily="Calibri, Segoe UI, sans-serif"
-          fontSize="12"
-          textAnchor="middle"
-        >
-          <text x="83" y="169">
-            Portrait · screen toward you
-          </text>
-          <text x="329" y="169">
-            Watch the shared screen
-          </text>
-        </g>
       </svg>
+      <div className="tutorial-control-labels">
+        <span>
+          {touch ? "Tap buttons or move the slider" : "Phone upright · screen toward you"}
+        </span>
+        <span>Watch the shared screen</span>
+      </div>
       <ol>
         {lesson.steps.map((step, i) => (
           <li key={step}>
@@ -269,8 +207,12 @@ export function GameTutorial({ kind }: { kind: TutorialKind }) {
           </li>
         ))}
       </ol>
-      <p>{lesson.goal}</p>
-      <small>{lesson.touch} · keep a secure grip</small>
+      <p>
+        <strong>Goal</strong> {lesson.goal}
+      </p>
+      <small>
+        {touch ? "Touch controls" : "Or use touch"}: {lesson.touchControls} · keep a secure grip
+      </small>
     </section>
   )
 }

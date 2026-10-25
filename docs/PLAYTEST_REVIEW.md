@@ -3,6 +3,18 @@
 Ryan requested a full pass, prioritizing weak coin spending and repeated Frost attacks.
 This is a desktop/code review and automated regression pass, not physical-phone certification.
 
+## October 25 follow-up (supersedes historical findings below)
+
+- The missing match objective is implemented: first arrival at space 47 wins; overshoots clamp.
+- Dodge is retired; five round games remain plus separate sword duels.
+- Travel now pays one coin per completed turn, round prizes 4/1, not per-space or 8/2.
+- Phone controls and lessons now share the woodland system, explicit input choice and numbered steps.
+- Live browser checks reached a solo finish, reconnected to the champion, replayed at 6 coins,
+  and completed two-player Fishing with a 100-point catch and 11/8 final balances (from 7/7).
+  All six remaining lessons were visually checked; phone widths 320/390/430 had no horizontal overflow.
+- Physical phone sensors, venue networking, human balance and presentation-device FPS remain unverified.
+- Current verification and release state live in `status/RYAN.md`; the remainder records the earlier pass.
+
 ## Fixed in this pass
 
 | Finding | Change |
@@ -39,8 +51,7 @@ This is a desktop/code review and automated regression pass, not physical-phone 
 
 ## Recommended next work (not silently added to this change)
 
-1. Define a short match objective/end condition. The current board is intentionally endless;
-   richer shops help moment-to-moment choices but do not create an overall match winner.
+1. Completed October 25: define a short match objective/end condition (first to finish).
 2. Run a four-human, physical iPhone/Android playtest and adjust prices/gesture sensitivity from
    actual behavior. Automated outcomes are not proof of fun or competitive balance.
 3. Profile the presentation laptop. The existing large 3D bundle warning remains; any rigged-model

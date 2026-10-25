@@ -10,8 +10,10 @@ Maintain the core board loop and the user-approved occupied-space sword duel: fo
 
 - Sword duels, round-end Hot Potato, coins, pass-by shops, Frost Charm, Trail Boots, Leaf Shield,
   and the 48-space route are approved by Ryan. Other content needs a new request.
-- Ryan also approved Balance, Fishing, Dodge, Archery, and Rhythm, including their integrated
+- Ryan also approved Balance, Fishing, Archery, and Rhythm, including their integrated
   server/controller behavior and random round-end rotation. Preserve touch alternatives.
+- Dodge was retired at Ryan's request on October 25. The default trail ends at space 47;
+  first arrival wins. Travel pays one coin per completed forward turn, never per space.
 - Do not implement accounts, matchmaking, databases, or additional boards without a new request.
 - Preserve the detailed woodland art direction and locally authored character assets.
 - The server is authoritative for game phase, turn order, dice values, and player positions.

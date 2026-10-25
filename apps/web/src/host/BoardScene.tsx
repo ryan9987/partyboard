@@ -181,14 +181,16 @@ function Scene({ state, movingPlayerId, motion, wrapFade }: BoardSceneProps) {
         )
       })}
 
-      <DiceView
-        position={dicePosition}
-        value={state.lastRoll}
-        rolling={state.phase === "ROLLING"}
-        follow={focus}
-        followOffset={[characterOffset[0], 3.05, characterOffset[2]]}
-        tracking={!!motion}
-      />
+      {state.phase !== "FINISHED" && (
+        <DiceView
+          position={dicePosition}
+          value={state.lastRoll}
+          rolling={state.phase === "ROLLING"}
+          follow={focus}
+          followOffset={[characterOffset[0], 3.05, characterOffset[2]]}
+          tracking={!!motion}
+        />
+      )}
     </>
   )
 }

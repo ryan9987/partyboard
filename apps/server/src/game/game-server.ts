@@ -11,6 +11,7 @@ import {
   minigameInputRequestSchema,
   continueGameRequestSchema,
   MINIGAMES,
+  GAME_REWARDS,
   type MinigameKind,
   SHOP_ITEMS,
   diceRolledEventSchema,
@@ -144,14 +145,14 @@ export class GameServer {
       turnEndMs: options.turnEndMs ?? 500,
       rollTimeoutMs: options.rollTimeoutMs ?? 0,
       disconnectTimeoutMs: options.disconnectTimeoutMs ?? 60_000,
-      duelIntroMs: options.duelIntroMs ?? 7000,
+      duelIntroMs: options.duelIntroMs ?? 10000,
       duelDurationMs: options.duelDurationMs ?? 25_000,
       duelResultMs: options.duelResultMs ?? 3200,
       shopDurationMs: options.shopDurationMs ?? 0,
-      potatoIntroMs: options.potatoIntroMs ?? 7000,
+      potatoIntroMs: options.potatoIntroMs ?? 10000,
       potatoFuseMs: options.potatoFuseMs ?? 5000,
       potatoResultMs: options.potatoResultMs ?? 3000,
-      minigameIntroMs: options.minigameIntroMs ?? 7000,
+      minigameIntroMs: options.minigameIntroMs ?? 10000,
       minigameDurationMs: options.minigameDurationMs ?? 20000,
       minigameResultMs: options.minigameResultMs ?? 3500,
     }
@@ -271,7 +272,7 @@ export class GameServer {
               connected: true,
               ready: false,
               tileId: defaultBoard.startingTileId,
-              coins: 6,
+              coins: GAME_REWARDS.startingCoins,
               inventory: [],
               frozen: false,
               shield: false,
@@ -360,9 +361,10 @@ export class GameServer {
           }
           room.state.waitingForHost = null
           room.state.itemEffect = null
+          room.state.winnerId = null
           for (const player of room.state.players) {
             player.tileId = defaultBoard.startingTileId
-            player.coins = 6
+            player.coins = GAME_REWARDS.startingCoins
             player.inventory = []
             player.frozen = false
             player.shield = false
@@ -410,7 +412,7 @@ export class GameServer {
           const slowed = !!player.frozen
           const spaces = Math.max(1, value + (player.boosted ? 2 : 0) - (slowed ? 2 : 0))
           const path = getMovementPath(defaultBoard, fromTileId, spaces)
-          const rollNotice = `${player.name} rolled ${value} · moves ${spaces} ${spaces === 1 ? "space" : "spaces"}${slowed ? " · Frost −2 (minimum 1)" : player.lucky ? " · Lucky Clover" : player.plannedRoll ? " · Trail Compass" : player.boosted ? " · Trail Boots +2" : ""}.`
+          const rollNotice = `${player.name} rolled ${value} · moves ${path.length} ${path.length === 1 ? "space" : "spaces"}${slowed ? " · Frost −2 (minimum 1)" : player.lucky ? " · Lucky Clover" : player.plannedRoll ? " · Trail Compass" : player.boosted ? " · Trail Boots +2" : ""}.`
           player.boosted = false
           player.lucky = false
           player.plannedRoll = null
@@ -452,8 +454,6 @@ export class GameServer {
             throw new CommandError("INVALID_SHOP", "This shop visit has ended")
           if (parsed.data.item !== "skip") {
             const item = SHOP_ITEMS[parsed.data.item]
-            if ((player.coins ?? 0) < item.price)
-              throw new CommandError("NOT_ENOUGH_COINS", "Not enough coins for that item")
             if (parsed.data.item === "freeze" && room.state.players.length < 2)
               throw new CommandError(
                 "ITEM_UNAVAILABLE",
@@ -461,6 +461,8 @@ export class GameServer {
               )
             if ((player.inventory?.length ?? 0) >= 3)
               throw new CommandError("INVENTORY_FULL", "Your pack holds three items")
+            if ((player.coins ?? 0) < item.price)
+              throw new CommandError("NOT_ENOUGH_COINS", "Not enough coins for that item")
             player.coins = (player.coins ?? 0) - item.price
             player.inventory = [...(player.inventory ?? []), parsed.data.item]
             room.state.notice = `${player.name} bought ${item.name}.`
@@ -743,6 +745,7 @@ export class GameServer {
   }
 
   private advance(room: Room, completeTurn = true): void {
+    if (room.state.phase === "FINISHED") return
     const completedPlayerId = room.state.currentPlayerId!
     if (completeTurn) {
       room.roundCompleted.add(completedPlayerId)
@@ -815,8 +818,7 @@ export class GameServer {
     this.snapshot(room)
     let crossed = 0
     const step = () => {
-      // Only the server awards travel coins, once per reached space (including Boots).
-      player.coins = Math.min(999, (player.coins ?? 0) + 1)
+      // Movement progress is visual only; the landing pays one completed-turn reward.
       crossed++
       if (crossed < segment.length) {
         this.snapshot(room)
@@ -854,6 +856,31 @@ export class GameServer {
   }
 
   private resolveLanding(room: Room, player: PublicPlayer): void {
+    // Paid once per completed forward move, never per animation step or shop segment.
+    player.coins = Math.min(999, (player.coins ?? 0) + GAME_REWARDS.completedTurn)
+    if (player.tileId === defaultBoard.finishTileId) {
+      this.clearTimer(room)
+      for (const session of room.sessions.values()) {
+        if (session.recoveryTimer) clearTimeout(session.recoveryTimer)
+        delete session.recoveryTimer
+      }
+      room.state.phase = "FINISHED"
+      room.state.winnerId = player.id
+      room.state.currentPlayerId = player.id
+      room.state.waitingForHost = null
+      room.state.itemEffect = null
+      room.state.shop = null
+      room.state.duel = null
+      room.state.potato = null
+      room.state.minigame = null
+      room.remainingPath = null
+      room.continueTask = null
+      room.minigameRuntime = null
+      room.duelRuntime = null
+      room.state.notice = `${player.name} reached the finish and wins the trail!`
+      this.snapshot(room)
+      return
+    }
     const opponent = room.state.players.find(
       (other) => other.id !== player.id && other.connected && other.tileId === player.tileId,
     )
@@ -870,13 +897,7 @@ export class GameServer {
 
   private beginRoundGame(room: Room, players: PublicPlayer[]): void {
     if (!room.gameBag.length) {
-      const kinds: Array<MinigameKind | "potato"> = [
-        "balance",
-        "fishing",
-        "dodge",
-        "archery",
-        "rhythm",
-      ]
+      const kinds: Array<MinigameKind | "potato"> = ["balance", "fishing", "archery", "rhythm"]
       for (let i = kinds.length - 1; i > 0; i--) {
         const j = randomInt(i + 1)
         ;[kinds[i], kinds[j]] = [kinds[j]!, kinds[i]!]
@@ -910,9 +931,15 @@ export class GameServer {
         const winners = runtime.state.winnerIds
         for (const entry of runtime.state.players) {
           const player = this.player(room, entry.playerId)
-          player.coins = Math.min(999, (player.coins ?? 0) + (winners.includes(player.id) ? 8 : 2))
+          player.coins = Math.min(
+            999,
+            (player.coins ?? 0) +
+              (winners.includes(player.id)
+                ? GAME_REWARDS.minigameWinner
+                : GAME_REWARDS.minigameParticipation),
+          )
         }
-        room.state.notice = `${MINIGAMES[kind].name} complete · winners +8 coins, everyone else +2.`
+        room.state.notice = `${MINIGAMES[kind].name} complete · winners +${GAME_REWARDS.minigameWinner} coins, everyone else +${GAME_REWARDS.minigameParticipation}.`
         this.snapshot(room)
         this.afterStage(room, "Back to the trail", this.timing.minigameResultMs, () => {
           room.state.minigame = null
@@ -985,11 +1012,17 @@ export class GameServer {
       game.endsAt = Date.now() + this.timing.potatoResultMs
       for (const playerId of game.participantIds) {
         const player = this.player(room, playerId)
-        player.coins = Math.min(999, (player.coins ?? 0) + (playerId === game.winnerId ? 8 : 2))
+        player.coins = Math.min(
+          999,
+          (player.coins ?? 0) +
+            (playerId === game.winnerId
+              ? GAME_REWARDS.minigameWinner
+              : GAME_REWARDS.minigameParticipation),
+        )
       }
       room.state.notice = game.winnerId
-        ? `${this.player(room, game.winnerId).name} wins Hot Potato · +8 coins! Everyone else +2.`
-        : "Hot Potato ended · +2 participation coins."
+        ? `${this.player(room, game.winnerId).name} wins Hot Potato · +${GAME_REWARDS.minigameWinner} coins! Everyone else +${GAME_REWARDS.minigameParticipation}.`
+        : `Hot Potato ended · +${GAME_REWARDS.minigameParticipation} participation coin.`
       this.snapshot(room)
       this.afterStage(room, "Back to the trail", this.timing.potatoResultMs, () => {
         room.state.potato = null

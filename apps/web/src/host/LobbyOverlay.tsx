@@ -1,12 +1,6 @@
-import type { GameState, PlayerColor } from "@party-board/protocol"
+import type { GameState } from "@party-board/protocol"
 import { QRCodeSVG } from "qrcode.react"
-
-const COLOR_VALUES: Record<PlayerColor, string> = {
-  coral: "#ff6f7d",
-  cyan: "#51e7ee",
-  gold: "#f6cc58",
-  violet: "#9a72ff",
-}
+import { PlayerPortrait } from "../app/PlayerPortrait"
 
 type LobbyOverlayProps = {
   actionLabel: string
@@ -27,31 +21,53 @@ export function LobbyOverlay({
 }: LobbyOverlayProps) {
   return (
     <aside className="host-panel host-panel--lobby" aria-label="Game lobby">
-      <span className="room-heading__label">Room</span>
-      <h1>{state.roomCode}</h1>
-      <p className="muted">{description}</p>
-
-      {controllerUrl && (
-        <div className="qr-card" aria-label={`QR code for ${controllerUrl}`}>
-          <QRCodeSVG bgColor="#ffffff" fgColor="#111820" size={112} value={controllerUrl} />
+      <p className="eyebrow">The trail is better together</p>
+      <h2>Gather your party.</h2>
+      <div className="lobby-join">
+        <div>
+          <span className="room-heading__label">Room code</span>
+          <h1>{state.roomCode}</h1>
+          <span className="lobby-join__hint">
+            Scan with your phone
+            <br />
+            or enter this code.
+          </span>
         </div>
-      )}
+
+        {controllerUrl && (
+          <div className="qr-card" aria-label={`QR code for ${controllerUrl}`}>
+            <QRCodeSVG bgColor="#ffffff" fgColor="#264738" size={116} value={controllerUrl} />
+          </div>
+        )}
+      </div>
+      <p className="lobby-description">{description}</p>
+      <p className="lobby-goal">
+        <strong>First to the finish wins.</strong>
+      </p>
 
       <div className="player-list">
-        <p className="roster-count">{state.players.length} of 4 players</p>
+        <p className="roster-count">
+          <span>Your party</span>
+          <strong>{state.players.length} / 4</strong>
+        </p>
         {state.players.map((player) => (
           <div className="player-row" key={player.id}>
             <span className="player-row__identity">
-              <span
-                className="player-dot"
-                style={{
-                  background: COLOR_VALUES[player.color],
-                  color: COLOR_VALUES[player.color],
-                }}
-              />
+              <PlayerPortrait color={player.color} />
               {player.name}
             </span>
-            <span className="player-state">{player.ready ? "Ready" : "Joining"}</span>
+            <span className={`lobby-ready${player.ready ? " is-ready" : ""}`}>
+              {!player.connected ? "Reconnecting" : player.ready ? "Ready" : "Joining"}
+            </span>
+          </div>
+        ))}
+        {Array.from({ length: Math.max(0, 4 - state.players.length) }, (_, index) => (
+          <div className="player-row player-row--empty" key={`empty-${index}`}>
+            <span className="empty-seat" aria-hidden="true">
+              +
+            </span>
+            <span>Open spot</span>
+            <small>Waiting for a friend</small>
           </div>
         ))}
       </div>

@@ -70,7 +70,7 @@ function setup(kind?: MinigameKind, options: Partial<GameServerOptions> = {}) {
   return { snapshot: () => state!, players, room: () => room!, errors, boardRound, startGame }
 }
 
-it.each(["balance", "fishing", "dodge", "archery", "rhythm"] as const)(
+it.each(["balance", "fishing", "archery", "rhythm"] as const)(
   "finishes %s, pays exactly once and resumes the correct player",
   (kind) => {
     const game = setup(kind)
@@ -81,7 +81,7 @@ it.each(["balance", "fishing", "dodge", "archery", "rhythm"] as const)(
     const result = game.snapshot()
     expect(result.minigame?.stage).toBe("result")
     expect(result.players.map((player, i) => player.coins! - balances[i]!)).toEqual(
-      result.players.map((player) => (result.minigame!.winnerIds.includes(player.id) ? 8 : 2)),
+      result.players.map((player) => (result.minigame!.winnerIds.includes(player.id) ? 4 : 1)),
     )
     vi.advanceTimersByTime(100)
     expect(game.snapshot()).toMatchObject({
@@ -97,16 +97,17 @@ it.each(["balance", "fishing", "dodge", "archery", "rhythm"] as const)(
   },
 )
 
-it("rotates all six games without repeats within a bag", () => {
+it("rotates all five games without repeats within a bag", () => {
   const game = setup()
   const kinds: string[] = []
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     game.boardRound()
     kinds.push(game.snapshot().minigame?.kind ?? "potato")
     while (["POTATO", "MINIGAME"].includes(game.snapshot().phase)) vi.advanceTimersByTime(10)
   }
   expect(kinds[0]).toBe("potato")
-  expect(new Set(kinds).size).toBe(6)
+  expect(new Set(kinds).size).toBe(5)
+  expect(kinds).not.toContain("dodge")
 })
 
 it("awards the last Balance survivor once, rejects late inputs, and resumes the board early", () => {
@@ -138,7 +139,7 @@ it("awards the last Balance survivor once, rejects late inputs, and resumes the 
   expect(result.minigame!.winnerIds).toEqual([game.players[0]!.playerId])
   expect(result.minigame!.players.filter((player) => player.alive)).toHaveLength(1)
   expect(Date.now() - result.minigame!.startsAt).toBeLessThan(20_000)
-  expect(result.players.map((player, i) => player.coins! - before[i]!)).toEqual([8, 2, 2, 2])
+  expect(result.players.map((player, i) => player.coins! - before[i]!)).toEqual([4, 1, 1, 1])
   server.handle("p1", "minigame.input", {
     roomCode: game.room().roomCode,
     playerSessionId: game.players[1]!.playerSessionId,

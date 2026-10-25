@@ -34,6 +34,16 @@ against `diceOrientation.ts`.
 
 ## Rendering
 
+Instruction cards prioritize reading from the demo audience: 16px numbered steps and goals,
+14px touch guidance and a 760px maximum width, with the game title inside the same card. Keep
+phone diagrams as supporting cues, not text containers. Phone lessons reflect the selected
+Touch/Motion mode; no gesture animation on touch-only phones. See `gameLessons.ts` for copy.
+
+The terminal tile has an original timber FINISH arch, cream inset sign, brass finials and
+colored pennants. No borrowed assets or additional WebGL canvas. Persistent victory cards
+use the same portrait/ivory/pine system as arena results. Phone UI follows that palette with
+one strong primary action, secondary inventory, numbered lessons and explicit Phone/TV labels.
+
 Warm directional sunlight and cooler hemisphere light retain shape and material contrast.
 PCF shadows cover the route; fog and distant hills soften the horizon. The die remains above the
 active character. Decoration has no effect on board traversal or server-authoritative turns.
@@ -47,3 +57,30 @@ roll, movement, and at least one turn transition at the presentation viewport.
 The added geometry uses instancing to limit repeated draw calls, but actual frame rate on the
 presentation laptop still needs hardware testing. The current Vite host chunk size warning is
 unchanged in kind; all 3D code remains isolated from the phone controller route.
+
+## Trail-kit overlays
+
+The host HUD uses matte ivory, pine-green frames and small outfit-color accents, not glass,
+gradients or decorative image panels. `hud.css` is scoped to `.host-shell` and loaded by the
+host/rehearsal routes. It does not restyle Jack's controller route or load 3D code on the phone.
+
+Visual references reviewed: the official [Super Mario Party Jamboree gallery](https://www.nintendo.com/us/store/products/super-mario-party-jamboree-switch/)
+for compact party-game hierarchy and [Animal Crossing: New Horizons gallery](https://www.nintendo.com/us/store/products/animal-crossing-new-horizons-switch/)
+for soft natural colors and rounded shapes. These are design references only; no Nintendo art,
+fonts, screenshots or icons are included in the game.
+
+- One stable bottom player rail carries coins, positions/effects and authoritative arena scores.
+  Do not reintroduce a second standings panel. Scores and coin balances have different labels.
+- `PlayerPortrait` is an original lightweight SVG counterpart to the four 3D character outfits.
+- Keep the center clear during play. Instructions, market browsing and results may use larger
+  trail cards; allow scrolling on short screens, not clipped text. Keep touch fallbacks described.
+- `RoundResult` handles named wins, shared victories and draws consistently across all arenas.
+  Balance winner badges retain the existing fall-reveal delay.
+- Use system Trebuchet/Segoe UI type; do not fetch fonts or add GPU blur/backdrop effects.
+  Existing reduced-motion behavior applies to the countdown and crossed-swords introduction.
+- Names truncate visually in the rail with full names retained in accessible text/title.
+  Test 20-character names, 999 coins and 10,000-point scores before changing the card widths.
+
+Development QA: `/rehearsal` includes Board HUD, Lobby, Market and all seven arena views;
+`/rehearsal?stress=1` exercises label limits. `/phone-preview?view=overlays` renders these in
+real 320/390/430px iframes. These fixtures never connect to or mutate a live game room.

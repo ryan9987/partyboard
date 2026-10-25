@@ -18,6 +18,7 @@ export function getMovementPath(
   let currentId = startingTileId
 
   for (let step = 0; step < spaces; step += 1) {
+    if (currentId === board.finishTileId) break
     const tile = tilesById.get(currentId)
     if (!tile) {
       throw new InvalidBoardError(`Cannot traverse missing tile ${currentId}`)

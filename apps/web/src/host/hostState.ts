@@ -8,7 +8,9 @@ import type {
 } from "@party-board/protocol"
 
 function isCurrentOrNewerTurn(state: GameState, turnNumber: number): boolean {
-  return turnNumber >= state.turnNumber
+  return (
+    turnNumber >= state.turnNumber && (state.phase !== "FINISHED" || turnNumber > state.turnNumber)
+  )
 }
 
 export function applyDiceRolled(state: GameState, event: DiceRolledEvent): GameState {
@@ -17,6 +19,7 @@ export function applyDiceRolled(state: GameState, event: DiceRolledEvent): GameS
   return {
     ...state,
     phase: "ROLLING",
+    winnerId: null,
     currentPlayerId: event.playerId,
     lastRoll: event.value,
     turnNumber: event.turnNumber,
@@ -29,6 +32,7 @@ export function applyMovementStarted(state: GameState, event: PlayerMovingEvent)
   return {
     ...state,
     phase: "MOVING",
+    winnerId: null,
     currentPlayerId: event.playerId,
     turnNumber: event.turnNumber,
     players: state.players.map((player) =>
@@ -38,6 +42,7 @@ export function applyMovementStarted(state: GameState, event: PlayerMovingEvent)
 }
 
 export function applyMovementStep(state: GameState, playerId: string, tileId: string): GameState {
+  if (state.phase === "FINISHED") return state
   return {
     ...state,
     players: state.players.map((player) =>
@@ -64,6 +69,7 @@ export function applyTurnStarted(state: GameState, event: TurnStartedEvent): Gam
   return {
     ...state,
     phase: "AWAITING_ROLL",
+    winnerId: null,
     currentPlayerId: event.playerId,
     turnNumber: event.turnNumber,
   }
@@ -75,6 +81,7 @@ export function applyTurnEnded(state: GameState, event: TurnEndedEvent): GameSta
   return {
     ...state,
     phase: "TURN_END",
+    winnerId: null,
     currentPlayerId: event.nextPlayerId,
     turnNumber: event.turnNumber,
   }

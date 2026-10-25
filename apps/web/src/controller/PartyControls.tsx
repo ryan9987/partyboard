@@ -1,4 +1,4 @@
-import { SHOP_ITEMS, type GameState, type Item } from "@party-board/protocol"
+import { SHOP_ITEMS, GAME_REWARDS, type GameState, type Item } from "@party-board/protocol"
 import { useEffect, useState } from "react"
 import type { ControllerClient } from "./controller-client"
 import { getDuelGesture } from "./duel-motion"
@@ -6,6 +6,7 @@ import { useGameNow } from "../networking/gameClock"
 import { CoinCount } from "../app/CoinCount"
 import { ItemGlyph } from "../app/PowerupNotice"
 import { defaultBoard, getMovementPath } from "@party-board/board"
+import { GameTutorial } from "../host/GameTutorial"
 
 export function PartyControls({
   client,
@@ -51,16 +52,20 @@ export function PartyControls({
             ? "Don't hold the hot acorn!"
             : game.stage === "result"
               ? winner?.id === me.id
-                ? "You win · +8 coins!"
-                : "Well played · +2 coins"
+                ? `You win · +${GAME_REWARDS.minigameWinner} coins!`
+                : `Well played · +${GAME_REWARDS.minigameParticipation} coin`
               : !alive
                 ? "You're out. Cheer them on!"
                 : canPass
                   ? "Pass it!"
                   : `${holder?.name ?? "Someone"} has it`}
         </h2>
-        <p>{motionEnabled ? "Flick or tap to pass." : "Tap to pass. Watch the host screen."}</p>
-        {game.stage !== "result" && (
+        {game.stage === "intro" ? (
+          <GameTutorial kind="potato" mode={motionEnabled ? "motion" : "touch"} />
+        ) : game.stage === "active" ? (
+          <p>{motionEnabled ? "Flick or tap to pass." : "Tap to pass. Watch the host screen."}</p>
+        ) : null}
+        {game.stage === "active" && (
           <button
             className="controller-roll"
             type="button"
@@ -216,11 +221,14 @@ export function PartyControls({
               >
                 {[1, 2, 3, 4, 5, 6].map((value) => {
                   const spaces = Math.max(1, value - (me.frozen ? 2 : 0))
-                  const end = getMovementPath(defaultBoard, me.tileId, spaces).at(-1)!
+                  const path = getMovementPath(defaultBoard, me.tileId, spaces)
+                  const end = path.at(-1) ?? me.tileId
                   return (
                     <option key={value} value={value}>
-                      {value} · move {spaces} →{" "}
-                      {end === "tile-0" ? "Start" : end.replace("tile-", "Space ")}
+                      {value} · move {path.length} →{" "}
+                      {end === defaultBoard.finishTileId
+                        ? "Finish!"
+                        : end.replace("tile-", "Space ")}
                     </option>
                   )
                 })}

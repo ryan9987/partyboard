@@ -1,12 +1,6 @@
-import type { GameState, PlayerColor } from "@party-board/protocol"
-import { playerEffectLabels } from "../app/playerEffects"
-
-const COLOR_VALUES: Record<PlayerColor, string> = {
-  coral: "#ff6f7d",
-  cyan: "#51e7ee",
-  gold: "#f6cc58",
-  violet: "#9a72ff",
-}
+import type { GameState } from "@party-board/protocol"
+import { PlayerPortrait } from "../app/PlayerPortrait"
+import { defaultBoard } from "@party-board/board"
 
 const PHASE_LABELS: Record<GameState["phase"], string> = {
   DUEL: "A duel on the trail",
@@ -59,11 +53,16 @@ type GameOverlayProps = {
 
 export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameOverlayProps) {
   const activePlayer = state.players.find((player) => player.id === state.currentPlayerId)
+  const progress = Math.max(
+    0,
+    defaultBoard.tiles.findIndex((tile) => tile.id === activePlayer?.tileId),
+  )
+  const finish = defaultBoard.tiles.length - 1
 
   return (
     <aside className="host-panel host-panel--game" aria-label="Game status">
       <div className="game-heading">
-        <h2>The Winding Trail</h2>
+        <span className="eyebrow">The Winding Trail</span>
         <span className="turn-counter" aria-label={`Turn ${state.turnNumber}`}>
           <small>Turn</small>
           {state.turnNumber}
@@ -72,17 +71,12 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
 
       <div className="turn-summary">
         <div>
-          <span className="summary-label">
-            {activePlayer ? "Playing this turn" : "Waiting for a player"}
-          </span>
           <strong className="turn-summary__player">
-            {activePlayer && (
-              <span
-                className="player-dot"
-                style={{ background: COLOR_VALUES[activePlayer.color] }}
-              />
-            )}
-            {activePlayer?.name ?? "Waiting"}
+            {activePlayer && <PlayerPortrait color={activePlayer.color} />}
+            <span>
+              <small>{activePlayer ? "Your turn" : "Gathering players"}</small>
+              {activePlayer?.name ?? "Waiting"}
+            </span>
           </strong>
           <span className="phase-line" role="status">
             {PHASE_LABELS[state.phase]}
@@ -94,33 +88,24 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
         </div>
       </div>
 
-      <div className="player-list">
-        {state.players.map((player) => (
-          <div
-            className={`player-row ${player.id === state.currentPlayerId ? "player-row--active" : ""}`}
-            key={player.id}
-          >
-            <span className="player-row__identity">
-              <span
-                className="player-dot"
-                style={{
-                  background: COLOR_VALUES[player.color],
-                  color: COLOR_VALUES[player.color],
-                }}
-              />
-              {player.name}
-            </span>
-            <span className="player-state">
-              <span className="player-effect-label">{playerEffectLabels(player).join(" · ")}</span>
-              {player.tileId === "tile-0" ? "Start" : player.tileId.replace("tile-", "Space ")}
-            </span>
-          </div>
-        ))}
+      <div className="trail-progress">
+        <span>Start</span>
+        <span>
+          {progress} / {finish} · Finish
+        </span>
+        <div
+          role="progressbar"
+          aria-label="Trail progress"
+          aria-valuemin={0}
+          aria-valuemax={finish}
+          aria-valuenow={progress}
+        >
+          <i style={{ width: `${(progress / finish) * 100}%` }} />
+        </div>
       </div>
-
       {state.phase === "AWAITING_ROLL" && (
-        <p className="muted">
-          One power-up per turn, then roll when ready. Each space earns 1 coin. No time limit.
+        <p className="turn-prompt">
+          Shake or tap to roll<span>Use a power-up first, if you like. No rush.</span>
         </p>
       )}
       {state.notice && !state.itemEffect && (
@@ -129,7 +114,7 @@ export function GameOverlay({ busy, live, state, onPreviewRoll, onReset }: GameO
         </p>
       )}
 
-      <div className="button-row">
+      <div className="game-operator">
         <button
           className="button button--secondary"
           disabled={busy}

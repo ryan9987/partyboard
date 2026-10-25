@@ -115,6 +115,7 @@ export const gameStateSchema = z
     currentPlayerId: z.string().min(1).max(64).nullable(),
     turnNumber: z.number().int().nonnegative(),
     lastRoll: z.number().int().min(1).max(6).nullable(),
+    winnerId: z.string().min(1).max(64).nullable().optional(),
     duel: duelStateSchema.nullable().optional(),
     shop: shopStateSchema.nullable().optional(),
     potato: potatoStateSchema.nullable().optional(),
@@ -142,6 +143,18 @@ export const gameStateSchema = z
   })
   .strict()
   .superRefine((state, context) => {
+    if (
+      state.phase === "FINISHED"
+        ? !state.winnerId ||
+          state.currentPlayerId !== state.winnerId ||
+          !state.players.some((p) => p.id === state.winnerId)
+        : !!state.winnerId
+    )
+      context.addIssue({
+        code: "custom",
+        message: "Only a finished match may declare a room player as its winner",
+        path: ["winnerId"],
+      })
     const pausedStage =
       state.phase === "DUEL"
         ? state.duel?.stage

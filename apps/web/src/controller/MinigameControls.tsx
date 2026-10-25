@@ -1,9 +1,9 @@
 import {
   MINIGAMES,
   RHYTHM_BEAT_MS,
-  balanceLean,
   archeryDrift,
   FISHING_RULES,
+  GAME_REWARDS,
   type GameState,
 } from "@party-board/protocol"
 import { useEffect, useRef, useState } from "react"
@@ -11,7 +11,7 @@ import type { ControllerClient } from "./controller-client"
 import { getMinigameMotionReading } from "./duel-motion"
 import { useGameClock, useGameNow } from "../networking/gameClock"
 import { canFishingAct, createFishingFlickDetector } from "./fishing-motion"
-import { PhoneMotionGuide } from "../app/PhoneMotionGuide"
+import { GameTutorial } from "../host/GameTutorial"
 
 export function MinigameControls({
   client,
@@ -43,6 +43,7 @@ export function MinigameControls({
     connection.connection === "connected" &&
     !connection.joining
   const info = MINIGAMES[game.kind]
+  const touchControls = !motionEnabled || usingTouch
   useEffect(() => {
     const timer = window.setInterval(() => {
       setDisplayAxis(axis.current)
@@ -92,23 +93,23 @@ export function MinigameControls({
   return (
     <section className="minigame-controller" aria-label={`${info.name} controller`}>
       <h2>{info.name}</h2>
-      <p>
-        {game.stage === "intro"
-          ? "Get ready · watch the host screen"
-          : game.kind === "fishing" && (!motionEnabled || usingTouch)
+      {game.stage === "active" && (
+        <p>
+          {game.kind === "fishing" && touchControls
             ? "Tap Cast line. Wait for REEL NOW, then tap again."
             : game.kind === "archery"
               ? "Aim at your target on the host. Tap to release."
               : info.instruction}
-      </p>
+        </p>
+      )}
       {game.stage === "result" ? (
         <h3>
           {game.winnerIds.includes(playerId ?? "")
-            ? "You win · +8 coins"
-            : "+2 participation coins"}
+            ? `You win · +${GAME_REWARDS.minigameWinner} coins`
+            : `+${GAME_REWARDS.minigameParticipation} participation coin`}
         </h3>
       ) : game.stage === "intro" ? (
-        <PhoneMotionGuide kind={game.kind} />
+        <GameTutorial kind={game.kind} mode={touchControls ? "touch" : "motion"} />
       ) : !me ? (
         <p>You're spectating this round.</p>
       ) : !me.alive ? (
@@ -145,15 +146,23 @@ export function MinigameControls({
                   waiting: "Watch the float…",
                   bite:
                     Math.abs(displayAxis) > FISHING_RULES.maxCatchTilt
-                      ? "Center your phone, then reel"
-                      : "REEL NOW · lift once or tap",
+                      ? touchControls
+                        ? "Slide the meter into the green, then reel"
+                        : "Center your phone, then reel"
+                      : touchControls
+                        ? "REEL NOW · tap Reel now!"
+                        : "REEL NOW · lift once or tap",
                   caught: "Landed! Nice catch",
-                  miss: "It got away · steady your phone and try again",
+                  miss: touchControls
+                    ? "It got away · center the slider and try again"
+                    : "It got away · steady your phone and try again",
                   hit: "",
                   out: "",
                 }[me.status]
               : game.kind === "balance"
-                ? `Lean ${balanceLean(elapsed, index) > 0 ? "left" : "right"} to counter the log`
+                ? Math.abs(me.position) < 0.08
+                  ? "Keep the marker centered"
+                  : `${touchControls ? "Slide" : "Tilt"} ${me.position > 0 ? "left" : "right"} to stay on the log`
                 : game.kind === "archery"
                   ? `${3 - me.attempts} ${me.attempts === 2 ? "arrow" : "arrows"} remaining`
                   : game.kind === "rhythm"
@@ -162,7 +171,7 @@ export function MinigameControls({
                       : me.status === "miss"
                         ? "Find the rhythm"
                         : "Follow the beat"
-                    : "Avoid the marked lane"}
+                    : "Ready"}
           </p>
           {motionEnabled && (
             <button
@@ -180,7 +189,7 @@ export function MinigameControls({
               {usingTouch ? "Using touch · switch to motion" : "Using motion · switch to touch"}
             </button>
           )}
-          {game.kind !== "rhythm" && game.kind !== "dodge" && (
+          {game.kind !== "rhythm" && (
             <label className="tilt-control">
               {game.kind === "archery" ? "Aim" : game.kind === "fishing" ? "Line tension" : "Tilt"}
               <input
@@ -199,24 +208,6 @@ export function MinigameControls({
                 }}
               />
             </label>
-          )}
-          {game.kind === "dodge" && (
-            <div className="lane-buttons">
-              {[-1, 0, 1].map((lane) => (
-                <button
-                  key={lane}
-                  disabled={!active}
-                  onClick={() => {
-                    axis.current = lane
-                    setUsingTouch(true)
-                    setDisplayAxis(lane)
-                    client.minigameInput(lane)
-                  }}
-                >
-                  {lane < 0 ? "Left" : lane > 0 ? "Right" : "Center"}
-                </button>
-              ))}
-            </div>
           )}
           {["archery", "fishing", "rhythm"].includes(game.kind) && (
             <button
@@ -261,8 +252,8 @@ export function MinigameControls({
       )}
       {game.stage === "active" && (
         <details className="motion-guide-help">
-          <summary>Phone position & controls</summary>
-          <PhoneMotionGuide kind={game.kind} />
+          <summary>How to play · {touchControls ? "touch" : "motion"}</summary>
+          <GameTutorial kind={game.kind} mode={touchControls ? "touch" : "motion"} />
         </details>
       )}
     </section>

@@ -1,5 +1,35 @@
 # Integration notes
 
+### 2026-10-25 — Instruction review follow-through and requested main release
+
+- Ryan requested applying the review improvements and pushing the complete pending work to main.
+  This includes the existing overlay/terminal-trail/economy work and the necessary phone-control
+  presentation changes in Jack's lane; no unrelated changes or edits to Jack's status.
+- Increase essential host lesson text from 12px to 16px and improve helper text. Replace gaming
+  jargon, state every winning rule, match action labels and show mode-specific phone lessons/help.
+- Touch diagrams show taps rather than motion. Active Balance direction follows actual lean;
+  Fishing feedback no longer asks touch players to move their phones. No scoring/timing changes.
+- Shared lessons have automated content coverage; dev-only phone fixtures inspect every mode
+  without room commands or permission prompts. Preserve four-player, touch and motion behavior.
+- New lobby objective states first-to-finish. No dependencies or external assets added.
+
+### 2026-10-25 — Ryan-approved terminal trail, economy and phone clarity
+
+- Ryan requested complete Dodge removal, a first-to-finish match, reduced travel income and
+  clearer phone/instruction UI. This authorizes necessary server/controller/tests in Jack's
+  lane alongside host, board and protocol changes. No unrelated work or Jack status edits.
+- Default trail terminates at tile-47; overshoots clamp, first arrival wins, no exact roll.
+  Add validated snapshot `winnerId`, persistent named results and host-only Play again.
+- Retire Dodge across enum, rotation, runtime, controls, arena, lessons and fixtures. Five
+  round games remain including Hot Potato; sword duels remain separate.
+- Replace per-space income with one completed-turn coin; round prizes 4/1, starting balance 6
+  and prices unchanged. Centralize reward values and preserve idempotence/recovery.
+- Original woodland phone design uses a primary Roll, optional pack, explicit Touch/Motion
+  setup and numbered illustrated lessons. Ten-second intro = seven setup + final 3–2–1.
+  No new dependencies, borrowed Nintendo art, production deployment or main push this turn.
+- Coordinated release needs refreshed clients/new room. Historical submission video/script
+  still show the old activity/economy and must be refreshed before being used as current footage.
+
 ### 2026-10-24 — Economy review and anti-freeze balance
 
 - Ryan requested a full game pass, more ways to spend coins, and a fix for repeated shop/freezes.

@@ -101,7 +101,7 @@ function round() {
   settle()
 }
 
-it.each(["potato", "balance", "fishing", "dodge", "archery", "rhythm"] as const)(
+it.each(["potato", "balance", "fishing", "archery", "rhythm"] as const)(
   "shows setup then automatically counts down three seconds into %s, shows results and returns to the board",
   (kind) => {
     setup(2, kind, false)
@@ -111,8 +111,8 @@ it.each(["potato", "balance", "fishing", "dodge", "archery", "rhythm"] as const)
     vi.advanceTimersByTime(30)
     expect(state.waitingForHost).toBeFalsy()
     expect((state.minigame ?? state.potato)?.stage).toBe("intro")
-    expect((state.minigame?.startsAt ?? state.potato!.endsAt) - Date.now()).toBe(7000)
-    vi.advanceTimersByTime(4000)
+    expect((state.minigame?.startsAt ?? state.potato!.endsAt) - Date.now()).toBe(10000)
+    vi.advanceTimersByTime(7000)
     expect((state.minigame ?? state.potato)?.stage).toBe("intro")
     vi.advanceTimersByTime(2999)
     expect((state.minigame ?? state.potato)?.stage).toBe("intro")
@@ -146,7 +146,7 @@ it("never skips a connected player or closes a shop just because time passes", (
   expect(state.shop?.id).toBe(visitId)
   command(0, "shop.choice", { visitId, item: "boots" })
   settle()
-  expect(state.players[0]).toMatchObject({ tileId: "tile-6", inventory: ["boots"], coins: 8 })
+  expect(state.players[0]).toMatchObject({ tileId: "tile-6", inventory: ["boots"], coins: 3 })
 })
 
 it("still recovers disconnected turns and finishes an abandoned shop's exact path", () => {
@@ -204,7 +204,7 @@ it("waits on Hot Potato instructions/results, starts a fresh fuse and pays only 
   expect(state).toMatchObject({ phase: "AWAITING_ROLL", waitingForHost: null, roundNumber: 2 })
 })
 
-for (const kind of ["balance", "fishing", "dodge", "archery", "rhythm"] as const)
+for (const kind of ["balance", "fishing", "archery", "rhythm"] as const)
   it(`gives ${kind} its full playing time after an untimed intro and holds the results`, () => {
     setup(2, kind)
     round()

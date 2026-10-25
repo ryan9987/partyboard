@@ -20,12 +20,13 @@ function createTile(index: number): BoardTile {
   return {
     id: `tile-${index}`,
     position: getPosition(index),
-    nextTileId: `tile-${(index + 1) % TILE_COUNT}`,
+    nextTileId: `tile-${Math.min(index + 1, TILE_COUNT - 1)}`,
   }
 }
 
 export const defaultBoard: BoardDefinition = {
   id: "winding-expedition",
   startingTileId: "tile-0",
+  finishTileId: "tile-47",
   tiles: Array.from({ length: TILE_COUNT }, (_, index) => createTile(index)),
 }

@@ -1,11 +1,11 @@
 import { z } from "zod"
 
-export const minigameKindSchema = z.enum(["balance", "fishing", "dodge", "archery", "rhythm"])
+export const minigameKindSchema = z.enum(["balance", "fishing", "archery", "rhythm"])
 export type MinigameKind = z.infer<typeof minigameKindSchema>
 export const MINIGAMES = {
   balance: {
     name: "Balance",
-    instruction: "Tilt gently to stay centered on the rolling log.",
+    instruction: "Leaning left? Tilt or slide right. Leaning right? Go left. Stay on the log.",
     action: "Steady",
     unit: "seconds",
   },
@@ -15,21 +15,15 @@ export const MINIGAMES = {
     action: "Cast / reel",
     unit: "catch points",
   },
-  dodge: {
-    name: "Dodge",
-    instruction: "Tilt between three lanes. Watch the shadows before the acorns fall.",
-    action: "Dodge",
-    unit: "seconds",
-  },
   archery: {
     name: "Archery",
-    instruction: "Tilt to aim, then tap to release. Three arrows; closest to center wins.",
+    instruction: "Tilt or slide to aim, then tap Release arrow. Three arrows; highest total wins.",
     action: "Release arrow",
     unit: "points",
   },
   rhythm: {
     name: "Rhythm",
-    instruction: "Make a small wrist flick when the beat reaches the center line.",
+    instruction: "When the beat marker reaches the center line, flick once or tap Strike.",
     action: "Strike",
     unit: "points",
   },
@@ -73,9 +67,6 @@ export type MinigamePlayer = z.infer<typeof minigamePlayerSchema>
 // Shared deterministic cues; the server alone judges input time and awards points.
 export function balanceLean(elapsed: number, index: number): number {
   return Math.sin(elapsed / 850 + index * 0.65) * 0.62
-}
-export function hazardLane(wave: number, index: number): number {
-  return ((wave * 7 + index * 2 + Math.floor(wave / 3)) % 3) - 1
 }
 export function archeryDrift(elapsed: number): number {
   return Math.sin(elapsed / 730) * 0.28

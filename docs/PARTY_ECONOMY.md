@@ -10,24 +10,26 @@ has 48 spaces. Shops sit at spaces 3, 11, 19, 27, 35, and 43 so content appears 
 - Connected players have no roll deadline. A disconnected active player is still skipped after
   60 seconds; rejoining before then cancels recovery. A disconnected shopper gets eight seconds
   to rejoin before the route resumes without a purchase.
-- Round games/duels automatically start after a server-timed three-second countdown. Named
+- Round games/duels show seven seconds of illustrated setup and a final three-second countdown. Named
   results/rewards show for 3–3.5 seconds, then return to the board without host clicks.
 - Active competitive rounds retain their gameplay clocks (including the acorn fuse and combat
   cooldowns). Shopping, board turns and choosing power-ups remain untimed.
 - The host shows the stall and stock; only the current player's phone can purchase.
-- After every connected player completes or skips one board turn, everyone enters Hot Potato.
+- After every connected player completes or skips one board turn, everyone enters a round game.
 - Mini-games do not wait for a lap. A longer route therefore does not delay the first shop or game.
-- Six round games rotate without repetition per bag; see `MINIGAMES.md`.
+- Five round games rotate without repetition per bag; see `MINIGAMES.md`. Dodge is removed.
+- First arrival at space 47 ends the entire match before another duel or round game starts.
 
 ## Economy
 
-Each player starts with 6 coins and a three-item pack. Every forward space crossed gives 1 coin,
-at that space's arrival time. A six-space roll therefore earns 6 coins, not one. Passing a market
-earns its coin before shopping; resuming the unused path cannot pay for earlier spaces twice.
-Boots bonus spaces and crossing Start also pay. Skipped turns, backwards duel penalties, and
-duplicate requests do not. There is no additional landing/turn-end bonus. Hot Potato's
-last survivor receives 8 coins; each other participant receives 2. Payouts happen exactly once.
-Balances are capped at 999; restart resets coins, packs, effects, and round progress.
+Each player starts with 6 coins and a three-item pack. Completing one forward board turn pays
+1 coin, once, after the whole movement (including any market pauses). Crossing intermediate
+spaces pays nothing. Boots and large rolls do not multiply income. Skipped turns, backwards
+duel penalties, interrupted moves, and duplicate requests do not pay. Every round-game winner
+receives 4 coins; each other participant receives 1. Tied winners each receive 4. Payouts happen
+exactly once. Shared `GAME_REWARDS` constants define these values for server and UI.
+Balances are capped at 999; restart resets coins, packs, effects, winner and round progress.
+These October 25 rules supersede the older per-space and 8/2 reward system.
 
 Travel defaults to 420 ms per space. The host follows a continuous curve through the same
 server-approved tile path; animation never decides the route, reward, or dice value.
@@ -54,10 +56,10 @@ server-approved tile path; animation never decides the route, reward, or dice va
 - Clover upgrades the actual displayed die: raw 1/2/3 become four; 4/5/6 stay unchanged. Compass
   chooses one legal die value, not a destination or client-submitted reward. Roll buffs do not
   stack; the server applies Boots +2 or Frost −2 to movement with a one-space minimum. The die,
-  path and per-space coins agree. The host announces rolled value versus movement explicitly.
+  path and landing preview agree. The host announces rolled value versus movement explicitly.
 - The catalogue offers low-cost movement, safe rolls, precise landings, defense and premium
-  sabotage. Regular travel averages 3.5 coins before mini-game rewards; prices range 3–10, with
-  no price inflation or changes to the existing 8/2 coin payouts. These are initial tuning values,
+  sabotage. Travel now pays one coin per completed turn; prices remain 3–10 and mini-games pay
+  4/1. This makes premium sabotage a saving decision. These are initial tuning values,
   not a claim of competitive balance proven by human playtests.
 - Phone shopping remains untimed and scrollable. Unaffordable choices stay readable and show
   the missing coin amount. Compass previews Start/space numbers, including Frost's reduction.

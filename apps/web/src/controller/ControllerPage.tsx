@@ -15,6 +15,7 @@ import { PowerupNotice } from "../app/PowerupNotice"
 import { CoinCount } from "../app/CoinCount"
 import { PhoneMotionGuide } from "../app/PhoneMotionGuide"
 import { playerEffectLabels } from "../app/playerEffects"
+import { PlayerPortrait } from "../app/PlayerPortrait"
 import "./controller.css"
 
 function initialRoom(): string {
@@ -88,10 +89,31 @@ function ConnectedController({ client }: { client: ControllerClient }) {
       document.activeElement.blur()
   }, [view.playerId])
   const active = view.state?.players.find((player) => player.id === view.state?.currentPlayerId)
+  const winner = view.state?.players.find((player) => player.id === view.state?.winnerId)
+  const finished = view.state?.phase === "FINISHED"
+  const setup =
+    view.state?.phase === "LOBBY" ||
+    view.state?.minigame?.stage === "intro" ||
+    view.state?.duel?.stage === "intro" ||
+    view.state?.potato?.stage === "intro"
+  const enableMotion = async () => {
+    if (permission === "enabled") {
+      setPermission("off")
+      return
+    }
+    setRequestingPermission(true)
+    try {
+      setPermission(await requestMotionPermission())
+    } finally {
+      setRequestingPermission(false)
+    }
+  }
   const inActivity = ["DUEL", "SHOP", "POTATO", "MINIGAME"].includes(view.state?.phase ?? "")
   let headline = "Join the table"
   if (me) {
     if (view.connection !== "connected") headline = "Reconnecting…"
+    else if (finished)
+      headline = winner?.id === me.id ? "Trail champion!" : `${winner?.name ?? "The leader"} wins!`
     else if (view.state?.phase === "LOBBY") headline = "You're in!"
     else if (view.state?.phase === "DUEL") headline = "Sword duel"
     else if (view.state?.phase === "SHOP") headline = "Wildwood Market"
@@ -108,7 +130,13 @@ function ConnectedController({ client }: { client: ControllerClient }) {
   return (
     <main className={`controller-page${inActivity ? " controller-page--activity" : ""}`}>
       <header>
-        <p>Party Board · {view.connection}</p>
+        <div className="controller-brand">
+          <span>
+            <img src="/favicon.svg" alt="" width="28" height="28" />
+            Partyboard
+          </span>
+          <small>{view.connection === "connected" ? "Connected" : "Reconnecting"}</small>
+        </div>
         {!inActivity && <h1>{headline}</h1>}
       </header>
       {view.error && (
@@ -169,6 +197,7 @@ function ConnectedController({ client }: { client: ControllerClient }) {
       ) : (
         <section aria-label="Your controller">
           <div className="controller-identity">
+            <PlayerPortrait color={me.color} />
             <span>
               {me.name} · Room {view.state?.roomCode}
             </span>
@@ -189,7 +218,53 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           )}
         </section>
       )}
-      {me && view.state && view.state.phase !== "DUEL" && view.state.phase !== "MINIGAME" && (
+      {me && setup && (
+        <section className="controller-inputmode" aria-label="Choose your controls">
+          <span>
+            {inActivity ? "Controls" : "Play your way"}
+            {!inActivity && <small>Both work in every game</small>}
+          </span>
+          <div>
+            <button
+              type="button"
+              aria-pressed={permission !== "enabled"}
+              onClick={() => setPermission("off")}
+            >
+              Touch
+            </button>
+            <button
+              type="button"
+              aria-pressed={permission === "enabled"}
+              disabled={requestingPermission}
+              onClick={() => {
+                if (permission !== "enabled") void enableMotion()
+              }}
+            >
+              {requestingPermission ? "Enabling…" : "Motion"}
+            </button>
+          </div>
+          <small>
+            {permission === "enabled"
+              ? inActivity
+                ? "Motion on · small wrist movements"
+                : "Motion on. Keep a firm grip and use small wrist movements."
+              : permission === "off"
+                ? inActivity
+                  ? "Touch on · buttons and sliders"
+                  : "Tap buttons or move the sliders. No phone motion required."
+                : `Motion ${permission}. Touch controls are ready.`}
+          </small>
+        </section>
+      )}
+      {me && finished && (
+        <section className="controller-match-result" role="status">
+          {winner && <PlayerPortrait color={winner.color} />}
+          <h2>{winner?.name} reached the finish</h2>
+          <p>Match complete. Watch the shared screen to celebrate.</p>
+          <small>The host can choose Play again.</small>
+        </section>
+      )}
+      {me && view.state && (view.state.phase === "SHOP" || view.state.phase === "POTATO") && (
         <PartyControls
           client={client}
           state={view.state}
@@ -239,25 +314,20 @@ function ConnectedController({ client }: { client: ControllerClient }) {
           Roll
         </button>
       ) : null}
+      {me && view.state?.phase === "AWAITING_ROLL" && (
+        <PartyControls
+          client={client}
+          state={view.state}
+          playerId={view.playerId}
+          motionEnabled={permission === "enabled"}
+        />
+      )}
       <details className="controller-settings">
         <summary>
           {permission === "enabled" ? "Motion on · controller settings" : "Enable motion / help"}
         </summary>
         <section aria-label="Motion control">
-          <button
-            type="button"
-            disabled={requestingPermission}
-            onClick={async () => {
-              if (permission === "enabled") {
-                setPermission("off")
-                return
-              }
-              setRequestingPermission(true)
-              const result = await requestMotionPermission()
-              setPermission(result)
-              setRequestingPermission(false)
-            }}
-          >
+          <button type="button" disabled={requestingPermission} onClick={() => void enableMotion()}>
             {permission === "enabled" ? "Use touch only" : "Enable motion"}
           </button>
           <p aria-live="polite">

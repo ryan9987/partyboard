@@ -7,7 +7,7 @@ const kind =
   process.env.MINIGAME === "all"
     ? "all"
     : minigameKindSchema.parse(process.env.MINIGAME ?? "fishing")
-const rotation = ["potato", "fishing", "archery", "rhythm", "balance", "dodge"] as const
+const rotation = ["potato", "fishing", "archery", "rhythm", "balance"] as const
 const rolls = process.env.DICE_SEQUENCE
   ? process.env.DICE_SEQUENCE.split(",").map(Number)
   : [1, 2, 3, 4]
@@ -27,7 +27,7 @@ const app = createGameApp({
     millisecondsPerTile: 100,
     turnEndMs: 100,
     rollTimeoutMs: 0,
-    minigameIntroMs: 7000,
+    minigameIntroMs: 10000,
     minigameDurationMs: kind === "all" ? 20000 : 60000,
     minigameResultMs: 3500,
   },

@@ -2,6 +2,9 @@
 
 This file records the original core milestone. Ryan subsequently approved sword duels and the
 round-game/shop economy; see `SWORD_DUEL.md` and `PARTY_ECONOMY.md` for the current extensions.
+On October 25 Ryan approved first-to-finish at space 47, retired Dodge, replaced per-space
+coins with one completed-turn coin, and reduced round prizes to 4/1. Those supersede the
+original indefinite-loop/deferred-win-condition descriptions below. See `BOARD_MODEL.md`.
 
 ## Goal
 

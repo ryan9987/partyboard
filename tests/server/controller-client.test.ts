@@ -109,6 +109,37 @@ function start(room: ReturnType<typeof host>) {
   server.handle("host", "game.start", { roomCode: room.roomCode, hostToken: room.hostToken })
 }
 
+it("clears the final pending roll, disables actions at victory, and can play again", () => {
+  const room = host()
+  const { client } = controller(room.roomCode)
+  client.join({ roomCode: room.roomCode, name: "Ryan", color: "cyan" })
+  start(room)
+  for (let space = 1; space <= 47; space++) {
+    expect(client.requestRoll()).toBe(true)
+    vi.advanceTimersByTime(1200)
+    if (client.getSnapshot().state!.phase === "SHOP") client.chooseShop("skip")
+    vi.advanceTimersByTime(500)
+    expect(client.getSnapshot().state!.players[0]!.tileId).toBe(`tile-${space}`)
+  }
+  expect(client.getSnapshot()).toMatchObject({
+    pending: null,
+    state: { phase: "FINISHED", winnerId: client.getSnapshot().playerId },
+  })
+  expect(client.canRoll()).toBe(false)
+  expect(client.requestRoll()).toBe(false)
+  expect(client.canUseItem()).toBe(false)
+  expect(client.canDuel()).toBe(false)
+  expect(client.canPass()).toBe(false)
+  expect(client.minigameInput(0, true)).toBe(false)
+  server.handle("host", "game.restart", { roomCode: room.roomCode, hostToken: room.hostToken })
+  expect(client.getSnapshot()).toMatchObject({
+    pending: null,
+    state: { phase: "AWAITING_ROLL", winnerId: null },
+  })
+  expect(client.getSnapshot().state!.players[0]).toMatchObject({ tileId: "tile-0", coins: 6 })
+  expect(client.canRoll()).toBe(true)
+})
+
 it("preserves a Compass choice and the one-item limit through reconnect and controller refresh", () => {
   const room = host()
   const { client, socket } = controller(room.roomCode)
@@ -433,7 +464,7 @@ it("enables duel input only for participants, shares a cooldown, and disables bo
   first.client.requestRoll()
   vi.advanceTimersByTime(1700)
   second.client.requestRoll()
-  vi.advanceTimersByTime(1200 + 6999)
+  vi.advanceTimersByTime(1200 + 9999)
   expect(first.client.canDuel()).toBe(false)
   expect(second.client.canDuel()).toBe(false)
   vi.advanceTimersByTime(1)

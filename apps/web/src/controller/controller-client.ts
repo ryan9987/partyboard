@@ -123,7 +123,9 @@ export class ControllerClient {
         return
       }
       const pending =
-        this.view.pending?.turnNumber === parsed.data.turnNumber ? this.view.pending : null
+        parsed.data.phase !== "FINISHED" && this.view.pending?.turnNumber === parsed.data.turnNumber
+          ? this.view.pending
+          : null
       const sameTurn = parsed.data.turnNumber === this.view.state?.turnNumber
       const itemConfirmed = parsed.data.itemEffect?.id !== this.view.state?.itemEffect?.id
       const pendingItem =

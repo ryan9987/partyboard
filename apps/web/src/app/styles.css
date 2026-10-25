@@ -929,15 +929,6 @@ a {
 .tutorial-reel {
   animation: tutorial-bite 3.6s ease-in-out infinite;
 }
-.tutorial-dodger {
-  animation: tutorial-dodge 3.6s ease-in-out infinite;
-}
-.tutorial-hazard {
-  animation: tutorial-drop 3.6s ease-in infinite;
-}
-.tutorial-warning {
-  animation: tutorial-bite 3.6s ease-in-out infinite reverse;
-}
 .tutorial-aim {
   animation: tutorial-aim 3.6s ease-in-out infinite;
 }
@@ -1038,36 +1029,6 @@ a {
   50%,
   78% {
     opacity: 1;
-  }
-}
-@keyframes tutorial-dodge {
-  0%,
-  15%,
-  100% {
-    transform: translateX(0);
-  }
-  36%,
-  80% {
-    transform: translateX(49px);
-  }
-}
-@keyframes tutorial-drop {
-  0%,
-  20% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  25% {
-    opacity: 1;
-  }
-  60% {
-    transform: translateY(99px);
-    opacity: 1;
-  }
-  65%,
-  100% {
-    transform: translateY(99px);
-    opacity: 0;
   }
 }
 @keyframes tutorial-aim {

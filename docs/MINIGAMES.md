@@ -1,27 +1,28 @@
 # Woodland mini-games
 
-Ryan approved all five additions and their integrated host/server/controller implementation.
+Ryan approved the integrated host/server/controller implementation. Dodge was removed on October 25;
+the active round games are Hot Potato, Balance, Fishing, Archery and Rhythm.
 No dependencies or external models were added. These games reuse the detailed local characters
 and woodland environment. Hot Potato's acorn now follows the animated wrist and travels in a
 short hand-to-hand arc; it no longer floats above players' heads.
 
 ## Round flow
 
-After everyone connected completes or skips a board turn, choose from a six-game bag.
-Hot Potato opens each bag, then Balance, Fishing, Dodge, Archery and Rhythm are shuffled without
-repetition. A new bag starts after all six. Occupied-space sword duels remain separate.
+After everyone connected completes or skips a board turn, choose from a five-game bag.
+Hot Potato opens each bag, then Balance, Fishing, Archery and Rhythm are shuffled without
+repetition. A new bag starts after all five. Occupied-space sword duels remain separate.
 
-Instructions show four seconds of illustrated phone setup followed by an automatic, server-timed
+Instructions show seven seconds of illustrated phone setup followed by an automatic, server-timed
 3–2–1 countdown. No extra click is required. The playing clock (up to 20
 seconds) then starts fresh. Named winners/rewards display for 3–3.5 seconds and the board resumes
 automatically, with no Start/Continue clicks. Optional `manualStageAdvance: true` remains available
 for an operator/rehearsal, but is not the production default. Shops and board turns stay untimed.
-Winners receive 8 coins, other participants receive 2, exactly once. Tied high scores share the
-8-coin prize. No board positions change. Resume the player following the round's final mover.
+Winners receive 4 coins, other participants receive 1, exactly once. Tied high scores each receive
+4 coins. No board positions change. Resume the player following the round's final mover.
 
-All six round games and sword duels now include a short animated how-to-play splash. It shows
+All five round games and sword duels include a short animated how-to-play splash. It shows
 the portrait phone input alongside the corresponding game action, three concise steps, the
-goal, and a touch alternative. The seven-second intro includes four seconds of setup followed
+goal, and a touch alternative. The ten-second intro includes seven seconds of setup followed
 by the final 3–2–1; Hot Potato and duels now have that same setup allowance. No extra Start
 button and no playing time consumed. The SVG/CSS lessons add no downloads, dependencies or
 second WebGL canvas. Reduced-motion preferences show a static diagram with the same text.
@@ -32,12 +33,11 @@ second WebGL canvas. Reduced-motion preferences show a static diagram with the s
 | --- | --- | --- |
 | Balance | Counter-tilt / slider | Stay centered on a rolling log. Drift amplifies existing lean. Fall at 1.15 displacement. End immediately with one survivor; simultaneous final falls share the highest survival time. Survivors at time-up share the win. |
 | Fishing | Small forward wrist flick to cast, lift once to reel; tilt to steady / button and slider | Cast lasts 0.8s, bite opens 1.8–4.2s after cast (2.4s reaction window). Reel at axis magnitude ≤0.75 for 55–100 catch points. Sustained extreme tilt breaks the line. Highest total wins. |
-| Dodge | Tilt / left-center-right buttons | Three lanes per player. Ground marker warns before a falling acorn arrives every 1.8s. Collision evaluated after 1.45s. Highest survival time wins. |
 | Archery | Tilt to aim, tap release / slider and release | Three arrows, 900ms cooldown. Shared deterministic sway; 0–100 points per shot depending on horizontal accuracy. Highest total wins. |
 | Rhythm | Small wrist flick / Strike button | Beats every 750ms. Server receipt within 180ms of a beat earns up to 100 points; one attempt per beat. Highest total wins. |
 
 The phone calibrates neutral sideways gravity when motion starts. Recenter resets it.
-An explicit touch/motion selector prevents sensors from overriding slider or lane-button input.
+An explicit touch/motion selector prevents sensors from overriding slider input.
 Touch controls remain available without granting sensor permission. Keep phones held securely.
 
 ### Fishing reliability and orientation
@@ -62,6 +62,16 @@ Touch controls remain available without granting sensor permission. Keep phones 
 
 ## Art and interface
 
+- October 25 clarity pass: all lessons use shared `gameLessons.ts` copy, explicit winning rules,
+  and real button names. Phone lessons and in-game help follow Touch/Motion selection; touch
+  players see tap/slide steps and a stationary phone diagram with a tap cue.
+- Desktop lesson steps/goals are 16px, touch guidance 14px, with wider 760px cards and integrated
+  game titles. All six lessons fit without scrolling at 1280x720. Active hints are enlarged too.
+- `/phone-preview?view=lessons` embeds dev-only `/lesson-preview` for six games/two modes at
+  320/390/430px. These fixtures never connect to rooms, request permissions or send commands.
+- Automated copy checks reject motion-only touch steps and preserve three-arrow totals, the
+  center-line beat cue, named buttons, elimination and duel consequences.
+
 - Fishing rods, bows and drumsticks attach to animated wrist nodes; no independent floating props.
 - Fishing has raised wooden docks, a visible pond, rod-tip-to-float line, visible cast arc,
   dipping bobber, ripples and fish retrieval.
@@ -79,13 +89,15 @@ Touch controls remain available without granting sensor permission. Keep phones 
   1.1s before its large winner card so the fall/splash remains visible; normal automatic return
   timing is unchanged. With four players, the first fall alone does not end the round. A final
   faller's same-tick score cannot tie a player who is still on the log. Forfeits cannot win.
-- Dodge uses separated lane pads, warning rings and falling acorns.
 - Rhythm uses rope-laced drums, metal rims, animated sticks and beat-lit heads.
 - Compact ivory/forest-green HUD, countdown, per-player scores and matching clean controller cards.
 - No gradients, stock hero pictures or network asset downloads.
 - The host retains the full coin ledger. The phone shows only its owner's compact balance,
-  current controls and necessary feedback; full standings/instructions stay on the shared screen.
-- Motion/help is an expandable footer, with an explicit touch-only option and visible touch inputs.
+  current controls and necessary feedback. Lessons appear during setup; full standings stay on
+  the shared screen and instructions collapse into optional help during play.
+- Touch/Motion setup is visible in the lobby and intros; detailed sensor help stays expandable.
+- Mobile board turns put Roll before the optional pack. Numbered lesson cards, readable Phone/TV
+  labels and a separate goal line replace cramped diagrams and unstructured instruction text.
 - Intro scenes are already in the arena, so the countdown does not trigger another world change.
 
 ## Protocol and recovery
@@ -127,7 +139,7 @@ by desktop tests. No audio playback is currently provided; Rhythm uses visual be
 ## Reproduce checks
 
 - `pnpm check`: types, lint, formatting, automated rules/network tests and production build.
-- Dev-only `/rehearsal`: select all six art scenes; prominently marked simulated inputs.
+- Dev-only `/rehearsal`: select five round games, the duel or Trail victory; prominently marked simulated inputs.
   It does not connect to a room and is not available as a production route.
 - The rehearsal now includes the duel scene, an instruction/playing/result selector and a
   replayable Balance fall/winner sequence. These are visual fixtures, not live-game proof.
@@ -136,7 +148,7 @@ by desktop tests. No audio playback is currently provided; Rhythm uses visual be
   `VITE_CONTROLLER_URL=http://localhost:5175/controller`. Join 2–4 controllers and complete a round.
   This rehearsal extends play to 60s, not production's 20s, to inspect animations.
 
-Verified in browser: four controllers completed the six-game round rotation (through board turn 25),
+Historical verification before Dodge retirement: four controllers completed the former six-game round rotation (through board turn 25),
 including pass-by purchases, Boots use, active Shield, targeted Frost, Hot Potato passing,
 scored sword duels and knockback, Fishing cast/bite/reel (100 points), and Rhythm hits (105 points).
 Targeted replays exercised all three Archery arrows (157 total including a miss) and Balance tilt.

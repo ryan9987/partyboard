@@ -15,13 +15,16 @@ describe("default board", () => {
     expect(defaultBoard.tiles.at(-1)?.position[2]).toBeLessThan(-40)
   })
 
-  it("returns each visited tile and wraps around", () => {
-    expect(getMovementPath(defaultBoard, "tile-46", 4)).toEqual([
-      "tile-47",
-      "tile-0",
-      "tile-1",
-      "tile-2",
-    ])
+  it("clamps overshoots at the finish instead of wrapping", () => {
+    expect(getMovementPath(defaultBoard, "tile-46", 4)).toEqual(["tile-47"])
+  })
+  it("has a terminal finish and cannot move past it", () => {
+    expect(defaultBoard.finishTileId).toBe("tile-47")
+    expect(getMovementPath(defaultBoard, "tile-47", 6)).toEqual([])
+    expect(getMovementPath(defaultBoard, "tile-44", 8)).toEqual(["tile-45", "tile-46", "tile-47"])
+    const broken = { ...defaultBoard, tiles: defaultBoard.tiles.map((tile) => ({ ...tile })) }
+    broken.tiles.at(-1)!.nextTileId = "tile-0"
+    expect(() => validateBoard(broken)).toThrow("stop at the finish")
   })
 
   it("rejects movement outside a dice range", () => {

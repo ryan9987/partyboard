@@ -105,7 +105,8 @@ it("uses actual Socket.IO for private joins, schema errors, a roll, and refresh 
   })
   await ended
   expect(crossingCoins).toContain(7)
-  expect(crossingCoins).toContain(8)
+  expect(crossingCoins).not.toContain(8)
+  expect(crossingCoins.every((coins) => coins === 6 || coins === 7)).toBe(true)
   phone.disconnect()
   const replacement = client(url)
   await connected(replacement)
@@ -307,8 +308,8 @@ it.each(["archery", "fishing"] as const)(
       (state) => state.phase === "AWAITING_ROLL" && state.roundNumber === 2,
     )
     expect(resumed.currentPlayerId).toBe(result.players[0]!.id)
-    expect(resumed.players[0]!.coins).toBe(16)
-    expect(resumed.players[1]!.coins).toBe(10)
+    expect(resumed.players[0]!.coins).toBe(11)
+    expect(resumed.players[1]!.coins).toBe(8)
   },
   10_000,
 )

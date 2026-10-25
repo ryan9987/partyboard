@@ -4,6 +4,67 @@ Ryan or Ryan's agent owns this file.
 
 ## Current
 
+- October 25 instruction-review follow-through: larger 16px host steps/goals and 14px touch
+  guidance in 760px cards with integrated game titles. Six host lessons fit without scrolling
+  at 1280x720. Lobby objective and Start button fit together without scrolling too.
+- Shared `gameLessons.ts` removes jargon and states every winning rule, including Archery's
+  three-arrow total, Rhythm's center marker, Hot Potato elimination and duel knockback.
+  Phone lessons/help match Touch/Motion with exact button labels and correct diagrams.
+- Touch-aware Fishing cues no longer ask for phone movement; Balance corrections follow actual
+  player lean. Completed duels/Hot Potato no longer show obsolete attack/pass prompts.
+- Browser checked all 36 phone lesson combinations (six games × two modes ×320/390/430px):
+  no horizontal overflow, wrong-mode steps or motion requirements in touch lessons. Live
+  two-phone Fishing showed touch-first setup, automatic start, successful cast/reel and shared
+  touch help. No physical permission/sensor certification or measured device FPS claimed.
+- Added 14 lesson regression cases; complete suite 184 Vitest +10 motion tests, typecheck,
+  formatting and production build pass. Existing large 3D bundle warning remains. No dependencies.
+- Ryan requested merging all pending overlay/finish/economy/instruction work into main and
+  pushing it. Release verification follows below; older “local only” notes are historical.
+
+- October 25 terminal-trail/phone pass on `feat/woodland-overlays`, preserving the prior overlay
+  work below. Ryan explicitly authorized integrated server/controller changes; recorded in
+  `INTEGRATION_NOTES.md`. No edits to Jack's status, new dependencies or external artwork.
+- Dodge is removed from the shared enum, random bag, server runtime, phone input, 3D arena,
+  instructions and preview options. Five round games remain plus occupied-space sword duels.
+- First player at space 47 wins. Overshoots and Boots clamp at finish; no exact roll. Terminal
+  board metadata, original finish arch, validated snapshot winner, persistent named host/phone
+  results and host-only Play again. Finish cancels timers; late events cannot reopen the match.
+- Economy: start 6, one coin per completed forward turn (zero per space), mini-game prizes 4/1.
+  Shared constants, unchanged shop prices, no skipped/interrupted/duplicate/backwards income.
+- Phone uses a clear primary Roll, secondary optional pack, owner portrait/coins and visible
+  Touch/Motion setup. Original animated lessons have readable labels, numbered steps and goals.
+  Seven seconds of setup + final 3–2–1; connected turns and shops remain untimed.
+- Live browser: eight six-space rolls through all shops ended at 47 with 14 coins, named winner,
+  refresh-safe result and replay reset to start/6. Two-player Fishing still cast/reels (100 points),
+  automatically returns and pays 4/1 (7/7 → 11/8). Error logs empty on fresh host/two phone tabs.
+- Visually inspected all six remaining lessons. Real controller iframes at 320/390/430px had no
+  horizontal overflow. Tightened intro controls so the 320px lesson includes its goal/touch cue.
+- Typecheck, formatting check, 170 Vitest + 10 motion tests and production build pass. Coverage
+  includes four-player victory, exact/overshoot/Boots, reconnect/replay, late events, final phone
+  pending-roll cleanup and reduced payouts. Existing large 3D bundle warning remains.
+- Local only: no main push/deploy requested. Physical sensors, venue-network/human balance and
+  presentation-device FPS still need rehearsal. Refresh clients/create a new room when deploying.
+  Existing submission footage predates these rules and should be updated before submission.
+
+## Previous passes (historical rules and verification)
+
+- Woodland overlay redesign on `feat/woodland-overlays`: pine/ivory trail cards, rounded system
+  type, original character portraits, compact turn card and branded room header. One stable
+  player rail replaces duplicated standings and carries coins, effects and arena scores.
+- Matching market, animated lessons and shared named-winner/draw cards across all seven arenas.
+  Five market items fit at 1280x720. Long labels truncate without losing accessible names;
+  coin/score values remain separate. Balance fall timing and crossed-swords animation preserved.
+- Only Ryan-owned host/app/presentation paths changed; no server, controller, motion or protocol
+  changes, dependencies or external art assets. CSS is host-scoped and uses no gradients or blur.
+- Browser-inspected all seven active arenas, instruction/result cards, board/lobby/market and
+  320/390px iframe layouts. Live browser smoke: join, start, roll, +3 travel coins (6→9), Clover
+  purchase (9→6), inventory/board return and visible activation/effect feedback. Physical sensors
+  and presentation-device FPS remain unverified; art fixtures are not multiplayer proof.
+- Added 15 player-rail regression cases: five game scores, phase return, separate coins, fishing
+  cues, arrows, ties, disconnects, Hot Potato and delayed Balance winner reveal. Typecheck,
+  production build and 166 Vitest + 10 motion tests pass. Existing large 3D chunk warning remains.
+  Work is local; this request did not authorize a main push or deployment.
+
 - Full game/economy pass on `feat/balanced-market`, based on the previous local tutorial commit.
   Frost costs 10, slows by two (minimum one), never skips a turn, and gives shared thaw protection
   through the following unhindered roll. Shield blocks grant protection too. Different attackers

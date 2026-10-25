@@ -1,6 +1,6 @@
 # Protocol contract
 
-The five-game extension is documented in [MINIGAMES.md](./MINIGAMES.md): `MINIGAME`,
+The four-game extension (plus separate Hot Potato) is documented in [MINIGAMES.md](./MINIGAMES.md): `MINIGAME`,
 validated per-player snapshots, and authenticated `minigame.input` commands with monotonic sequences.
 
 The round-game/economy extension in [PARTY_ECONOMY.md](./PARTY_ECONOMY.md) adds `SHOP`, `POTATO`,
@@ -32,10 +32,25 @@ type GameState = {
   currentPlayerId: string | null
   turnNumber: number
   lastRoll: number | null
+  winnerId?: string | null
 }
 ```
 
 Private session IDs are omitted from public room snapshots. Controllers receive their own private session token only in the `room.joined` response. The shared `PublicPlayer` schema contains no session field.
+
+### October 25: terminal trail and retired activity
+
+`FINISHED` requires `winnerId` to reference a room player and equal `currentPlayerId`.
+Other phases cannot carry a non-null winner. The default board's `finishTileId` is tile-47;
+the server clamps overshoots, awards one completed-turn coin, cancels pending activity/recovery
+timers and broadcasts the persistent result through `room.snapshot`. No new event is needed.
+Further actions are rejected; authenticated `game.restart` clears the winner and resets the match.
+Reconnect preserves the champion. This is first-to-finish, not a coin-total victory.
+
+`minigame.kind` now accepts only `balance`, `fishing`, `archery`, `rhythm`; `dodge` is invalid.
+Hot Potato remains its own phase. Reward values are shared `GAME_REWARDS` (6 starting,
+1 completed forward turn, 4 winner / 1 participation). Refresh host/phone tabs and create a new
+room on coordinated deployment; old open clients are incompatible with the retired enum.
 
 ## Client-to-server events
 
@@ -76,7 +91,7 @@ Host-only. Returns every player to the starting tile while preserving the room a
 
 Optional operator mode only (`manualStageAdvance: true`). Production round stages auto-advance
 after the server's countdown/result deadlines; no controller/host command is needed.
-All six round games and sword duels now show four seconds of animated setup before the final
+All five round games and sword duels now show seven seconds of animated setup before the final
 three-second countdown; `startsAt` already represents the authoritative end of that whole intro.
 Hot Potato uses `endsAt`, and duels use `stageEndsAt`, for the equivalent intro deadline.
 For Balance, existing player `actionAt` records the server's fall timestamp and signed `position`

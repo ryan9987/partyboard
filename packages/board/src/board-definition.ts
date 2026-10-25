@@ -9,6 +9,7 @@ export type BoardTile = {
 export type BoardDefinition = {
   id: string
   startingTileId: string
+  finishTileId?: string
   tiles: BoardTile[]
 }
 
@@ -40,6 +41,8 @@ export function validateBoard(board: BoardDefinition): void {
   if (!tileIds.has(board.startingTileId)) {
     throw new InvalidBoardError(`Starting tile does not exist: ${board.startingTileId}`)
   }
+  if (board.finishTileId && !tileIds.has(board.finishTileId))
+    throw new InvalidBoardError("Finishing tile does not exist")
 
   for (const tile of board.tiles) {
     if (!tileIds.has(tile.nextTileId)) {
@@ -60,10 +63,19 @@ export function validateBoard(board: BoardDefinition): void {
     if (!tile) {
       throw new InvalidBoardError(`Cannot traverse missing tile ${currentId}`)
     }
+    if (board.finishTileId && currentId === board.finishTileId) {
+      if (visited.size !== board.tiles.length || tile.nextTileId !== currentId)
+        throw new InvalidBoardError("The trail must visit every space and stop at the finish")
+      return
+    }
     currentId = tile.nextTileId
   }
 
-  if (currentId !== board.startingTileId || visited.size !== board.tiles.length) {
+  if (
+    board.finishTileId ||
+    currentId !== board.startingTileId ||
+    visited.size !== board.tiles.length
+  ) {
     throw new InvalidBoardError("Board must form one loop containing every tile")
   }
 }

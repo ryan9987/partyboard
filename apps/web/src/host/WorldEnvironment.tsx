@@ -6,6 +6,7 @@ import * as THREE from "three"
 import { MeadowGround, MeadowPlanting, TrailLandmarks, WoodlandUnderstory } from "./WoodlandDetails"
 import { Prop, PropInstances } from "./worldAssets"
 import { treeVariant, type Placement } from "./worldProps"
+import { FinishMarker } from "./FinishMarker"
 
 const ROUTE_CENTER_Z =
   ((defaultBoard.tiles[0]?.position[2] ?? 0) + (defaultBoard.tiles.at(-1)?.position[2] ?? 0)) / 2
@@ -131,6 +132,7 @@ export function WorldEnvironment() {
         />
       ))}
       <Prop name="StartGate" position={[start[0], 0, start[2] - 1.3]} />
+      <FinishMarker />
       <Cloud position={[-8, 7.2, 2]} speed={0.18} />
       <Cloud position={[5, 8.1, -17]} speed={0.11} />
       <Cloud position={[-3, 7.5, -38]} speed={0.14} />

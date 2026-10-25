@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto"
 import {
   archeryDrift,
   balanceLean,
-  hazardLane,
   RHYTHM_BEAT_MS,
   FISHING_RULES,
   type MinigameKind,
@@ -16,7 +15,6 @@ type Runtime = {
   actionAt: number
   castAt: number | null
   beat: number
-  wave: number
   strain: number
 }
 export class MinigameRound {
@@ -53,7 +51,6 @@ export class MinigameRound {
         actionAt: 0,
         castAt: null,
         beat: -1,
-        wave: -1,
         strain: 0,
       }),
     )
@@ -154,17 +151,6 @@ export class MinigameRound {
           player.status = "out"
           player.actionAt = now
         }
-      } else if (game.kind === "dodge") {
-        player.position = player.axis < -0.33 ? -1 : player.axis > 0.33 ? 1 : 0
-        const wave = Math.floor(elapsed / 1800)
-        if (elapsed % 1800 >= 1450 && runtime.wave !== wave) {
-          runtime.wave = wave
-          if (player.position === hazardLane(wave, index)) {
-            player.alive = false
-            player.status = "out"
-          }
-        }
-        player.score = Math.round(elapsed / 10) / 100
       } else if (
         game.kind === "fishing" &&
         runtime.castAt !== null &&
@@ -200,7 +186,7 @@ export class MinigameRound {
     return (
       now >= game.endsAt ||
       balanceDecided ||
-      ((game.kind === "balance" || game.kind === "dodge") && aliveCount === 0) ||
+      (game.kind === "balance" && aliveCount === 0) ||
       arrowsFinished
     )
   }

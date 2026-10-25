@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import type { ControllerClient } from "./controller-client"
 import { getDuelGesture } from "./duel-motion"
 import { useGameClock, useGameNow } from "../networking/gameClock"
+import { GameTutorial } from "../host/GameTutorial"
 
 export function DuelControls({
   client,
@@ -72,28 +73,35 @@ export function DuelControls({
       </p>
       {fighter ? (
         <>
-          <p>
-            Swing with a small phone motion to attack. Tilt sideways to guard for a moment. Both
-            actions need a short recovery.
-          </p>
-          <div className="duel-controller__buttons">
-            <button type="button" disabled={disabled} onClick={() => action("swing")}>
-              Swing sword
-            </button>
-            <button type="button" disabled={disabled} onClick={() => action("guard")}>
-              Guard
-            </button>
-          </div>
-          <p role="status">
-            {duel.stage === "intro"
-              ? "Get ready…"
-              : duel.stage === "result"
-                ? "Continue on the host when ready."
-                : now < readyAt
-                  ? "Recovering…"
-                  : "Ready"}
-          </p>
-          <small>Keep a firm grip and use small motions. Touch controls always work.</small>
+          {duel.stage === "intro" ? (
+            <GameTutorial kind="duel" mode={motionEnabled ? "motion" : "touch"} />
+          ) : duel.stage === "result" ? (
+            <p role="status">
+              {state.waitingForHost ? "Waiting for the host." : "Returning to the trail…"}
+            </p>
+          ) : (
+            <>
+              <p>
+                {motionEnabled
+                  ? "Swing gently to attack. Tilt sideways to guard. Wait for Ready between actions."
+                  : "Tap Swing sword to attack, or Guard to block. Wait for Ready between actions."}
+              </p>
+              <div className="duel-controller__buttons">
+                <button type="button" disabled={disabled} onClick={() => action("swing")}>
+                  Swing sword
+                </button>
+                <button type="button" disabled={disabled} onClick={() => action("guard")}>
+                  Guard
+                </button>
+              </div>
+              <p role="status">{now < readyAt ? "Recovering…" : "Ready"}</p>
+              <small>
+                {motionEnabled
+                  ? "Keep a firm grip and use small motions. Touch controls always work."
+                  : "Watch the shared screen. Your buttons control the duel."}
+              </small>
+            </>
+          )}
         </>
       ) : (
         <p>The rest of the trail is watching. Your board turn will resume after the duel.</p>

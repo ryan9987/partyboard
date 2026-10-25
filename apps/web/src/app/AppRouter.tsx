@@ -4,6 +4,7 @@ const HostPage = lazy(() => import("../host/HostPage"))
 const ControllerPage = lazy(() => import("../controller/ControllerPage"))
 const MinigameRehearsal = lazy(() => import("../host/MinigameRehearsal"))
 const PhoneRehearsal = lazy(() => import("../host/PhoneRehearsal"))
+const LessonRehearsal = lazy(() => import("../host/LessonRehearsal"))
 
 function LoadingScreen() {
   return (
@@ -32,6 +33,12 @@ function NotFound() {
 
 export function AppRouter() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/"
+  if (import.meta.env.DEV && path === "/lesson-preview")
+    return (
+      <Suspense fallback={<LoadingScreen />}>
+        <LessonRehearsal />
+      </Suspense>
+    )
   if (import.meta.env.DEV && path === "/phone-preview")
     return (
       <Suspense fallback={<LoadingScreen />}>

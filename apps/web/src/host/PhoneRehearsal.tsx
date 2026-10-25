@@ -3,6 +3,8 @@ import { useState } from "react"
 /** A real iframe viewport exercises mobile media queries without browser emulation. */
 export default function PhoneRehearsal() {
   const [width, setWidth] = useState(390)
+  const overlays = new URLSearchParams(window.location.search).get("view") === "overlays"
+  const lessons = new URLSearchParams(window.location.search).get("view") === "lessons"
   const code = (new URLSearchParams(window.location.search).get("room") ?? "")
     .replace(/[^a-z0-9]/gi, "")
     .slice(0, 4)
@@ -10,8 +12,16 @@ export default function PhoneRehearsal() {
   return (
     <main className="phone-rehearsal">
       <div>
-        <h1>Phone layout check</h1>
-        <p>Live controller · {width}px wide</p>
+        <h1>
+          {lessons
+            ? "Phone instruction check"
+            : overlays
+              ? "Overlay layout check"
+              : "Phone layout check"}
+        </h1>
+        <p>
+          {lessons || overlays ? "Art fixtures" : "Live controller"} · {width}px wide
+        </p>
         <label>
           Screen width
           <select
@@ -26,8 +36,14 @@ export default function PhoneRehearsal() {
         </label>
       </div>
       <iframe
-        title="Phone controller"
-        src={`/controller/${code}${/^[1-4]$/.test(slot) ? `?slot=${slot}` : ""}`}
+        title={lessons ? "Phone instructions" : overlays ? "Game overlays" : "Phone controller"}
+        src={
+          lessons
+            ? "/lesson-preview"
+            : overlays
+              ? "/rehearsal"
+              : `/controller/${code}${/^[1-4]$/.test(slot) ? `?slot=${slot}` : ""}`
+        }
         style={{
           width,
           height: 844,

@@ -11,14 +11,25 @@ import { createFixtureState } from "./fixture"
 import { CharacterStudy } from "./CharacterStudy"
 import { PartyOverlay } from "./PartyOverlay"
 import { DuelOverlay } from "./DuelOverlay"
+import { GameOverlay } from "./GameOverlay"
+import { LobbyOverlay } from "./LobbyOverlay"
+import { PlayerBalances } from "../app/PlayerBalances"
+import "./hud.css"
+import { MatchResult } from "./MatchResult"
+
+type PreviewSelection =
+  MinigameKind | "potato" | "duel" | "characters" | "shop" | "board" | "lobby" | "finish"
 
 // Development-only art inspection. This never connects to or changes a live room.
 export default function MinigameRehearsal() {
-  const [selection, setKind] = useState<MinigameKind | "potato" | "duel" | "characters" | "shop">(
-    "fishing",
-  )
+  const [selection, setKind] = useState<PreviewSelection>("fishing")
   const kind =
-    selection === "characters" || selection === "shop" || selection === "duel"
+    selection === "characters" ||
+    selection === "shop" ||
+    selection === "duel" ||
+    selection === "board" ||
+    selection === "lobby" ||
+    selection === "finish"
       ? "fishing"
       : selection
   const [previewStage, setPreviewStage] = useState<"intro" | "active" | "fall" | "result">("active")
@@ -29,11 +40,19 @@ export default function MinigameRehearsal() {
     return () => window.clearInterval(timer)
   }, [])
   const fixture = createFixtureState()
+  const stressLabels = new URLSearchParams(window.location.search).get("stress") === "1"
+  if (stressLabels) {
+    fixture.players = fixture.players.map((player) => ({
+      ...player,
+      name: "AlexandertheExplorer",
+      coins: 999,
+    }))
+  }
   const elapsed = Math.max(0, now - started)
   const cycle = Math.floor(elapsed / 4000)
   const age = elapsed % 4000
   const stage = previewStage === "fall" ? "result" : previewStage
-  const introEndsAt = started + (Math.floor(elapsed / 7000) + 1) * 7000
+  const introEndsAt = started + (Math.floor(elapsed / 10000) + 1) * 10000
   const state: GameState = {
     ...fixture,
     serverTime: now,
@@ -67,15 +86,17 @@ export default function MinigameRehearsal() {
             players: fixture.players.map((p, i) => ({
               playerId: p.id,
               score:
-                stage === "intro"
-                  ? 0
-                  : kind === "archery"
-                    ? 100
-                    : kind === "rhythm"
-                      ? 200
-                      : kind === "fishing"
-                        ? 100
-                        : 4,
+                stressLabels && stage !== "intro"
+                  ? 10000
+                  : stage === "intro"
+                    ? 0
+                    : kind === "archery"
+                      ? 100
+                      : kind === "rhythm"
+                        ? 200
+                        : kind === "fishing"
+                          ? 100
+                          : 4,
               alive: !(kind === "balance" && previewStage === "fall" && i < 3),
               axis: Math.sin(elapsed / 1000 + i) * 0.4,
               position:
@@ -158,7 +179,31 @@ export default function MinigameRehearsal() {
               endsAt: now + 8000,
             },
           }
-        : state
+        : selection === "board" || selection === "lobby" || selection === "finish"
+          ? {
+              ...fixture,
+              phase:
+                selection === "finish"
+                  ? "FINISHED"
+                  : selection === "board"
+                    ? "AWAITING_ROLL"
+                    : "LOBBY",
+              winnerId: selection === "finish" ? fixture.players[0]!.id : null,
+              currentPlayerId: selection === "lobby" ? null : fixture.players[0]!.id,
+              turnNumber: 7,
+              lastRoll: 5,
+              players: fixture.players.map((player, index) => ({
+                ...player,
+                tileId:
+                  selection === "finish"
+                    ? `tile-${47 - index * 3}`
+                    : selection === "board"
+                      ? `tile-${4 + index}`
+                      : "tile-0",
+                coins: 12 + index * 7,
+              })),
+            }
+          : state
   return (
     <main className="host-shell">
       {selection === "characters" ? (
@@ -174,7 +219,13 @@ export default function MinigameRehearsal() {
           onChange={(event) => {
             const value = event.target.value
             setKind(
-              value === "characters" || value === "potato" || value === "shop" || value === "duel"
+              value === "characters" ||
+                value === "potato" ||
+                value === "shop" ||
+                value === "duel" ||
+                value === "board" ||
+                value === "lobby" ||
+                value === "finish"
                 ? value
                 : minigameKindSchema.parse(value),
             )
@@ -186,6 +237,9 @@ export default function MinigameRehearsal() {
           <option value="duel">Sword duel</option>
           <option value="characters">Character study</option>
           <option value="shop">Wildwood Market</option>
+          <option value="board">Board HUD</option>
+          <option value="finish">Trail victory</option>
+          <option value="lobby">Lobby</option>
           {Object.entries(MINIGAMES).map(([key, value]) => (
             <option key={key} value={key}>
               {value.name}
@@ -212,13 +266,35 @@ export default function MinigameRehearsal() {
           Replay preview
         </button>
       </header>
-      {selection === "duel" ? (
+      {selection === "finish" ? (
+        <MatchResult state={displayState} onRestart={() => setKind("board")} />
+      ) : selection === "board" ? (
+        <GameOverlay
+          state={displayState}
+          busy={false}
+          live={false}
+          onPreviewRoll={undefined}
+          onReset={() => setKind("lobby")}
+        />
+      ) : selection === "lobby" ? (
+        <LobbyOverlay
+          state={displayState}
+          controllerUrl={null}
+          actionLabel="Preview board"
+          description="Art rehearsal: simulated players, no live room."
+          disabled={false}
+          onStart={() => setKind("board")}
+        />
+      ) : selection === "duel" ? (
         <DuelOverlay state={displayState} />
       ) : selection === "shop" || selection === "potato" ? (
         <PartyOverlay state={displayState} />
       ) : (
         selection !== "characters" &&
         kind !== "potato" && <MinigameOverlay key={kind} state={state} />
+      )}
+      {selection !== "characters" && selection !== "lobby" && (
+        <PlayerBalances state={displayState} host />
       )}
     </main>
   )

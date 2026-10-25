@@ -89,7 +89,12 @@ function shop(
 }
 function settle(stopAtPotato = false) {
   for (let step = 0; step < 2000; step++) {
-    if (state.phase === "AWAITING_ROLL" || (stopAtPotato && state.phase === "POTATO")) return
+    if (
+      state.phase === "FINISHED" ||
+      state.phase === "AWAITING_ROLL" ||
+      (stopAtPotato && state.phase === "POTATO")
+    )
+      return
     if (state.phase === "SHOP")
       shop(
         players.findIndex((player) => player.playerId === state.shop!.playerId),
@@ -112,8 +117,8 @@ function use(index: number, item: Item, target?: number) {
 }
 
 /** Play a real turn, purchasing only when its server-owned purse can pay. */
-function marketTurn(index: number, item?: Item) {
-  roll(index)
+function marketTurn(index: number, item?: Item, value = 6) {
+  roll(index, value)
   for (let step = 0; step < 2000; step++) {
     if (state.phase === "AWAITING_ROLL") return
     if (state.phase === "SHOP") {
@@ -127,10 +132,11 @@ function marketTurn(index: number, item?: Item) {
 
 it("prevents four-player Frost chaining and guarantees an unhindered roll between slowdowns", () => {
   setup(4)
-  for (let round = 0; round < 4; round++)
-    for (let i = 0; i < 4; i++) marketTurn(i, i === 0 || i === 2 ? "freeze" : undefined)
+  for (let round = 0; round < 12; round++)
+    for (let i = 0; i < 4; i++) marketTurn(i, i === 0 || i === 2 ? "freeze" : undefined, 1)
   expect(state.players[0]!.inventory).toEqual(["freeze", "freeze"])
   expect(state.players[2]!.inventory).toEqual(["freeze", "freeze"])
+  const victimStart = Number(state.players[1]!.tileId.replace("tile-", ""))
   use(0, "freeze", 1)
   expect(state.players[1]).toMatchObject({ frozen: true, frostWard: true })
   server.disconnect("p1")
@@ -147,8 +153,12 @@ it("prevents four-player Frost chaining and guarantees an unhindered roll betwee
   play(0, 1)
   const victimCoins = state.players[1]!.coins!
   play(1, 6)
-  expect(state.players[1]).toMatchObject({ frozen: false, frostWard: true, tileId: "tile-28" })
-  expect(state.players[1]!.coins).toBe(victimCoins + 4)
+  expect(state.players[1]).toMatchObject({
+    frozen: false,
+    frostWard: true,
+    tileId: `tile-${victimStart + 4}`,
+  })
+  expect(state.players[1]!.coins).toBe(victimCoins + 1)
   use(2, "freeze", 1)
   expect(errors.at(-1)).toBe("INVALID_TARGET")
   expect(state.players[2]!.inventory).toHaveLength(2)
@@ -158,14 +168,18 @@ it("prevents four-player Frost chaining and guarantees an unhindered roll betwee
   expect(errors.at(-1)).toBe("INVALID_TARGET")
   play(0, 1)
   play(1, 1)
-  expect(state.players[1]).toMatchObject({ frozen: false, frostWard: false, tileId: "tile-29" })
+  expect(state.players[1]).toMatchObject({
+    frozen: false,
+    frostWard: false,
+    tileId: `tile-${victimStart + 5}`,
+  })
   use(2, "freeze", 1)
   expect(state.players[1]).toMatchObject({ frozen: true, frostWard: true })
   expect(state.players[2]!.inventory).toHaveLength(1)
 })
 
 it.each([1, 4, 6])(
-  "uses Lucky Clover once, showing a valid die and paying exactly the %i-derived path",
+  "uses Lucky Clover once, showing a valid %i-derived die and one turn coin",
   (raw) => {
     setup(1)
     marketTurn(0, "clover")
@@ -178,16 +192,16 @@ it.each([1, 4, 6])(
     expect(state.lastRoll).toBe(Math.max(4, raw))
     settle()
     expect(state.players[0]!.lucky).toBe(false)
-    expect(state.players[0]!.coins).toBe(before + Math.max(4, raw))
+    expect(state.players[0]!.coins).toBe(before + 1)
     expect(state.players[0]!.tileId).toBe(`tile-${6 + Math.max(4, raw)}`)
   },
 )
 
 it("applies Frost after Lucky Clover without turning a slowed roll into another full turn", () => {
   setup(2)
-  for (let round = 0; round < 2; round++) {
-    marketTurn(0, "freeze")
-    marketTurn(1, "clover")
+  for (let round = 0; round < 3; round++) {
+    marketTurn(0, "freeze", 1)
+    marketTurn(1, "clover", 1)
   }
   use(0, "freeze", 1)
   play(0, 1)
@@ -197,18 +211,17 @@ it("applies Frost after Lucky Clover without turning a slowed roll into another 
   expect(state.lastRoll).toBe(4)
   settle()
   expect(state.players[1]).toMatchObject({
-    tileId: "tile-14",
+    tileId: "tile-5",
     lucky: false,
     frozen: false,
     frostWard: true,
   })
-  expect(state.players[1]!.coins).toBeGreaterThanOrEqual(before + 2)
+  expect(state.players[1]!.coins).toBeGreaterThanOrEqual(before + 1)
 })
 
 it("validates Compass choices, persists the selected die through refresh, and clears buffs on restart", () => {
   setup(1)
-  marketTurn(0)
-  marketTurn(0, "compass")
+  for (let i = 0; i < 11; i++) marketTurn(0, "compass", 1)
   const inventory = [...state.players[0]!.inventory!]
   for (const dieValue of [undefined, 0, 7, 2.5]) {
     command(0, "item.use", { item: "compass", dieValue, turnNumber: state.turnNumber })
@@ -231,8 +244,8 @@ it("validates Compass choices, persists the selected die through refresh, and cl
   settle()
   expect(state.players[0]).toMatchObject({
     plannedRoll: null,
-    tileId: "tile-14",
-    coins: before + 2,
+    tileId: "tile-13",
+    coins: before + 1,
   })
   server.handle("host", "game.restart", { roomCode: room.roomCode, hostToken: room.hostToken })
   expect(state.players[0]).toMatchObject({
@@ -255,9 +268,9 @@ it("pauses at a passed shop, buys once, and finishes the original path without a
   const visitId = state.shop!.id
   const id = shop(0, "boots")
   shop(0, "boots", id, visitId)
-  expect(state.players[0]).toMatchObject({ coins: 5, inventory: ["boots"] })
+  expect(state.players[0]).toMatchObject({ coins: 2, inventory: ["boots"] })
   settle()
-  expect(state.players[0]).toMatchObject({ tileId: "tile-6", coins: 8 })
+  expect(state.players[0]).toMatchObject({ tileId: "tile-6", coins: 3 })
   expect(state.currentPlayerId).toBe(players[1]!.playerId)
 })
 
@@ -274,28 +287,28 @@ it("does not sell unusable sabotage in a solo room or charge for a rejected choi
   expect(state.players[0]!.inventory).toEqual(["clover"])
 })
 
-it("awards one coin at each actual crossing, including the market, and no extra landing coin", () => {
+it("awards no crossing coins, pauses shopping, and pays one coin at the final landing only", () => {
   setup(1)
   roll(0)
   vi.advanceTimersByTime(14)
   expect(state.players[0]!.coins).toBe(6)
   vi.advanceTimersByTime(1)
-  expect(state.players[0]!.coins).toBe(7)
+  expect(state.players[0]!.coins).toBe(6)
   vi.advanceTimersByTime(5)
-  expect(state.players[0]!.coins).toBe(8)
+  expect(state.players[0]!.coins).toBe(6)
   vi.advanceTimersByTime(5)
   expect(state.phase).toBe("SHOP")
-  expect(state.players[0]!.coins).toBe(9)
+  expect(state.players[0]!.coins).toBe(6)
   const visitId = state.shop!.id
   vi.advanceTimersByTime(500)
-  expect(state.players[0]!.coins).toBe(9)
+  expect(state.players[0]!.coins).toBe(6)
   const id = shop(0, "skip")
   shop(0, "skip", id, visitId)
   settle()
-  expect(state.players[0]).toMatchObject({ coins: 12, tileId: "tile-6" })
+  expect(state.players[0]).toMatchObject({ coins: 7, tileId: "tile-6" })
 })
 
-it("pays all eight Boots spaces exactly once and does not pay for rejected duplicate rolls", () => {
+it("Boots never multiplies the one-coin reward and duplicate rolls cannot pay again", () => {
   setup(1)
   roll(0)
   vi.advanceTimersByTime(25)
@@ -306,7 +319,7 @@ it("pays all eight Boots spaces exactly once and does not pay for rejected dupli
   const id = command(0, "dice.roll.request", {})
   command(0, "dice.roll.request", {}, id)
   settle()
-  expect(state.players[0]!.coins).toBe(coins + 8)
+  expect(state.players[0]!.coins).toBe(coins + 1)
   expect(state.players[0]!.tileId).toBe("tile-14")
 })
 
@@ -314,19 +327,22 @@ it("cancels future crossing rewards on restart and resets the purse", () => {
   setup(1)
   roll(0)
   vi.advanceTimersByTime(20)
-  expect(state.players[0]!.coins).toBe(8)
+  expect(state.players[0]!.coins).toBe(6)
   server.handle("host", "game.restart", { roomCode: room.roomCode, hostToken: room.hostToken })
   vi.advanceTimersByTime(10_000)
   expect(state.players[0]).toMatchObject({ coins: 6, tileId: "tile-0" })
   expect(state.phase).toBe("AWAITING_ROLL")
 })
 
-it("pays a wrap-to-Start space once, respects the coin cap and never adds a turn-end bonus", () => {
+it("stops income at the finish and cannot farm an infinite loop", () => {
   setup(1)
   for (let i = 0; i < 8; i++) play(0)
-  expect(state.players[0]).toMatchObject({ coins: 54, tileId: "tile-0" })
-  for (let i = 0; i < 160; i++) play(0)
-  expect(state.players[0]!.coins).toBe(999)
+  expect(state.players[0]).toMatchObject({ coins: 14, tileId: "tile-47" })
+  expect(state.phase).toBe("FINISHED")
+  roll(0)
+  vi.advanceTimersByTime(10000)
+  expect(errors.at(-1)).toBe("INVALID_PHASE")
+  expect(state.players[0]!.coins).toBe(14)
 })
 
 it("auto-skips expired shops and still finishes a disconnected player's movement", () => {
@@ -374,40 +390,38 @@ it("slows one roll without skipping a turn, always moving and paying for at leas
   settle()
   play(1, 1)
   play(2, 2)
-  roll(0)
-  vi.advanceTimersByTime(35)
-  shop(0, "freeze")
-  settle()
-  play(1, 1)
-  play(2, 2)
+  // With the smaller purse, save through several real rounds before buying Frost.
+  for (let round = 0; round < 5; round++) {
+    marketTurn(0, "freeze", 1)
+    marketTurn(1, undefined, 1)
+    marketTurn(2, undefined, 1)
+  }
   use(0, "freeze", 1)
   expect(state.players[1]).toMatchObject({ frozen: true, frostWard: true })
   const before = state.turnNumber
   const frozenCoins = state.players[1]!.coins!
+  const frozenTile = Number(state.players[1]!.tileId.replace("tile-", ""))
   play(0, 1)
   expect(state.currentPlayerId).toBe(players[1]!.playerId)
   expect(state.phase).toBe("AWAITING_ROLL")
   play(1, 1)
   expect(state.currentPlayerId).toBe(players[2]!.playerId)
   expect(state.turnNumber).toBe(before + 2)
-  expect(state.players[1]).toMatchObject({ frozen: false, frostWard: true, tileId: "tile-3" })
+  expect(state.players[1]).toMatchObject({
+    frozen: false,
+    frostWard: true,
+    tileId: `tile-${frozenTile + 1}`,
+  })
   expect(state.players[1]!.coins).toBe(frozenCoins + 1)
 })
 
 it("consumes a shield when it blocks sabotage and leaves the protected player unfrozen", () => {
   setup()
-  roll(0)
-  vi.advanceTimersByTime(25)
-  shop(0, "skip")
-  settle()
-  roll(1)
-  vi.advanceTimersByTime(25)
-  shop(1, "shield")
-  settle()
-  roll(0)
-  vi.advanceTimersByTime(35)
-  shop(0, "freeze")
-  settle()
+  for (let round = 0; round < 3; round++) {
+    marketTurn(0, "freeze", 1)
+    marketTurn(1, "shield", 1)
+  }
+  play(0, 1)
   use(1, "shield")
   play(1, 1)
   use(0, "freeze", 1)
@@ -467,7 +481,7 @@ it("starts Hot Potato only after all four turns, passes by current revision, and
   expect(state.potato!.stage).toBe("result")
   const winnerId = state.potato!.winnerId
   expect(state.players.map((player, index) => player.coins! - balances[index]!)).toEqual(
-    state.players.map((player) => (player.id === winnerId ? 8 : 2)),
+    state.players.map((player) => (player.id === winnerId ? 4 : 1)),
   )
   vi.advanceTimersByTime(100)
   expect(state.phase).toBe("AWAITING_ROLL")

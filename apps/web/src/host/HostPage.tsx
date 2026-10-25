@@ -1,5 +1,5 @@
 import { defaultBoard, getMovementPath } from "@party-board/board"
-import type { GameState } from "@party-board/protocol"
+import { GAME_REWARDS, type GameState } from "@party-board/protocol"
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { buildControllerUrl, createRuntimeConfig } from "../app/runtimeConfig"
@@ -15,6 +15,8 @@ import { useLiveHostGame } from "./useLiveHostGame"
 import { usePieceAnimation } from "./usePieceAnimation"
 import { PlayerBalances } from "../app/PlayerBalances"
 import { PowerupNotice } from "../app/PowerupNotice"
+import "./hud.css"
+import { MatchResult } from "./MatchResult"
 
 const DICE_DURATION_MS = 900
 const MOVEMENT_DURATION_MS = 420
@@ -113,9 +115,7 @@ export default function HostPage() {
         setFixtureState((current) => ({
           ...current,
           players: current.players.map((player) =>
-            player.id === activePlayerId
-              ? { ...player, tileId, coins: Math.min(999, (player.coins ?? 6) + 1) }
-              : player,
+            player.id === activePlayerId ? { ...player, tileId } : player,
           ),
         }))
       },
@@ -128,7 +128,27 @@ export default function HostPage() {
     if (!completed) return
 
     setFixtureMovingPlayerId(null)
-    setFixtureState((current) => ({ ...current, phase: "TURN_END" }))
+    const finished = path.at(-1) === defaultBoard.finishTileId
+    setFixtureState((current) => ({
+      ...current,
+      phase: finished ? "FINISHED" : "TURN_END",
+      winnerId: finished ? activePlayerId : null,
+      players: current.players.map((p) =>
+        p.id === activePlayerId
+          ? {
+              ...p,
+              coins: Math.min(
+                999,
+                (p.coins ?? GAME_REWARDS.startingCoins) + GAME_REWARDS.completedTurn,
+              ),
+            }
+          : p,
+      ),
+    }))
+    if (finished) {
+      setFixtureBusy(false)
+      return
+    }
     await wait(TURN_END_DURATION_MS)
 
     setFixtureState((current) => {
@@ -156,7 +176,7 @@ export default function HostPage() {
   const lobbyDescription = liveMode
     ? (live.error ??
       (live.state
-        ? "Scan to join from a phone. Start once at least one connected player is ready."
+        ? "Join on your phone. Start when your party is ready."
         : "Connecting to the authoritative game server and creating a room…"))
     : "Scan to join from a phone. Four fixture players are shown for Ryan's host preview."
   const sceneKey = state.minigame?.id ?? state.duel?.id ?? state.potato?.id ?? "trail"
@@ -173,8 +193,17 @@ export default function HostPage() {
       <div ref={wrapFade} className="world-wrap" aria-hidden="true" />
 
       <header className="topbar">
-        <div className="brand">Party Board</div>
+        <div className="brand">
+          <img src="/favicon.svg" alt="" width="32" height="32" />
+          Partyboard
+        </div>
         <div className="topbar__actions">
+          {state.roomCode !== "WAIT" && (
+            <span className="host-room">
+              <span>Room</span>
+              {state.roomCode}
+            </span>
+          )}
           {liveMode && live.connectionState !== "connected" && (
             <span className="connection-notice" role="status">
               {live.connectionState === "disconnected" ? "Reconnecting to server…" : "Connecting…"}
@@ -193,7 +222,9 @@ export default function HostPage() {
         </div>
       </header>
 
-      {state.phase === "MINIGAME" && state.minigame ? (
+      {state.phase === "FINISHED" ? (
+        <MatchResult state={state} onRestart={reset} />
+      ) : state.phase === "MINIGAME" && state.minigame ? (
         <MinigameOverlay state={state} />
       ) : state.phase === "SHOP" || state.phase === "POTATO" ? (
         <PartyOverlay state={state} />
@@ -217,7 +248,7 @@ export default function HostPage() {
           state={state}
         />
       )}
-      <PlayerBalances state={state} host />
+      {state.phase !== "LOBBY" && <PlayerBalances state={state} host />}
       <PowerupNotice state={state} host />
       {state.waitingForHost && (
         <section className="host-continue" aria-label="Continue when ready">

@@ -3,6 +3,8 @@
 Ryan requested this pass together with per-space travel coins. It keeps Jack's instanced Blender
 scenery, camera-facing authoritative die, and untimed shops/connected board turns. The subsequent
 seamless-round pass replaces manual mini-game starts/results with automatic countdowns/results.
+October 25 supersedes the original economy: one coin per completed forward turn, no per-space
+coins, and the default board stops at tile-47 with a match winner. Animation timing is unchanged.
 
 ## Travel
 
@@ -18,8 +20,8 @@ seamless-round pass replaces manual mini-game starts/results with automatic coun
   carry, cast, strike, guard, balance and hit poses blend using frame-rate-independent damping.
 - Camera, die and sunlight share the sampled active-player focus. Scratch vectors and projectile
   targets are reused; fishing line updates reuse their existing buffer.
-- The last tile wraps logically to Start. The character/world briefly fade while the camera
-  reframes, rather than generating a long flight/line across the entire map.
+- The default trail stops at the finish. Legacy custom loop boards retain a brief wrap fade
+  rather than generating a long flight/line across the world.
 - Scene switches have a short flat-color reveal under the HUD. Reduced-motion CSS applies to UI
   animations. No physics engine, additional model copies, extra shadow passes or dependencies.
 
@@ -30,21 +32,21 @@ fresh/reconnected host snaps to that state rather than replaying an unknown old 
 snapshots update balances but cannot replace the currently animated tile. Restart or a new phase
 cancels the pending path; an older animation cannot clear a replacement run.
 
-Each server crossing timer awards one coin, capped at 999, then publishes the existing snapshot.
-Markets split movement and preserve the remaining path. They cannot replay paid spaces. Coins
+Server crossing timers only publish visual progress. The completed forward move awards one coin,
+capped at 999, after all market pauses. Markets preserve the remaining path and cannot pay twice. Coins
 are never computed from frame count, animation completion, a client's position, or a supplied die.
 Backwards duel displacement and disconnected/skipped turns are not rewarding movement. Frost now
-slows a real roll by two spaces (minimum one); only the actual forward spaces pay coins.
+slows a real roll by two spaces (minimum one); turn income remains one coin regardless of distance.
 
 ## Verification
 
 Automated checks cover exact tile arrivals, continuous middle-tile velocities, endpoints,
 30/60/120 Hz sampling and rotation equivalence, caller-owned output storage, eight-step Boots,
-every normal board edge, bounded wrap behavior, reward ticks before/after shops, duplicates,
+every normal board edge, finish clamping, no rewards while paused at shops, duplicates,
 restart cancellation, coin caps, duel penalties and real Socket.IO reward snapshots.
 
-Manual: join a host/controller, roll into the first market, check one coin per space and 9 coins
-after a three-space arrival from a fresh purse. Buy Boots for 4, finish the original roll, and
+Manual: join a host/controller, roll into the first market, verify the purse stays at6 during
+travel/shopping. Buy Boots for 4, finish the original roll to receive exactly one coin, and
 activate them next turn. Watch continuous bends, walking starts/stops, overhead die/camera, and
 coin increments; inspect the held acorn, casts, strikes and guards in the rehearsal gallery.
 

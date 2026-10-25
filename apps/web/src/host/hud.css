@@ -1,0 +1,1261 @@
+/* Partyboard's trail kit: matte ivory, pine framing, outfit-color accents.
+   Keep the middle of the world clear; no textures, gradients or backdrop filters. */
+.trail-progress {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 7px;
+  margin-top: 12px;
+  font-size: 0.62rem;
+  color: #66725e;
+}
+.trail-progress > div {
+  flex: 0 0 100%;
+  height: 5px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #e1e5ce;
+}
+.trail-progress i {
+  display: block;
+  height: 100%;
+  background: #557a4e;
+  transition: width 240ms ease-out;
+}
+.host-shell .round-result > .button {
+  display: flex;
+  margin: 18px auto 0;
+  min-width: 180px;
+}
+.tutorial-control-labels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: -5px 0 14px;
+  color: #66725e;
+  font-size: 0.65rem;
+  line-height: 1.45;
+}
+.tutorial-control-labels > span {
+  text-align: center;
+}
+.host-shell .game-tutorial li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.host-shell .game-tutorial ol {
+  align-items: stretch;
+}
+.host-shell {
+  --font-body: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  --font-display: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  --paper: #fff9e9;
+  --ink: #284b3c;
+  --muted: #66725e;
+  --line: #dedbc6;
+  --pine: #2d5140;
+  --hud-shadow: 0 4px 0 #28453645, 0 9px 24px #203d2920;
+  font-family: var(--font-body);
+}
+.host-shell .topbar {
+  top: 20px;
+  gap: 12px;
+}
+.host-shell .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 14px 7px 7px;
+  border: 2px solid #fffaf0;
+  border-radius: 14px;
+  color: #fff9e9;
+  background: var(--pine);
+  box-shadow: 0 3px 0 #28453638;
+  font: 700 1.12rem/1 var(--font-body);
+  letter-spacing: -0.04em;
+}
+.host-shell .brand img {
+  display: block;
+  border-radius: 8px;
+}
+.host-room {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 13px;
+  border: 2px solid #fffaf0;
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 3px 0 #28453625;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.host-room > span {
+  color: var(--muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.host-shell .eyebrow {
+  font: 700 0.64rem/1.4 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.host-shell .host-panel {
+  top: 88px;
+  left: 24px;
+  padding: 20px;
+  border: 2px solid #fffdf4;
+  border-radius: 18px;
+  background: var(--paper);
+  box-shadow: var(--hud-shadow);
+  scrollbar-width: thin;
+  scrollbar-color: #b3bca0 var(--paper);
+}
+.host-shell .host-panel h2 {
+  font: 700 1.65rem/1.15 var(--font-display);
+  letter-spacing: -0.055em;
+}
+.host-shell .button {
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 11px;
+  font: 700 0.87rem/1.3 var(--font-body);
+  box-shadow: 0 3px 0 #1b392d;
+  transition:
+    transform 120ms ease-out,
+    background-color 120ms ease-out;
+}
+.host-shell .button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #1b392d;
+}
+.host-shell .button--primary {
+  background: var(--pine);
+}
+.host-shell .button--secondary {
+  box-shadow: none;
+  color: var(--muted);
+  border-color: var(--line);
+  background: transparent;
+}
+.host-shell .host-panel--game {
+  width: 288px;
+  overflow: visible;
+  padding: 0 18px 14px;
+}
+.host-shell .game-heading {
+  align-items: center;
+  margin: -2px -20px 0;
+  padding: 12px 18px;
+  border: 2px solid #fffdf4;
+  border-radius: 18px 18px 0 0;
+  background: var(--pine);
+  color: var(--paper);
+}
+.host-shell .game-heading > .eyebrow {
+  color: #e0e9d2;
+  letter-spacing: 0.09em;
+}
+.host-shell .turn-counter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  font: 700 1rem var(--font-body);
+}
+.host-shell .turn-counter small {
+  color: #d8e4c8;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+}
+.host-shell .turn-summary {
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 10px;
+  margin: 0;
+  padding: 18px 0 14px;
+  border-top: 0;
+}
+.host-shell .turn-summary__player {
+  margin: 0;
+  gap: 10px;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+.host-shell .turn-summary__player small {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.player-portrait {
+  display: block;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+.host-shell .turn-summary__player .player-portrait {
+  width: 49px;
+  height: 49px;
+}
+.host-shell .phase-line {
+  margin: 8px 0 0 59px;
+  font-size: 0.73rem;
+  font-style: normal;
+}
+.host-shell .roll-face {
+  width: 34px;
+  height: 34px;
+}
+.host-shell .roll-summary .summary-label {
+  font-size: 0.6rem;
+}
+.turn-prompt {
+  margin: 14px 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.turn-prompt span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 400;
+  line-height: 1.55;
+}
+.game-operator {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.host-shell .game-operator .button {
+  min-height: 30px;
+  padding: 6px 9px;
+  font-size: 0.66rem;
+  border-radius: 7px;
+}
+.host-shell .host-panel--game > .muted {
+  margin-top: 10px;
+  font-size: 0.75rem;
+}
+
+/* One player rail, in the same positions on the board and in every arena.
+   Coins and mini-game scores are separate, explicitly labelled values. */
+.host-shell .player-balances--host {
+  position: absolute;
+  top: auto;
+  right: auto;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 48px);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
+.host-shell .player-balances__heading {
+  display: none;
+}
+.host-shell .player-balances--host ul {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+.host-shell .player-seat {
+  --seat-color: #51a8ad;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: clamp(175px, 20vw, 246px);
+  min-height: 88px;
+  padding: 12px;
+  border: 2px solid #fffdf4;
+  border-bottom: 4px solid var(--seat-color);
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow:
+    0 3px 0 #28453638,
+    0 5px 15px #203d2914;
+}
+.host-shell .player-balances--host .player-seat {
+  border-bottom: 4px solid var(--seat-color);
+}
+.host-shell .player-seat--coral {
+  --seat-color: #d96e77;
+}
+.host-shell .player-seat--gold {
+  --seat-color: #c79b36;
+}
+.host-shell .player-seat--violet {
+  --seat-color: #8f73c6;
+}
+.host-shell .player-seat--current {
+  background: #fffdf2;
+  border-color: var(--pine);
+  border-bottom-color: var(--seat-color);
+}
+.host-shell .player-seat--winner {
+  background: #fff5cf;
+  border-color: #a88740;
+}
+.host-shell .player-seat--out {
+  background: #ececde;
+}
+.host-shell .player-seat--out .player-portrait {
+  opacity: 0.6;
+}
+.host-shell .player-balances__name {
+  align-self: center;
+  padding-right: 42px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.host-shell .player-balances__name small {
+  max-width: none;
+  margin-top: 5px;
+  font-size: 0.6rem;
+  line-height: 1.35;
+  color: #62715e;
+  font-weight: 400;
+}
+.host-shell .player-seat__name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.host-shell .player-seat--current .player-seat__status {
+  color: #355d40;
+  font-weight: 700;
+}
+.host-shell .player-seat--winner .player-seat__status {
+  color: #805f21;
+  font-weight: 700;
+}
+.host-shell .player-seat > .coin-count {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  gap: 4px;
+}
+.host-shell .player-seat > .coin-count strong {
+  font-size: 1.05rem;
+}
+.host-shell .player-seat--scored > .coin-count {
+  top: 12px;
+  transform: none;
+}
+.host-shell .player-seat--scored > .coin-count strong {
+  font-size: 0.76rem;
+}
+.host-shell .player-seat--scored > .coin-count svg {
+  width: 13px;
+  height: 13px;
+}
+.host-shell .player-seat--scored .player-balances__name {
+  padding-right: 58px;
+}
+.player-seat__score {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  text-align: right;
+}
+.player-seat__score strong {
+  display: block;
+  font-size: 1.28rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.player-seat__score small {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.53rem;
+  color: var(--muted);
+}
+
+/* Joining: a small invitation, a legible room code and four actual seats. */
+.host-shell .host-panel--lobby {
+  width: 380px;
+  max-height: calc(100dvh - 110px);
+}
+.host-shell .host-panel--lobby h2 {
+  margin: 8px 0 18px;
+  font-size: 1.8rem;
+}
+.lobby-join {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #d9dec8;
+  border-radius: 12px;
+  background: #edf0df;
+}
+.host-shell .lobby-join h1 {
+  font: 700 2.45rem/1.1 var(--font-body);
+  margin: 5px 0 8px;
+  letter-spacing: 0.09em;
+}
+.host-shell .room-heading__label {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.lobby-join__hint {
+  font-size: 0.69rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.host-shell .qr-card {
+  margin: 0;
+  padding: 7px;
+  border-radius: 9px;
+  flex: 0 0 auto;
+}
+.lobby-description {
+  margin: 12px 0 10px;
+  color: var(--muted);
+  font-size: 0.69rem;
+  line-height: 1.5;
+}
+.host-shell .roster-count {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 6px;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.host-shell .roster-count strong {
+  font-size: 0.76rem;
+  color: var(--ink);
+}
+.host-shell .host-panel--lobby .player-list {
+  gap: 5px;
+  margin: 6px 0 14px;
+}
+.host-shell .host-panel--lobby .player-row {
+  min-height: 45px;
+  padding: 5px 7px;
+  border-radius: 10px;
+  background: #efeedd;
+}
+.host-shell .player-row__identity {
+  font-size: 0.84rem;
+}
+.host-shell .player-row .player-portrait {
+  width: 32px;
+  height: 32px;
+}
+.lobby-ready {
+  color: #7b725b;
+  font-size: 0.61rem;
+}
+.lobby-ready.is-ready {
+  padding: 5px 8px;
+  color: #41663d;
+  background: #dce6c9;
+  border-radius: 6px;
+  font-weight: 700;
+}
+.host-shell .player-row--empty {
+  justify-content: flex-start;
+  color: var(--muted);
+  font-size: 0.76rem;
+  background: transparent !important;
+  border: 1px dashed #c9cfb8;
+}
+.player-row--empty small {
+  margin-left: auto;
+  font-size: 0.58rem;
+}
+.empty-seat {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  font-size: 1.25rem;
+}
+.host-shell .host-panel--lobby .button-row {
+  border: 0;
+  padding: 0;
+}
+
+/* The outfitter menu uses the same glyphs and honest affordability as the phone. */
+.host-shell .market-panel {
+  width: 396px;
+  max-height: calc(100dvh - 214px);
+  padding: 18px 20px;
+}
+.market-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.market-open {
+  padding: 4px 7px;
+  background: #e2ebd2;
+  border-radius: 5px;
+  color: #47623b;
+  font-size: 0.59rem;
+  font-weight: 700;
+}
+.host-shell .market-panel h2 {
+  margin: 7px 0 14px;
+  font-size: 1.8rem;
+}
+.market-customer {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 0;
+  border-block: 1px solid var(--line);
+}
+.market-customer .player-portrait {
+  width: 36px;
+  height: 36px;
+}
+.market-customer > span {
+  flex: 1;
+  font-size: 0.83rem;
+}
+.market-customer small {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.market-customer > .coin-count {
+  flex: 0 0 auto;
+  padding: 7px 9px;
+  background: #f3e7bf;
+  border-radius: 8px;
+}
+.host-shell .market-stock {
+  gap: 0;
+  border: 0;
+  padding: 0;
+  margin: 6px 0;
+}
+.host-shell .market-stock > .market-item {
+  padding: 13px 0 13px 51px;
+  border-bottom: 1px solid var(--line);
+}
+.host-shell .market-stock > .market-item:last-child {
+  border: 0;
+}
+.host-shell .market-stock .powerup-symbol {
+  top: 14px;
+  width: 26px;
+  height: 26px;
+  padding: 6px;
+  border-radius: 11px;
+  border-color: transparent;
+}
+.host-shell .market-stock strong {
+  align-items: center;
+  gap: 12px;
+  font-size: 0.83rem;
+}
+.market-price {
+  flex: 0 0 auto;
+}
+.host-shell .market-price .coin-count {
+  gap: 4px;
+}
+.host-shell .market-price .coin-count strong {
+  font-size: 0.84rem;
+}
+.host-shell .market-price svg {
+  width: 15px;
+  height: 15px;
+}
+.host-shell .market-stock small {
+  font-size: 0.69rem;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.market-shortfall {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.59rem;
+  color: #8a6040;
+}
+.market-item--saving .market-price {
+  opacity: 0.65;
+}
+.market-footer {
+  margin: 10px 0 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.host-shell .market-rule {
+  margin: 7px 0 0;
+  padding: 0;
+  border: 0;
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
+/* Gameplay gets one top ribbon and one low instruction strip, not a dashboard. */
+.host-shell .minigame-hud,
+.host-shell .duel-overlay {
+  inset: 88px 24px 124px;
+  z-index: 5;
+}
+.host-shell .minigame-titlebar,
+.host-shell .duel-scoreboard {
+  width: fit-content;
+  max-width: min(620px, 100%);
+  min-width: 320px;
+  margin: 0 auto;
+  padding: 12px 18px;
+  gap: 24px;
+  border: 2px solid #fffdf4;
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow: var(--hud-shadow);
+}
+.host-shell .minigame-titlebar h1,
+.host-shell .duel-scoreboard h2 {
+  margin: 4px 0 0;
+  font: 700 1.5rem/1.2 var(--font-display);
+  letter-spacing: -0.045em;
+}
+.host-shell .minigame-clock {
+  min-width: 48px;
+  padding: 0 0 0 16px;
+  border-color: var(--line);
+}
+.host-shell .minigame-clock strong {
+  color: var(--ink);
+  font: 700 1.65rem/1 var(--font-body);
+}
+.host-shell .minigame-clock small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.55rem;
+}
+.host-shell .duel-timer {
+  border: 0;
+  border-radius: 9px;
+  background: #e8eddb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.host-shell .duel-scoreboard__scores {
+  gap: 16px;
+}
+.host-shell .duel-scoreboard__scores > div {
+  display: grid;
+  grid-template-columns: 30px auto;
+  gap: 0 7px;
+  align-items: center;
+  text-align: left;
+}
+.host-shell .duel-scoreboard__scores .player-portrait {
+  width: 30px;
+  height: 30px;
+  grid-row: span 2;
+}
+.host-shell .duel-scoreboard__scores span {
+  font-size: 0.62rem;
+}
+.host-shell .duel-scoreboard__scores strong {
+  font: 700 1.15rem var(--font-body);
+}
+.host-shell .minigame-hint,
+.host-shell .duel-instructions {
+  bottom: 0;
+  margin: 0;
+  padding: 10px 18px;
+  border: 2px solid #fffdf4;
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 0 3px 0 #28453630;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.host-shell .duel-instructions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.fuse-pill {
+  flex: 0 0 auto;
+  color: #8d5432;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lessons and victory screens share the same physical 'trail card' language. */
+.host-shell .minigame-hud--intro::before,
+.host-shell .duel-overlay--intro::before,
+.host-shell .minigame-hud--result:has(.round-result)::before,
+.host-shell .duel-overlay--result::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #1d3d302b;
+  pointer-events: none;
+}
+.host-shell .minigame-brief.minigame-brief--instructions,
+.host-shell .duel-announcement.duel-announcement--tutorial {
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(760px, 90vw);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 22px 26px;
+  border: 2px solid #fffdf4;
+  border-radius: 22px;
+  background: var(--paper);
+  box-shadow: var(--hud-shadow);
+  text-align: center;
+  animation: none;
+}
+.host-shell .minigame-hud--intro .minigame-titlebar {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  padding: 9px 18px;
+  transform: translateY(-18px);
+}
+.host-shell .minigame-hud--intro .minigame-titlebar h1 {
+  font-size: 1.3rem;
+}
+.host-shell .minigame-hud--intro .minigame-clock {
+  display: none;
+}
+.host-shell .game-tutorial,
+.host-shell .game-tutorial h2 {
+  font-family: var(--font-body);
+}
+.host-shell .game-tutorial h2 {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.host-shell .game-tutorial > svg {
+  max-height: 140px;
+  margin: 10px auto 14px;
+  border-radius: 12px;
+  background: #eff0de;
+}
+.host-shell .game-tutorial ol {
+  gap: 10px;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.host-shell .game-tutorial li {
+  padding: 9px 10px;
+  border: 1px solid #dce0c9;
+  border-radius: 9px;
+}
+.host-shell .game-tutorial li span {
+  color: #7b622e;
+  font: 700 0.82rem var(--font-body);
+}
+.host-shell .game-tutorial > p {
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.host-shell .game-tutorial > small {
+  font: 400 0.875rem/1.4 var(--font-body);
+}
+.host-shell .tutorial-control-labels {
+  font-size: 0.8rem;
+}
+.host-shell .lesson-heading {
+  margin-bottom: 10px;
+}
+.host-shell .lesson-heading h1 {
+  margin: 4px 0 0;
+  font: 700 1.6rem/1.2 var(--font-body);
+  letter-spacing: -0.035em;
+}
+.host-shell .lobby-goal {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #e9eedb;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin: 10px 0;
+}
+.host-shell .lobby-goal strong {
+  display: block;
+}
+.host-shell .round-countdown {
+  min-height: 58px;
+  margin: 12px 0 0;
+}
+.host-shell .round-countdown strong {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: var(--pine);
+  color: var(--paper);
+  font: 700 2.2rem/1 var(--font-body);
+}
+.host-shell .round-countdown span {
+  font: 700 0.875rem/1.4 var(--font-body);
+}
+.host-shell .round-countdown--setup {
+  align-content: center;
+  border-radius: 10px;
+  background: #e9eedb;
+  padding: 10px;
+  min-height: 40px;
+}
+.host-shell .minigame-brief--instructions > small,
+.host-shell .duel-announcement > small {
+  display: block;
+  margin: 9px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.host-shell .duel-announcement.duel-announcement--tutorial h1 {
+  font: 700 1.7rem/1.15 var(--font-display);
+  letter-spacing: -0.05em;
+}
+.host-shell .duel-announcement--tutorial > p {
+  margin: 6px 0 12px;
+  font-size: 0.8rem;
+}
+.host-shell .duel-announcement--tutorial .crossed-swords {
+  display: block;
+  width: 60px;
+  height: 36px;
+  margin-bottom: 4px;
+}
+.host-shell .duel-announcement--tutorial .crossed-swords svg {
+  width: 20px;
+  height: 36px;
+  left: 20px;
+}
+.host-shell .duel-announcement--tutorial > .eyebrow {
+  font-size: 0.6rem;
+}
+.host-shell .round-result {
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(440px, 90vw);
+  max-height: 100%;
+  overflow-y: auto;
+  text-align: center;
+  padding: 24px 30px 26px;
+  border: 2px solid #fffdf4;
+  border-radius: 24px;
+  background: var(--paper);
+  box-shadow: var(--hud-shadow);
+}
+.victory-emblem {
+  display: block;
+  width: 55px;
+  height: 55px;
+  margin: 0 auto 7px;
+}
+.round-result__portraits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 18px 0 12px;
+}
+.round-result__portraits:empty {
+  display: none;
+}
+.round-result__portraits .player-portrait {
+  width: 68px;
+  height: 68px;
+  border: 3px solid #e5c784;
+}
+.host-shell .round-result h2 {
+  margin: 8px 0 14px;
+  font: 700 2rem/1.15 var(--font-display);
+  letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
+}
+.round-result__reward {
+  margin: 0 0 14px;
+  padding: 12px;
+  border-radius: 10px;
+  color: #765c2f;
+  background: #f2e6bd;
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+.round-result > small {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+.host-shell .minigame-hud--result .minigame-titlebar {
+  min-width: 0;
+  padding: 9px 18px;
+}
+.host-shell .minigame-hud--result .minigame-titlebar h1 {
+  font-size: 1.15rem;
+}
+.host-shell .minigame-hud--result .minigame-clock {
+  display: none;
+}
+.host-shell .minigame-hud--result:has(.round-result) .minigame-titlebar {
+  display: none;
+}
+.host-shell .powerup-notice--host {
+  bottom: 130px;
+  border: 2px solid #fffdf4;
+  border-radius: 15px;
+  box-shadow: var(--hud-shadow);
+}
+.host-shell .powerup-notice--host small {
+  font-size: 0.65rem;
+}
+.host-shell .powerup-notice--host p {
+  font-size: 0.8rem;
+}
+.host-shell .host-continue {
+  bottom: 124px;
+  padding: 8px 10px;
+  border: 2px solid #fffdf4;
+  border-radius: 13px;
+  background: var(--paper);
+}
+.host-shell:has(.host-continue) .duel-instructions {
+  bottom: 64px;
+}
+.host-shell .host-game-error {
+  bottom: 130px;
+  max-width: calc(100% - 48px);
+  border-radius: 12px;
+}
+.host-shell .archery-target-label {
+  font: 700 0.8rem/1.2 var(--font-body);
+  border-radius: 9px;
+}
+.host-shell .rehearsal-controls .brand {
+  font-size: 0.8rem;
+  padding: 11px;
+  letter-spacing: 0;
+}
+.host-shell .rehearsal-controls select,
+.host-shell .rehearsal-controls button {
+  padding: 8px 10px;
+  border: 1px solid #fffdf4;
+  border-radius: 9px;
+  color: var(--ink);
+  background: var(--paper);
+  font: 700 0.7rem var(--font-body);
+}
+
+@media (max-height: 760px) and (min-width: 761px) {
+  .host-shell .market-panel {
+    padding: 14px 18px;
+  }
+  .host-shell .market-stock > .market-item {
+    padding-block: 6px;
+  }
+  .host-shell .market-stock .powerup-symbol {
+    top: 7px;
+  }
+  .host-shell .market-panel h2 {
+    font-size: 1.55rem;
+    margin-bottom: 9px;
+  }
+  .host-shell .market-customer {
+    padding-block: 6px;
+  }
+  .host-shell .market-footer {
+    margin-top: 6px;
+  }
+  .host-shell .host-panel--lobby {
+    padding: 16px 18px;
+  }
+  .host-shell .host-panel--lobby h2 {
+    margin-block: 5px 12px;
+  }
+  .host-shell .host-panel--lobby .player-row {
+    min-height: 39px;
+    padding-block: 3px;
+  }
+  .host-shell .lobby-description {
+    margin-block: 6px;
+  }
+  .host-shell .lobby-goal {
+    padding-block: 8px;
+    margin-block: 8px;
+  }
+  .host-shell .host-panel--lobby .player-list {
+    margin-bottom: 8px;
+  }
+  .host-shell .minigame-brief.minigame-brief--instructions,
+  .host-shell .duel-announcement.duel-announcement--tutorial {
+    padding: 16px 22px;
+  }
+  .host-shell .game-tutorial > svg {
+    max-height: 80px;
+    margin-block: 6px 9px;
+  }
+  .host-shell .game-tutorial ol {
+    margin-bottom: 8px;
+  }
+  .host-shell .game-tutorial li {
+    padding: 6px 8px;
+  }
+  .host-shell .round-countdown {
+    min-height: 48px;
+    margin-top: 8px;
+  }
+  .host-shell .round-countdown strong {
+    width: 44px;
+    height: 44px;
+    font-size: 1.8rem;
+    border-radius: 12px;
+  }
+}
+@media (max-width: 1000px) {
+  .host-shell .player-seat {
+    width: clamp(157px, 22vw, 215px);
+    padding: 10px;
+    gap: 7px;
+  }
+  .host-shell .player-seat .player-portrait {
+    width: 34px;
+    height: 34px;
+  }
+  .host-shell .player-balances__name {
+    font-size: 0.76rem;
+  }
+  .host-shell .player-balances__name small {
+    font-size: 0.56rem;
+  }
+  .host-shell .duel-scoreboard {
+    min-width: 0;
+  }
+}
+@media (max-width: 760px) {
+  .host-shell .topbar {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+  }
+  .host-shell .brand {
+    font-size: 0.95rem;
+    padding: 5px 10px 5px 5px;
+  }
+  .host-shell .brand img {
+    width: 26px;
+    height: 26px;
+  }
+  .host-room {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    gap: 7px;
+  }
+  .host-shell .host-panel {
+    top: 72px;
+    left: 12px;
+    right: auto;
+    bottom: auto;
+    max-width: calc(100% - 24px);
+  }
+  .host-shell .host-panel--game {
+    width: 260px;
+    padding: 0 16px 12px;
+  }
+  .host-shell .game-heading {
+    margin-inline: -18px;
+  }
+  .host-shell .host-panel--lobby {
+    width: 348px;
+    max-height: calc(100dvh - 88px);
+  }
+  .host-shell .player-balances--host {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
+  .host-shell .player-balances--host ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .host-shell .player-seat {
+    width: auto;
+    min-width: 0;
+    min-height: 72px;
+    gap: 7px;
+    padding: 9px;
+    border-radius: 12px;
+  }
+  .host-shell .player-seat .player-portrait {
+    width: 30px;
+    height: 30px;
+  }
+  .host-shell .player-balances__name {
+    padding-right: 34px;
+    font-size: 0.72rem;
+  }
+  .host-shell .player-balances__name small {
+    font-size: 0.52rem;
+  }
+  .host-shell .player-seat > .coin-count {
+    right: 9px;
+  }
+  .host-shell .player-seat > .coin-count svg {
+    width: 13px;
+    height: 13px;
+  }
+  .host-shell .player-seat > .coin-count strong {
+    font-size: 0.82rem;
+  }
+  .player-seat__score {
+    right: 9px;
+    bottom: 8px;
+  }
+  .player-seat__score strong {
+    font-size: 1rem;
+  }
+  .player-seat__score small {
+    display: none;
+  }
+  .host-shell .market-panel {
+    width: min(396px, calc(100% - 24px));
+    max-height: calc(100dvh - 250px);
+    padding: 16px;
+  }
+  .host-shell .minigame-hud,
+  .host-shell .duel-overlay {
+    inset: 72px 12px 178px;
+  }
+  .host-shell .minigame-titlebar,
+  .host-shell .duel-scoreboard {
+    min-width: 0;
+    padding: 10px 13px;
+    gap: 14px;
+    border-radius: 13px;
+  }
+  .host-shell .minigame-titlebar h1,
+  .host-shell .duel-scoreboard h2 {
+    font-size: 1.15rem;
+  }
+  .host-shell .minigame-titlebar .eyebrow,
+  .host-shell .duel-scoreboard .eyebrow {
+    font-size: 0.52rem;
+  }
+  .host-shell .minigame-hint,
+  .host-shell .duel-instructions {
+    max-width: 100%;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+  }
+  .host-shell .duel-instructions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px 12px;
+  }
+  .host-shell .minigame-brief.minigame-brief--instructions,
+  .host-shell .duel-announcement.duel-announcement--tutorial {
+    top: 50%;
+    padding: 16px;
+    width: min(600px, calc(100vw - 24px));
+  }
+  .host-shell .game-tutorial > svg {
+    max-height: 105px;
+    margin-block: 5px 9px;
+  }
+  .host-shell .game-tutorial ol {
+    grid-template-columns: repeat(3, 1fr);
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+  .host-shell .game-tutorial li {
+    padding: 6px;
+  }
+  .host-shell .game-tutorial li span {
+    display: block;
+    margin: 0 0 3px;
+  }
+  .host-shell .game-tutorial > p {
+    font-size: 0.875rem;
+  }
+  .host-shell .round-result {
+    padding: 18px;
+  }
+  .host-shell .round-result h2 {
+    font-size: 1.6rem;
+  }
+  .host-shell .powerup-notice--host,
+  .host-shell .host-continue {
+    bottom: 182px;
+  }
+  .host-shell .host-game-error {
+    bottom: 182px;
+    left: 12px;
+  }
+  .host-shell .rehearsal-controls {
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .host-shell .rehearsal-controls .brand {
+    display: none;
+  }
+  .host-shell .rehearsal-controls select,
+  .host-shell .rehearsal-controls button {
+    max-width: 47%;
+    font-size: 0.6rem;
+  }
+}
+@media (max-width: 380px) {
+  .host-shell .player-balances__name {
+    font-size: 0.65rem;
+  }
+  .host-shell .player-seat .player-portrait {
+    width: 24px;
+    height: 24px;
+  }
+  .host-shell .host-panel--lobby {
+    padding: 14px;
+  }
+  .host-shell .lobby-join {
+    padding: 10px;
+  }
+  .host-shell .lobby-join h1 {
+    font-size: 2rem;
+  }
+  .host-shell .qr-card svg {
+    width: 100px;
+    height: 100px;
+  }
+}
